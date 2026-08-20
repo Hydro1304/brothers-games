@@ -1,58 +1,124 @@
+# BROTHER'S GAMES
 
-# BROTHER's GAMES — versão para VS Code
+E-commerce full-stack desenvolvido para venda de jogos e produtos gamer, com sistema de autenticação, carrinho, checkout, gerenciamento de pedidos, controle de estoque e painel administrativo.
 
-## 1. Instalar o Node.js
-Baixe o Node.js LTS em:
-https://nodejs.org/
+## Demonstração
 
-Depois de instalar, reinicie o VS Code.
+Site online:
 
-## 2. Abrir o projeto
-No VS Code:
-- Arquivo > Abrir Pasta
-- selecione a pasta `brothers-games`
+https://brothers-games.brothersgames.workers.dev/
 
-## 3. Instalar as dependências
-Abra o terminal do VS Code e execute:
+## Funcionalidades
 
-```bash
-npm install
-```
+### Cliente
 
-## 4. Rodar
-Execute:
+- Cadastro e login de usuários
+- Catálogo de produtos
+- Pesquisa e filtros
+- Visualização detalhada dos produtos
+- Carrinho de compras
+- Checkout
+- Pagamento via PIX e cartão
+- Cálculo de frete
+- Histórico de pedidos
+- Acompanhamento do status do pedido
+- Cancelamento de pagamento quando permitido
+- Avaliações de produtos
+- Área de dados pessoais
+- Tema claro e escuro
 
-```bash
-npm run dev
-```
+### Administração
 
-O terminal vai mostrar um endereço parecido com:
-http://localhost:5173
+- Painel administrativo
+- Cadastro de produtos
+- Edição e exclusão de produtos
+- Controle de estoque
+- Produtos em promoção
+- Gerenciamento de pedidos
+- Visualização de vendas
+- Atualização do status dos pedidos
+- Cancelamento e reembolso de pedidos pagos
+- Gerenciamento de avaliações
 
-Abra esse endereço no navegador.
+## Tecnologias
 
-## 5. Onde editar
-Produtos:
-`src/data/products.js`
+- React
+- JavaScript
+- Vite
+- HTML
+- CSS
+- Supabase
+- PostgreSQL
+- Supabase Authentication
+- Supabase Edge Functions
+- Mercado Pago
+- Melhor Envio
+- Cloudflare
 
-Visual:
-`src/styles.css`
+## Backend
 
-Estrutura e funcionalidades:
-`src/App.jsx`
+O projeto utiliza Supabase para:
 
-Instagram:
-procure por `https://www.instagram.com/souzx._.a`
+- Autenticação
+- Banco de dados
+- Controle de usuários
+- Produtos
+- Pedidos
+- Estoque
+- Avaliações
+- Edge Functions
 
-## Importante
-Esta versão é um frontend funcional/local.
-O botão de finalizar compra é demonstrativo.
+As operações críticas do checkout e pagamento são executadas no backend para evitar manipulação direta pelo cliente.
 
-Para uma loja real, os próximos passos são:
-1. Banco de dados (Supabase)
-2. Login/cadastro real
-3. Painel administrativo
-4. Checkout real (Mercado Pago/Stripe)
-5. Controle de estoque
-6. Pedidos
-7. Deploy
+## Pagamentos
+
+Integração com Mercado Pago para processamento de pagamentos.
+
+O sistema possui suporte a:
+
+- PIX
+- Cartão
+- Confirmação de pagamento
+- Webhook de atualização
+- Cancelamento
+- Reembolso
+
+## Frete
+
+Integração com Melhor Envio para cálculo e gerenciamento das opções de entrega.
+
+## Controle de estoque
+
+O sistema utiliza controle de estoque integrado ao fluxo de pedidos.
+
+O estoque é reservado durante o processo de compra e tratado de acordo com o status do pedido, incluindo cancelamentos e reembolsos.
+
+## Segurança
+
+O projeto utiliza práticas como:
+
+- Variáveis de ambiente para credenciais
+- Operações sensíveis executadas no backend
+- Supabase Row Level Security
+- Controle de autenticação e autorização
+- Validação de operações administrativas
+- Proteção de dados sensíveis
+
+Arquivos `.env` e credenciais privadas não são armazenados neste repositório.
+
+## Estrutura do projeto
+
+```text
+brothers-games/
+├── public/
+├── src/
+│   ├── App.jsx
+│   ├── AdminPanel.jsx
+│   ├── SitePopup.jsx
+│   ├── data/
+│   └── lib/
+├── supabase/
+│   └── functions/
+├── index.html
+├── package.json
+└── vite.config.js
