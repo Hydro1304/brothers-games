@@ -672,7 +672,9 @@ function App() {
 
   const [language, setLanguage] = useState(() => detectInitialLanguage());
   const [pendingLanguage, setPendingLanguage] = useState(null);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const languageRef = useRef(language);
+  const languageMenuRef = useRef(null);
   const i18nTextMemoryRef = useRef(new WeakMap());
   const i18nAttrMemoryRef = useRef(new WeakMap());
 
@@ -3308,9 +3310,38 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
+  useEffect(() => {
+    if (!languageMenuOpen) return undefined;
+
+    function handleLanguageMenuPointerDown(event) {
+      if (!languageMenuRef.current?.contains(event.target)) {
+        setLanguageMenuOpen(false);
+      }
+    }
+
+    function handleLanguageMenuKeyDown(event) {
+      if (event.key === "Escape") {
+        setLanguageMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handleLanguageMenuPointerDown);
+    window.addEventListener("keydown", handleLanguageMenuKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleLanguageMenuPointerDown);
+      window.removeEventListener("keydown", handleLanguageMenuKeyDown);
+    };
+  }, [languageMenuOpen]);
+
   function requestLanguageChange(nextLanguage) {
+    setLanguageMenuOpen(false);
     if (!nextLanguage || nextLanguage === language) return;
     setPendingLanguage(nextLanguage);
+  }
+
+  function cancelLanguageChange() {
+    setPendingLanguage(null);
   }
 
   function confirmLanguageChange() {
@@ -3319,20 +3350,16 @@ function App() {
     setPendingLanguage(null);
   }
 
-  function cancelLanguageChange() {
-    setPendingLanguage(null);
-  }
-
-  function LanguageChangeConfirmationModal() {
+  function LanguageConfirmationModal() {
     if (!pendingLanguage) return null;
 
     const target = languageMeta(pendingLanguage);
     const copy = languageChangeCopy(language);
-    const modalDir = languageMeta(language).dir;
+    const message = copy.message(target.label);
 
     return (
       <div
-        className="language-confirm-backdrop"
+        className="language-confirm-overlay"
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) cancelLanguageChange();
@@ -3343,7 +3370,8 @@ function App() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="language-confirm-title"
-          dir={modalDir}
+          aria-describedby="language-confirm-message"
+          dir={languageMeta(language).dir}
         >
           <button
             type="button"
@@ -3356,9 +3384,12 @@ function App() {
           </button>
 
           <div className="language-confirm-icon" aria-hidden="true">🌐</div>
-          <p className="language-confirm-eyebrow">{copy.eyebrow}</p>
-          <h2 id="language-confirm-title">{copy.title}</h2>
-          <p className="language-confirm-message">{copy.message(target.label)}</p>
+
+          <div className="language-confirm-copy">
+            <span>{copy.eyebrow}</span>
+            <h3 id="language-confirm-title">{copy.title}</h3>
+            <p id="language-confirm-message">{message}</p>
+          </div>
 
           <div className="language-confirm-target">
             <span>{target.short}</span>
@@ -3377,6 +3408,7 @@ function App() {
               type="button"
               className="language-confirm-accept"
               onClick={confirmLanguageChange}
+              autoFocus
             >
               {copy.confirm}
             </button>
@@ -3390,25 +3422,62 @@ function App() {
     const current = languageMeta(language);
 
     return (
-      <label
-        className={`language-selector ${compact ? "language-selector-compact" : ""}`}
-        title="Idioma / Language"
-        aria-label="Selecionar idioma"
+      <div
+        ref={languageMenuRef}
+        className={`language-selector ${compact ? "language-selector-compact" : ""} ${languageMenuOpen ? "is-open" : ""}`}
       >
-        <span className="language-selector-icon" aria-hidden="true">🌐</span>
-        <select
-          value={language}
-          onChange={(event) => requestLanguageChange(event.target.value)}
+        <button
+          type="button"
+          className="language-selector-trigger"
+          onClick={() => setLanguageMenuOpen((open) => !open)}
+          aria-haspopup="listbox"
+          aria-expanded={languageMenuOpen}
           aria-label="Selecionar idioma"
+          title="Idioma / Language"
         >
-          {LANGUAGES.map((item) => (
-            <option key={item.code} value={item.code}>
-              {compact ? item.short : item.label}
-            </option>
-          ))}
-        </select>
-        {!compact && <span className="language-selector-code">{current.short}</span>}
-      </label>
+          <span className="language-selector-icon" aria-hidden="true">🌐</span>
+          <span className="language-selector-current">
+            {compact ? current.short : current.label}
+          </span>
+          <span className="language-selector-chevron" aria-hidden="true">⌄</span>
+        </button>
+
+        {languageMenuOpen && (
+          <div
+            className="language-dropdown"
+            role="listbox"
+            aria-label="Idiomas disponíveis"
+          >
+            <div className="language-dropdown-header">
+              <span>IDIOMA</span>
+              <small>{current.short}</small>
+            </div>
+
+            <div className="language-dropdown-list">
+              {LANGUAGES.map((item) => {
+                const selected = item.code === language;
+
+                return (
+                  <button
+                    key={item.code}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    className={`language-dropdown-option ${selected ? "selected" : ""}`}
+                    onClick={() => requestLanguageChange(item.code)}
+                  >
+                    <span className="language-dropdown-check" aria-hidden="true">
+                      {selected ? "✓" : ""}
+                    </span>
+                    <span className="language-dropdown-name">{item.label}</span>
+                    <span className="language-dropdown-code">{item.short}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -5873,7 +5942,6 @@ function App() {
       {page === "pixPayment" && PixPaymentPage()}
       {page === "orderSuccess" && OrderSuccessPage()}
       {Footer()}
-      {LanguageChangeConfirmationModal()}
       {InstitutionalModal()}
       {AccountModal()}
       {ReviewModal()}
@@ -5881,6 +5949,7 @@ function App() {
       {ShippingCalculationOverlay()}
       {AuthActionOverlay()}
       {PaymentProcessingOverlay()}
+      {LanguageConfirmationModal()}
     </div>
   );
 }
