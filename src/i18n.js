@@ -7,67 +7,71 @@ export const LANGUAGES = [
   { code: "ar-SA", short: "AR", label: "العربية", dir: "rtl" },
   { code: "fr-FR", short: "FR", label: "Français", dir: "ltr" },
   { code: "de-DE", short: "DE", label: "Deutsch", dir: "ltr" },
+
 ];
 
-
-export const LANGUAGE_CONFIRMATIONS = {
+export const LANGUAGE_CHANGE_COPY = {
   "pt-BR": {
     eyebrow: "IDIOMA DO SITE",
     title: "Alterar idioma?",
-    message: "Deseja alterar o idioma do site para {language}?",
+    message: (name) => `Deseja alterar o idioma do site para ${name}?`,
     cancel: "Cancelar",
     confirm: "Alterar idioma",
   },
   "en-US": {
     eyebrow: "SITE LANGUAGE",
     title: "Change language?",
-    message: "Would you like to change the site language to {language}?",
+    message: (name) => `Would you like to change the site language to ${name}?`,
     cancel: "Cancel",
     confirm: "Change language",
   },
   "es-ES": {
     eyebrow: "IDIOMA DEL SITIO",
     title: "¿Cambiar idioma?",
-    message: "¿Deseas cambiar el idioma del sitio a {language}?",
+    message: (name) => `¿Deseas cambiar el idioma del sitio a ${name}?`,
     cancel: "Cancelar",
     confirm: "Cambiar idioma",
   },
   "zh-CN": {
     eyebrow: "网站语言",
     title: "更改语言？",
-    message: "是否将网站语言更改为 {language}？",
+    message: (name) => `是否要将网站语言更改为 ${name}？`,
     cancel: "取消",
     confirm: "更改语言",
   },
   "hi-IN": {
     eyebrow: "साइट की भाषा",
     title: "भाषा बदलें?",
-    message: "क्या आप साइट की भाषा {language} में बदलना चाहते हैं?",
+    message: (name) => `क्या आप साइट की भाषा ${name} में बदलना चाहते हैं?`,
     cancel: "रद्द करें",
     confirm: "भाषा बदलें",
   },
   "ar-SA": {
     eyebrow: "لغة الموقع",
     title: "تغيير اللغة؟",
-    message: "هل تريد تغيير لغة الموقع إلى {language}؟",
+    message: (name) => `هل تريد تغيير لغة الموقع إلى ${name}؟`,
     cancel: "إلغاء",
     confirm: "تغيير اللغة",
   },
   "fr-FR": {
     eyebrow: "LANGUE DU SITE",
     title: "Changer de langue ?",
-    message: "Souhaitez-vous changer la langue du site en {language} ?",
+    message: (name) => `Souhaitez-vous changer la langue du site en ${name} ?`,
     cancel: "Annuler",
     confirm: "Changer la langue",
   },
   "de-DE": {
     eyebrow: "WEBSITE-SPRACHE",
     title: "Sprache ändern?",
-    message: "Möchtest du die Sprache der Website auf {language} ändern?",
+    message: (name) => `Möchtest du die Sprache der Website auf ${name} ändern?`,
     cancel: "Abbrechen",
     confirm: "Sprache ändern",
   },
 };
+
+export function languageChangeCopy(code) {
+  return LANGUAGE_CHANGE_COPY[code] || LANGUAGE_CHANGE_COPY["pt-BR"];
+}
 
 const rows = [
   ["Início","Home","Inicio","首页","होम","الرئيسية","Accueil","Startseite"],
