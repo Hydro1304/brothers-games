@@ -6047,6 +6047,7 @@ function App() {
       <AdminPanel
         currentUser={authUser}
         isOwner={isOwner}
+        language={language}
         theme={theme}
         onToggleTheme={toggleTheme}
         onBack={() => {

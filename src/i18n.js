@@ -715,8 +715,43 @@ const ADMIN_ROWS = [
   ["Somente pedidos com pagamento aprovado podem ser reembolsados por esta opção.","Only orders with approved payment can be refunded using this option.","Solo los pedidos con pago aprobado pueden reembolsarse con esta opción.","只有付款已批准的订单可使用此选项退款。","केवल स्वीकृत भुगतान वाले ऑर्डर इस विकल्प से रिफंड किए जा सकते हैं।","يمكن استرداد الطلبات ذات الدفع المعتمد فقط عبر هذا الخيار.","Seules les commandes avec paiement approuvé peuvent être remboursées avec cette option.","Nur Bestellungen mit genehmigter Zahlung können über diese Option erstattet werden."],
 ];
 
+
+const ADMIN_FIX_ROWS = [
+  ["Resumo dos dados reais disponíveis no Supabase.","Summary of real data available in Supabase.","Resumen de los datos reales disponibles en Supabase.","Supabase 中可用真实数据的摘要。","Supabase में उपलब्ध वास्तविक डेटा का सारांश।","ملخص البيانات الفعلية المتاحة في Supabase.","Résumé des données réelles disponibles dans Supabase.","Zusammenfassung der in Supabase verfügbaren realen Daten."],
+  ["15 pedido(s) pago(s)/concluído(s)","15 paid/completed order(s)","15 pedido(s) pagado(s)/completado(s)","15 个已付款/已完成订单","15 भुगतान/पूर्ण ऑर्डर","15 طلبًا مدفوعًا/مكتملًا","15 commande(s) payée(s)/terminée(s)","15 bezahlte/abgeschlossene Bestellung(en)"],
+  ["1 aguardando pagamento","1 awaiting payment","1 esperando pago","1 个等待付款","1 भुगतान की प्रतीक्षा","1 بانتظار الدفع","1 en attente de paiement","1 Zahlung ausstehend"],
+  ["13 cadastrados no total","13 registered in total","13 registrados en total","共 13 个已登记","कुल 13 पंजीकृत","13 مسجلًا إجمالاً","13 enregistrés au total","13 insgesamt registriert"],
+  ["15 eventos de visualização registrados","15 view events recorded","15 eventos de visualización registrados","已记录 15 次浏览事件","15 व्यू इवेंट दर्ज","تم تسجيل 15 حدث مشاهدة","15 événements de vue enregistrés","15 Aufrufereignisse erfasst"],
+  ["7 dias","7 days","7 días","7 天","7 दिन","7 أيام","7 jours","7 Tage"],
+  ["30 dias","30 days","30 días","30 天","30 दिन","30 يومًا","30 jours","30 Tage"],
+  ["90 dias","90 days","90 días","90 天","90 दिन","90 يومًا","90 jours","90 Tage"],
+  ["2 views · 4 venda(s)","2 views · 4 sale(s)","2 visualizaciones · 4 venta(s)","2 次浏览 · 4 笔销售","2 व्यू · 4 बिक्री","2 مشاهدة · 4 مبيعات","2 vues · 4 vente(s)","2 Aufrufe · 4 Verkauf/Verkäufe"],
+  ["PAINEL ADMINISTRATIVO","ADMIN PANEL","PANEL ADMINISTRATIVO","管理后台","एडमिन पैनल","لوحة الإدارة","PANNEAU D’ADMINISTRATION","ADMIN-BEREICH"],
+  ["VISÃO GERAL","OVERVIEW","RESUMEN","概览","अवलोकन","نظرة عامة","VUE D’ENSEMBLE","ÜBERSICHT"],
+  ["RECEITA CONFIRMADA","CONFIRMED REVENUE","INGRESOS CONFIRMADOS","已确认收入","पुष्ट आय","الإيرادات المؤكدة","CHIFFRE D’AFFAIRES CONFIRMÉ","BESTÄTIGTER UMSATZ"],
+  ["PEDIDOS","ORDERS","PEDIDOS","订单","ऑर्डर","الطلبات","COMMANDES","BESTELLUNGEN"],
+  ["PRODUTOS ATIVOS","ACTIVE PRODUCTS","PRODUCTOS ACTIVOS","在售商品","सक्रिय उत्पाद","المنتجات النشطة","PRODUITS ACTIFS","AKTIVE PRODUKTE"],
+  ["VISUALIZAÇÕES","VIEWS","VISUALIZACIONES","浏览量","व्यूज़","المشاهدات","VUES","AUFRUFE"],
+  ["VENDAS","SALES","VENTAS","销售","बिक्री","المبيعات","VENTES","VERKÄUFE"],
+  ["Receita por dia","Revenue by day","Ingresos por día","每日收入","दैनिक आय","الإيرادات اليومية","Chiffre d’affaires par jour","Umsatz pro Tag"],
+  ["DESEMPENHO","PERFORMANCE","RENDIMIENTO","表现","प्रदर्शन","الأداء","PERFORMANCE","LEISTUNG"],
+  ["Produtos em destaque","Top products","Productos destacados","热门商品","प्रमुख उत्पाद","المنتجات المميزة","Produits en vedette","Top-Produkte"],
+  ["Pedidos e vendas","Orders & sales","Pedidos y ventas","订单与销售","ऑर्डर और बिक्री","الطلبات والمبيعات","Commandes et ventes","Bestellungen & Verkäufe"],
+  ["Problemas e suporte","Issues & support","Problemas y soporte","问题与支持","समस्याएँ और सहायता","المشكلات والدعم","Problèmes et assistance","Probleme & Support"],
+  ["Produtos","Products","Productos","商品","उत्पाद","المنتجات","Produits","Produkte"],
+  ["Agendamentos","Schedules","Programaciones","计划任务","शेड्यूल","الجدولة","Planifications","Zeitpläne"],
+  ["Avaliações","Reviews","Reseñas","评价","समीक्षाएँ","التقييمات","Avis","Bewertungen"],
+  ["Usuários","Users","Usuarios","用户","उपयोगकर्ता","المستخدمون","Utilisateurs","Benutzer"],
+  ["Integrações","Integrations","Integraciones","集成","इंटीग्रेशन","التكاملات","Intégrations","Integrationen"],
+  ["Administradores","Administrators","Administradores","管理员","एडमिनिस्ट्रेटर","المسؤولون","Administrateurs","Administratoren"],
+  ["← Voltar para a loja","← Back to store","← Volver a la tienda","← 返回商店","← स्टोर पर वापस","← العودة إلى المتجر","← Retour à la boutique","← Zurück zum Shop"],
+  ["Modo claro","Light mode","Modo claro","浅色模式","लाइट मोड","الوضع الفاتح","Mode clair","Heller Modus"],
+  ["Alterar aparência","Change appearance","Cambiar apariencia","更改外观","दिखावट बदलें","تغيير المظهر","Changer l’apparence","Darstellung ändern"],
+  ["Atualizar","Refresh","Actualizar","刷新","रीफ़्रेश","تحديث","Actualiser","Aktualisieren"],
+];
+
 const INDEX = { "en-US": 1, "es-ES": 2, "zh-CN": 3, "hi-IN": 4, "ar-SA": 5, "fr-FR": 6, "de-DE": 7 };
-const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS, ...ADMIN_ROWS].map((row) => [row[0], row]));
+const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS, ...ADMIN_ROWS, ...ADMIN_FIX_ROWS].map((row) => [row[0], row]));
 
 
 const PRODUCT_NAME_REPLACEMENTS = {

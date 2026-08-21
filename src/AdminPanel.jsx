@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "./lib/supabase";
 import { useSitePopup } from "./SitePopup";
+import { translateDom } from "./i18n";
 import "./admin.css";
 
 const SUCCESS_ORDER_STATUSES = ["paid", "processing", "completed"];
@@ -186,6 +187,7 @@ function issueStatusClass(status) {
 export default function AdminPanel({
   currentUser,
   isOwner,
+  language = "pt-BR",
   theme = "dark",
   onToggleTheme,
   onBack,
@@ -198,6 +200,27 @@ export default function AdminPanel({
     hideSiteLoading,
     runWithSiteLoading,
   } = useSitePopup();
+
+  const adminI18nTextMemoryRef = useRef(new WeakMap());
+  const adminI18nAttrMemoryRef = useRef(new WeakMap());
+
+  // O painel possui muitos textos gerados por estado e dados do Supabase.
+  // Traduzimos novamente depois de cada render do React para evitar que
+  // uma atualização de Dashboard/Pedidos/Produtos restaure o português.
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const root = document.getElementById("root");
+      if (!root) return;
+      translateDom(
+        root,
+        language,
+        adminI18nTextMemoryRef.current,
+        adminI18nAttrMemoryRef.current
+      );
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  });
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
