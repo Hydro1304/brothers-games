@@ -3257,7 +3257,7 @@ export default function AdminPanel({
 
   return (
     <>
-      <div className="admin-app">
+      <div className="admin-app" data-admin-language={language} dir={language === "ar-SA" ? "rtl" : "ltr"}>
       <aside className="admin-sidebar">
         <button className="admin-brand" onClick={onBack}>
           <span>BROTHER'S</span>

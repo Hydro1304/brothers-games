@@ -750,8 +750,97 @@ const ADMIN_FIX_ROWS = [
   ["Atualizar","Refresh","Actualizar","刷新","रीफ़्रेश","تحديث","Actualiser","Aktualisieren"],
 ];
 
+
+const FULL_SITE_FIX_ROWS = [
+  ["GERENCIAR PEDIDO","MANAGE ORDER","GESTIONAR PEDIDO","管理订单","ऑर्डर प्रबंधित करें","إدارة الطلب","GÉRER LA COMMANDE","BESTELLUNG VERWALTEN"],
+  ["Problemas com pedidos","Order issues","Problemas con pedidos","订单问题","ऑर्डर समस्याएँ","مشكلات الطلبات","Problèmes de commande","Bestellprobleme"],
+  ["Analise solicitações abertas até 5 dias após a entrega e converse com o cliente.","Review requests opened up to 5 days after delivery and chat with the customer.","Analiza solicitudes abiertas hasta 5 días después de la entrega y conversa con el cliente.","审核送达后 5 天内提交的请求并与客户沟通。","डिलीवरी के 5 दिनों के भीतर खोले गए अनुरोधों की समीक्षा करें और ग्राहक से चैट करें।","راجع الطلبات المفتوحة خلال 5 أيام من التسليم وتحدث مع العميل.","Analysez les demandes ouvertes jusqu’à 5 jours après la livraison et échangez avec le client.","Prüfe Anfragen, die bis zu 5 Tage nach der Lieferung geöffnet wurden, und chatte mit dem Kunden."],
+  ["Em aberto","Open","Abierto","处理中","खुला","مفتوح","Ouvert","Offen"],
+  ["Nenhuma solicitação encontrada neste filtro.","No requests found for this filter.","No se encontraron solicitudes con este filtro.","此筛选条件下没有请求。","इस फ़िल्टर में कोई अनुरोध नहीं मिला।","لم يتم العثور على طلبات ضمن هذا الفلتر.","Aucune demande trouvée avec ce filtre.","Keine Anfragen für diesen Filter gefunden."],
+  ["Cadastro em massa","Bulk upload","Carga masiva","批量添加","बल्क अपलोड","إضافة جماعية","Ajout en masse","Massenimport"],
+  ["CADASTRO EM MASSA","BULK UPLOAD","CARGA MASIVA","批量添加","बल्क अपलोड","إضافة جماعية","AJOUT EN MASSE","MASSENIMPORT"],
+  ["+ Novo produto","+ New product","+ Nuevo producto","+ 新商品","+ नया उत्पाद","+ منتج جديد","+ Nouveau produit","+ Neues Produkt"],
+  ["Gerencie, encontre e filtre rapidamente os produtos da loja.","Manage, find and quickly filter store products.","Gestiona, encuentra y filtra rápidamente los productos de la tienda.","快速管理、查找和筛选商店商品。","स्टोर के उत्पादों को जल्दी प्रबंधित, खोज और फ़िल्टर करें।","أدِر منتجات المتجر وابحث عنها وصفِّها بسرعة.","Gérez, trouvez et filtrez rapidement les produits de la boutique.","Verwalte, finde und filtere Shop-Produkte schnell."],
+  ["Em oferta","On sale","En oferta","促销中","ऑफर पर","ضمن عرض","En promotion","Im Angebot"],
+  ["Agendados","Scheduled","Programados","已计划","शेड्यूल किए गए","مجدولة","Planifiés","Geplant"],
+  ["Rascunhos","Drafts","Borradores","草稿","ड्राफ़्ट","مسودات","Brouillons","Entwürfe"],
+  ["Arquivados","Archived","Archivados","已归档","आर्काइव किए गए","مؤرشفة","Archivés","Archiviert"],
+  ["Todas as categorias","All categories","Todas las categorías","所有分类","सभी श्रेणियाँ","كل الفئات","Toutes les catégories","Alle Kategorien"],
+  ["PREÇO MÍNIMO","MINIMUM PRICE","PRECIO MÍNIMO","最低价格","न्यूनतम कीमत","الحد الأدنى للسعر","PRIX MINIMUM","MINDESTPREIS"],
+  ["PREÇO MÁXIMO","MAXIMUM PRICE","PRECIO MÁXIMO","最高价格","अधिकतम कीमत","الحد الأقصى للسعر","PRIX MAXIMUM","HÖCHSTPREIS"],
+  ["Preço mínimo","Minimum price","Precio mínimo","最低价格","न्यूनतम कीमत","الحد الأدنى للسعر","Prix minimum","Mindestpreis"],
+  ["Preço máximo","Maximum price","Precio máximo","最高价格","अधिकतम कीमत","الحد الأقصى للسعر","Prix maximum","Höchstpreis"],
+  ["Mais recentes","Newest","Más recientes","最新","सबसे नए","الأحدث","Plus récents","Neueste"],
+  ["Maior preço","Highest price","Mayor precio","价格最高","सबसे अधिक कीमत","الأعلى سعراً","Prix le plus élevé","Höchster Preis"],
+  ["Menor preço","Lowest price","Menor precio","价格最低","सबसे कम कीमत","الأقل سعراً","Prix le plus bas","Niedrigster Preis"],
+  ["LIMPAR FILTROS","CLEAR FILTERS","LIMPIAR FILTROS","清除筛选","फ़िल्टर साफ़ करें","مسح الفلاتر","EFFACER LES FILTRES","FILTER LÖSCHEN"],
+  ["Limpar filtros","Clear filters","Limpiar filtros","清除筛选","फ़िल्टर साफ़ करें","مسح الفلاتر","Effacer les filtres","Filter löschen"],
+  ["Exibindo produtos de todos os status.","Showing products from all statuses.","Mostrando productos de todos los estados.","显示所有状态的商品。","सभी स्टेटस के उत्पाद दिखाए जा रहे हैं।","عرض المنتجات من جميع الحالات.","Affichage des produits de tous les statuts.","Produkte aller Status werden angezeigt."],
+  ["Estoque disponível:","Available stock:","Stock disponible:","可用库存：","उपलब्ध स्टॉक:","المخزون المتاح:","Stock disponible :","Verfügbarer Bestand:"],
+  ["Editar","Edit","Editar","编辑","संपादित करें","تعديل","Modifier","Bearbeiten"],
+  ["Arquivar","Archive","Archivar","归档","आर्काइव करें","أرشفة","Archiver","Archivieren"],
+  ["Excluir","Delete","Eliminar","删除","हटाएँ","حذف","Supprimer","Löschen"],
+  ["Ativo","Active","Activo","启用","सक्रिय","نشط","Actif","Aktiv"],
+  ["Digital — sem frete","Digital — no shipping","Digital — sin envío","数字商品 — 无需配送","डिजिटल — शिपिंग नहीं","رقمي — بدون شحن","Numérique — sans livraison","Digital — kein Versand"],
+  ["Físico — calcular frete","Physical — calculate shipping","Físico — calcular envío","实体商品 — 计算运费","भौतिक — शिपिंग गणना","مادي — حساب الشحن","Physique — calculer la livraison","Physisch — Versand berechnen"],
+  ["Categoria","Category","Categoría","分类","श्रेणी","الفئة","Catégorie","Kategorie"],
+  ["Descrição","Description","Descripción","描述","विवरण","الوصف","Description","Beschreibung"],
+  ["Estoque","Stock","Stock","库存","स्टॉक","المخزون","Stock","Bestand"],
+  ["Quantidade em estoque","Stock quantity","Cantidad en stock","库存数量","स्टॉक मात्रा","كمية المخزون","Quantité en stock","Bestandsmenge"],
+  ["Tipo de entrega","Delivery type","Tipo de entrega","配送类型","डिलीवरी प्रकार","نوع التوصيل","Type de livraison","Lieferart"],
+  ["PAGAMENTO","PAYMENT","PAGO","付款","भुगतान","الدفع","PAIEMENT","ZAHLUNG"],
+  ["PEDIDO","ORDER","PEDIDO","订单","ऑर्डर","الطلب","COMMANDE","BESTELLUNG"],
+  ["CLIENTE","CUSTOMER","CLIENTE","客户","ग्राहक","العميل","CLIENT","KUNDE"],
+  ["VALOR DO PEDIDO","ORDER VALUE","VALOR DEL PEDIDO","订单金额","ऑर्डर मूल्य","قيمة الطلب","MONTANT DE LA COMMANDE","BESTELLWERT"],
+  ["OBSERVAÇÃO PARA O CLIENTE (OPCIONAL)","NOTE TO CUSTOMER (OPTIONAL)","NOTA PARA EL CLIENTE (OPCIONAL)","给客户的备注（可选）","ग्राहक के लिए नोट (वैकल्पिक)","ملاحظة للعميل (اختياري)","NOTE AU CLIENT (FACULTATIF)","HINWEIS AN KUNDEN (OPTIONAL)"],
+  ["OBSERVAÇÃO / JUSTIFICATIVA PARA O CLIENTE","NOTE / EXPLANATION FOR CUSTOMER","NOTA / JUSTIFICACIÓN PARA EL CLIENTE","给客户的备注 / 说明","ग्राहक के लिए नोट / स्पष्टीकरण","ملاحظة / توضيح للعميل","NOTE / JUSTIFICATION POUR LE CLIENT","HINWEIS / BEGRÜNDUNG FÜR KUNDEN"],
+  ["PROBLEMA INFORMADO PELO CLIENTE","ISSUE REPORTED BY CUSTOMER","PROBLEMA INFORMADO POR EL CLIENTE","客户报告的问题","ग्राहक द्वारा रिपोर्ट की गई समस्या","المشكلة التي أبلغ عنها العميل","PROBLÈME SIGNALÉ PAR LE CLIENT","VOM KUNDEN GEMELDETES PROBLEM"],
+  ["SUPORTE DO PEDIDO","ORDER SUPPORT","SOPORTE DEL PEDIDO","订单支持","ऑर्डर सहायता","دعم الطلب","ASSISTANCE COMMANDE","BESTELLSUPPORT"],
+  ["Cliente ↔ suporte","Customer ↔ support","Cliente ↔ soporte","客户 ↔ 支持","ग्राहक ↔ सहायता","العميل ↔ الدعم","Client ↔ assistance","Kunde ↔ Support"],
+  ["Nenhuma mensagem enviada ainda.","No messages sent yet.","Aún no se enviaron mensajes.","尚未发送消息。","अभी तक कोई संदेश नहीं भेजा गया।","لم يتم إرسال أي رسائل بعد.","Aucun message envoyé pour le moment.","Noch keine Nachrichten gesendet."],
+  ["Digite uma mensagem para o cliente...","Type a message to the customer...","Escribe un mensaje al cliente...","给客户输入消息...","ग्राहक को संदेश लिखें...","اكتب رسالة للعميل...","Écrivez un message au client...","Nachricht an den Kunden eingeben..."],
+  ["ENVIAR","SEND","ENVIAR","发送","भेजें","إرسال","ENVOYER","SENDEN"],
+  ["RESOLVIDO","RESOLVED","RESUELTO","已解决","समाधान हो गया","تم الحل","RÉSOLU","GELÖST"],
+  ["Resolvido","Resolved","Resuelto","已解决","समाधान हो गया","تم الحل","Résolu","Gelöst"],
+  ["Reembolsado","Refunded","Reembolsado","已退款","रिफंड हुआ","تم الاسترداد","Remboursé","Erstattet"],
+  ["Expirado","Expired","Caducado","已过期","समाप्त","منتهي الصلاحية","Expiré","Abgelaufen"],
+  ["Pedido encerrado","Order closed","Pedido cerrado","订单已关闭","ऑर्डर बंद","تم إغلاق الطلب","Commande clôturée","Bestellung geschlossen"],
+  ["Order closed","Order closed","Pedido cerrado","订单已关闭","ऑर्डर बंद","تم إغلاق الطلب","Commande clôturée","Bestellung geschlossen"],
+  ["Aguardando pagamento","Awaiting payment","Esperando pago","等待付款","भुगतान की प्रतीक्षा","بانتظار الدفع","En attente de paiement","Zahlung ausstehend"],
+  ["Pagamento aprovado","Payment approved","Pago aprobado","付款已批准","भुगतान स्वीकृत","تمت الموافقة على الدفع","Paiement approuvé","Zahlung genehmigt"],
+  ["Pagamento concluído","Payment completed","Pago completado","付款已完成","भुगतान पूरा","اكتمل الدفع","Paiement terminé","Zahlung abgeschlossen"],
+  ["Preparando pedido","Preparing order","Preparando pedido","正在准备订单","ऑर्डर तैयार हो रहा है","جارٍ تجهيز الطلب","Préparation de la commande","Bestellung wird vorbereitet"],
+  ["Pedido enviado","Order shipped","Pedido enviado","订单已发货","ऑर्डर भेजा गया","تم شحن الطلب","Commande expédiée","Bestellung versendet"],
+  ["Gerenciar pedido","Manage order","Gestionar pedido","管理订单","ऑर्डर प्रबंधित करें","إدارة الطلب","Gérer la commande","Bestellung verwalten"],
+  ["Todas","All","Todas","全部","सभी","الكل","Toutes","Alle"],
+  ["Todos os status","All statuses","Todos los estados","所有状态","सभी स्टेटस","كل الحالات","Tous les statuts","Alle Status"],
+  ["Nenhum pedido encontrado.","No orders found.","No se encontraron pedidos.","未找到订单。","कोई ऑर्डर नहीं मिला।","لم يتم العثور على طلبات.","Aucune commande trouvée.","Keine Bestellungen gefunden."],
+  ["Nenhum produto encontrado","No products found","No se encontraron productos","未找到商品","कोई उत्पाद नहीं मिला","لم يتم العثور على منتجات","Aucun produit trouvé","Keine Produkte gefunden"],
+  ["Nenhuma avaliação neste filtro.","No reviews for this filter.","No hay reseñas con este filtro.","此筛选条件下没有评价。","इस फ़िल्टर में कोई समीक्षा नहीं।","لا توجد تقييمات ضمن هذا الفلتر.","Aucun avis pour ce filtre.","Keine Bewertungen für diesen Filter."],
+  ["Nenhum agendamento ativo.","No active schedules.","No hay programaciones activas.","没有活动计划。","कोई सक्रिय शेड्यूल नहीं।","لا توجد جداول نشطة.","Aucune planification active.","Keine aktiven Zeitpläne."],
+  ["Vendas","Sales","Ventas","销售","बिक्री","المبيعات","Ventes","Verkäufe"],
+  ["Visualizações, carrinho, checkout, vendas e conversão por produto.","Views, cart, checkout, sales and conversion by product.","Visualizaciones, carrito, checkout, ventas y conversión por producto.","按商品查看浏览、购物车、结账、销售和转化。","उत्पाद के अनुसार व्यू, कार्ट, चेकआउट, बिक्री और कन्वर्ज़न।","المشاهدات والسلة والدفع والمبيعات والتحويل حسب المنتج.","Vues, panier, paiement, ventes et conversion par produit.","Aufrufe, Warenkorb, Checkout, Verkäufe und Conversion pro Produkt."],
+  ["✅ Bom: possui vendas e/ou boa conversão.","✅ Good: has sales and/or good conversion.","✅ Bueno: tiene ventas y/o buena conversión.","✅ 良好：有销售和/或转化率良好。","✅ अच्छा: बिक्री और/या अच्छा कन्वर्ज़न।","✅ جيد: توجد مبيعات و/أو معدل تحويل جيد.","✅ Bon : ventes et/ou bonne conversion.","✅ Gut: Verkäufe und/oder gute Conversion."],
+  ["🟡 Atenção: bastante interesse, mas poucas vendas.","🟡 Attention: high interest, but few sales.","🟡 Atención: mucho interés, pero pocas ventas.","🟡 注意：兴趣较高，但销售较少。","🟡 ध्यान: रुचि अधिक, बिक्री कम।","🟡 تنبيه: اهتمام كبير لكن مبيعات قليلة.","🟡 Attention : beaucoup d’intérêt, mais peu de ventes.","🟡 Achtung: großes Interesse, aber wenige Verkäufe."],
+  ["❌ Fraco: sem vendas e com pouco tráfego.","❌ Weak: no sales and low traffic.","❌ Débil: sin ventas y con poco tráfico.","❌ 较弱：无销售且流量较低。","❌ कमजोर: बिक्री नहीं और ट्रैफ़िक कम।","❌ ضعيف: لا مبيعات وحركة منخفضة.","❌ Faible : aucune vente et peu de trafic.","❌ Schwach: keine Verkäufe und wenig Traffic."],
+  ["Permissão solicitada agora","Permission currently requested","Permiso solicitado actualmente","当前请求的权限","अभी अनुरोधित अनुमति","الصلاحية المطلوبة حالياً","Autorisation actuellement demandée","Aktuell angeforderte Berechtigung"],
+  ["Melhor Envio conectado","Melhor Envio connected","Melhor Envio conectado","Melhor Envio 已连接","Melhor Envio कनेक्टेड","Melhor Envio متصل","Melhor Envio connecté","Melhor Envio verbunden"],
+  ["Frete e transportadoras","Shipping & carriers","Envío y transportistas","配送与承运商","शिपिंग और कैरियर","الشحن وشركات النقل","Livraison et transporteurs","Versand & Dienstleister"],
+  ["Conectar cálculo de frete","Connect shipping calculation","Conectar cálculo de envío","连接运费计算","शिपिंग गणना कनेक्ट करें","ربط حساب الشحن","Connecter le calcul de livraison","Versandberechnung verbinden"],
+  ["Conexão protegida","Secure connection","Conexión protegida","安全连接","सुरक्षित कनेक्शन","اتصال آمن","Connexion sécurisée","Sichere Verbindung"],
+  ["Conta principal","Primary account","Cuenta principal","主账户","मुख्य खाता","الحساب الرئيسي","Compte principal","Hauptkonto"],
+  ["Promover uma conta existente","Promote an existing account","Promover una cuenta existente","提升现有账户","मौजूदा खाते को प्रमोट करें","ترقية حساب موجود","Promouvoir un compte existant","Bestehendes Konto hochstufen"],
+  ["NOVO ADMIN","NEW ADMIN","NUEVO ADMIN","新管理员","नया एडमिन","مسؤول جديد","NOUVEL ADMIN","NEUER ADMIN"],
+  ["MANTER PRODUTO","KEEP PRODUCT","MANTENER PRODUCTO","保留商品","उत्पाद रखें","الإبقاء على المنتج","CONSERVER LE PRODUIT","PRODUKT BEHALTEN"],
+  ["ARQUIVAR","ARCHIVE","ARCHIVAR","归档","आर्काइव","أرشفة","ARCHIVER","ARCHIVIEREN"],
+  ["EXCLUIR PRODUTO","DELETE PRODUCT","ELIMINAR PRODUCTO","删除商品","उत्पाद हटाएँ","حذف المنتج","SUPPRIMER LE PRODUIT","PRODUKT LÖSCHEN"],
+  ["EDITAR","EDIT","EDITAR","编辑","संपादित करें","تعديل","MODIFIER","BEARBEITEN"],
+  ["VOLTAR","BACK","VOLVER","返回","वापस","رجوع","RETOUR","ZURÜCK"],
+  ["STATUS","STATUS","ESTADO","状态","स्टेटस","الحالة","STATUT","STATUS"]
+];
+
 const INDEX = { "en-US": 1, "es-ES": 2, "zh-CN": 3, "hi-IN": 4, "ar-SA": 5, "fr-FR": 6, "de-DE": 7 };
-const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS, ...ADMIN_ROWS, ...ADMIN_FIX_ROWS].map((row) => [row[0], row]));
+const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS, ...ADMIN_ROWS, ...ADMIN_FIX_ROWS, ...FULL_SITE_FIX_ROWS].map((row) => [row[0], row]));
 
 
 const PRODUCT_NAME_REPLACEMENTS = {
@@ -1001,6 +1090,178 @@ export function languageMeta(code) {
   return LANGUAGES.find((item) => item.code === code) || LANGUAGES[0];
 }
 
+
+const GENERIC_FALLBACK_RULES = {
+  "en-US": [
+    ["solicitação(ões)","request(s)"],["interação(ões)","interaction(s)"],["venda(s)","sale(s)"],["pedido(s)","order(s)"],["produto(s)","product(s)"],
+    ["cadastrado(s)","registered"],["pago(s)","paid"],["concluído(s)","completed"],["dia(s) útil(eis)","business day(s)"],
+    ["aguardando pagamento","awaiting payment"],["pagamento aprovado","payment approved"],["pagamento concluído","payment completed"],
+    ["pedido encerrado","order closed"],["pedido enviado","order shipped"],["pedido reembolsado","order refunded"],["pedido cancelado","order cancelled"],
+    ["nenhuma solicitação","no requests"],["nenhum produto","no products"],["nenhum pedido","no orders"],["nenhuma avaliação","no reviews"],
+    ["encontrada neste filtro","found for this filter"],["encontrado","found"],["encontrados","found"],
+    ["cadastro em massa","bulk upload"],["novo produto","new product"],["todas as categorias","all categories"],
+    ["preço mínimo","minimum price"],["preço máximo","maximum price"],["mais recentes","newest"],["maior preço","highest price"],["menor preço","lowest price"],
+    ["limpar filtros","clear filters"],["em oferta","on sale"],["agendados","scheduled"],["rascunhos","drafts"],["arquivados","archived"],
+    ["estoque disponível","available stock"],["estoque","stock"],["categoria","category"],["descrição","description"],["produto","product"],["produtos","products"],
+    ["pedidos","orders"],["vendas","sales"],["venda","sale"],["visualizações","views"],["usuários","users"],["avaliações","reviews"],
+    ["agendamentos","schedules"],["administradores","administrators"],["integrações","integrations"],["suporte","support"],["problemas","issues"],
+    ["cliente","customer"],["clientes","customers"],["pagamento","payment"],["frete","shipping"],["entrega","delivery"],["reembolso","refund"],
+    ["editar","edit"],["arquivar","archive"],["excluir","delete"],["salvar","save"],["enviar","send"],["voltar","back"],
+    ["ativo","active"],["ativos","active"],["pendente","pending"],["resolvido","resolved"],["reembolsado","refunded"],["expirado","expired"],
+    ["todos os status","all statuses"],["todos","all"],["todas","all"],["em aberto","open"],["modo claro","light mode"],["modo escuro","dark mode"],
+    ["alterar aparência","change appearance"],["atualizar","refresh"],["receita por dia","revenue by day"],["receita confirmada","confirmed revenue"],
+    ["produtos ativos","active products"],["produtos em destaque","top products"],["visão geral","overview"],["painel administrativo","admin panel"],
+    ["gerenciar pedido","manage order"],["problemas com pedidos","order issues"],["pedidos e vendas","orders & sales"],
+    ["não foi possível","could not"],["não feche","do not close"],["aguarde","please wait"],["carregando","loading"],["atualizando","updating"],
+    ["salvando","saving"],["enviando","sending"],["processando","processing"],["criando","creating"],["publicando","publishing"],["arquivando","archiving"],
+    ["nenhuma","no"],["nenhum","no"],["disponível","available"],["disponíveis","available"],["selecionado","selected"],["selecionados","selected"],
+    ["preço","price"],["nome","name"],["telefone","phone"],["endereço","address"],["cidade","city"],["estado","state"],["dados","details"],
+    ["conta","account"],["senha","password"],["foto","photo"],["imagem","image"],["mensagem","message"],["status","status"],
+    ["dias","days"],["dia","day"],["até","to"],["de","from"]
+  ],
+  "es-ES": [
+    ["solicitação(ões)","solicitud(es)"],["interação(ões)","interacción(es)"],["venda(s)","venta(s)"],["pedido(s)","pedido(s)"],["produto(s)","producto(s)"],
+    ["aguardando pagamento","esperando pago"],["pagamento aprovado","pago aprobado"],["pedido encerrado","pedido cerrado"],["pedido enviado","pedido enviado"],
+    ["cadastro em massa","carga masiva"],["novo produto","nuevo producto"],["todas as categorias","todas las categorías"],["preço mínimo","precio mínimo"],["preço máximo","precio máximo"],
+    ["mais recentes","más recientes"],["limpar filtros","limpiar filtros"],["em oferta","en oferta"],["agendados","programados"],["rascunhos","borradores"],["arquivados","archivados"],
+    ["estoque disponível","stock disponible"],["estoque","stock"],["categoria","categoría"],["descrição","descripción"],["produto","producto"],["produtos","productos"],
+    ["pedidos","pedidos"],["vendas","ventas"],["visualizações","visualizaciones"],["usuários","usuarios"],["avaliações","reseñas"],["agendamentos","programaciones"],
+    ["administradores","administradores"],["integrações","integraciones"],["suporte","soporte"],["problemas","problemas"],["cliente","cliente"],["pagamento","pago"],
+    ["frete","envío"],["entrega","entrega"],["reembolso","reembolso"],["editar","editar"],["arquivar","archivar"],["excluir","eliminar"],["salvar","guardar"],["enviar","enviar"],
+    ["voltar","volver"],["ativo","activo"],["ativos","activos"],["pendente","pendiente"],["resolvido","resuelto"],["reembolsado","reembolsado"],["expirado","caducado"],
+    ["todos os status","todos los estados"],["todos","todos"],["todas","todas"],["em aberto","abierto"],["modo claro","modo claro"],["modo escuro","modo oscuro"],
+    ["alterar aparência","cambiar apariencia"],["atualizar","actualizar"],["receita por dia","ingresos por día"],["receita confirmada","ingresos confirmados"],
+    ["produtos ativos","productos activos"],["produtos em destaque","productos destacados"],["visão geral","resumen"],["painel administrativo","panel administrativo"],
+    ["gerenciar pedido","gestionar pedido"],["problemas com pedidos","problemas con pedidos"],["pedidos e vendas","pedidos y ventas"],["não foi possível","no se pudo"],
+    ["não feche","no cierres"],["aguarde","espera"],["carregando","cargando"],["atualizando","actualizando"],["salvando","guardando"],["enviando","enviando"],
+    ["processando","procesando"],["nenhuma","ninguna"],["nenhum","ningún"],["disponível","disponible"],["preço","precio"],["nome","nombre"],["telefone","teléfono"],
+    ["endereço","dirección"],["cidade","ciudad"],["estado","estado"],["dados","datos"],["conta","cuenta"],["senha","contraseña"],["foto","foto"],["imagem","imagen"],
+    ["mensagem","mensaje"],["dias","días"],["dia","día"]
+  ],
+  "fr-FR": [
+    ["solicitação(ões)","demande(s)"],["interação(ões)","interaction(s)"],["venda(s)","vente(s)"],["pedido(s)","commande(s)"],["produto(s)","produit(s)"],
+    ["aguardando pagamento","en attente de paiement"],["pagamento aprovado","paiement approuvé"],["pedido encerrado","commande clôturée"],["pedido enviado","commande expédiée"],
+    ["cadastro em massa","ajout en masse"],["novo produto","nouveau produit"],["todas as categorias","toutes les catégories"],["preço mínimo","prix minimum"],["preço máximo","prix maximum"],
+    ["mais recentes","plus récents"],["limpar filtros","effacer les filtres"],["em oferta","en promotion"],["agendados","planifiés"],["rascunhos","brouillons"],["arquivados","archivés"],
+    ["estoque disponível","stock disponible"],["estoque","stock"],["categoria","catégorie"],["descrição","description"],["produto","produit"],["produtos","produits"],
+    ["pedidos","commandes"],["vendas","ventes"],["visualizações","vues"],["usuários","utilisateurs"],["avaliações","avis"],["agendamentos","planifications"],
+    ["administradores","administrateurs"],["integrações","intégrations"],["suporte","assistance"],["problemas","problèmes"],["cliente","client"],["pagamento","paiement"],
+    ["frete","livraison"],["entrega","livraison"],["reembolso","remboursement"],["editar","modifier"],["arquivar","archiver"],["excluir","supprimer"],["salvar","enregistrer"],
+    ["enviar","envoyer"],["voltar","retour"],["ativo","actif"],["ativos","actifs"],["pendente","en attente"],["resolvido","résolu"],["reembolsado","remboursé"],["expirado","expiré"],
+    ["todos os status","tous les statuts"],["todos","tous"],["todas","toutes"],["em aberto","ouvert"],["modo claro","mode clair"],["modo escuro","mode sombre"],
+    ["alterar aparência","changer l’apparence"],["atualizar","actualiser"],["receita por dia","chiffre d’affaires par jour"],["receita confirmada","chiffre d’affaires confirmé"],
+    ["produtos ativos","produits actifs"],["produtos em destaque","produits en vedette"],["visão geral","vue d’ensemble"],["painel administrativo","panneau d’administration"],
+    ["gerenciar pedido","gérer la commande"],["problemas com pedidos","problèmes de commande"],["pedidos e vendas","commandes et ventes"],["não foi possível","impossible de"],
+    ["não feche","ne fermez pas"],["aguarde","veuillez patienter"],["carregando","chargement"],["atualizando","mise à jour"],["salvando","enregistrement"],
+    ["enviando","envoi"],["processando","traitement"],["nenhuma","aucune"],["nenhum","aucun"],["disponível","disponible"],["preço","prix"],["nome","nom"],
+    ["telefone","téléphone"],["endereço","adresse"],["cidade","ville"],["estado","état"],["dados","données"],["conta","compte"],["senha","mot de passe"],["foto","photo"],
+    ["imagem","image"],["mensagem","message"],["dias","jours"],["dia","jour"]
+  ],
+  "de-DE": [
+    ["solicitação(ões)","Anfrage(n)"],["interação(ões)","Interaktion(en)"],["venda(s)","Verkauf/Verkäufe"],["pedido(s)","Bestellung(en)"],["produto(s)","Produkt(e)"],
+    ["aguardando pagamento","Zahlung ausstehend"],["pagamento aprovado","Zahlung genehmigt"],["pedido encerrado","Bestellung geschlossen"],["pedido enviado","Bestellung versendet"],
+    ["cadastro em massa","Massenimport"],["novo produto","neues Produkt"],["todas as categorias","alle Kategorien"],["preço mínimo","Mindestpreis"],["preço máximo","Höchstpreis"],
+    ["mais recentes","neueste"],["limpar filtros","Filter löschen"],["em oferta","im Angebot"],["agendados","geplant"],["rascunhos","Entwürfe"],["arquivados","archiviert"],
+    ["estoque disponível","verfügbarer Bestand"],["estoque","Bestand"],["categoria","Kategorie"],["descrição","Beschreibung"],["produto","Produkt"],["produtos","Produkte"],
+    ["pedidos","Bestellungen"],["vendas","Verkäufe"],["visualizações","Aufrufe"],["usuários","Benutzer"],["avaliações","Bewertungen"],["agendamentos","Zeitpläne"],
+    ["administradores","Administratoren"],["integrações","Integrationen"],["suporte","Support"],["problemas","Probleme"],["cliente","Kunde"],["pagamento","Zahlung"],
+    ["frete","Versand"],["entrega","Lieferung"],["reembolso","Erstattung"],["editar","bearbeiten"],["arquivar","archivieren"],["excluir","löschen"],["salvar","speichern"],
+    ["enviar","senden"],["voltar","zurück"],["ativo","aktiv"],["ativos","aktiv"],["pendente","ausstehend"],["resolvido","gelöst"],["reembolsado","erstattet"],["expirado","abgelaufen"],
+    ["todos os status","alle Status"],["todos","alle"],["todas","alle"],["em aberto","offen"],["modo claro","heller Modus"],["modo escuro","dunkler Modus"],
+    ["alterar aparência","Darstellung ändern"],["atualizar","aktualisieren"],["receita por dia","Umsatz pro Tag"],["receita confirmada","bestätigter Umsatz"],
+    ["produtos ativos","aktive Produkte"],["produtos em destaque","Top-Produkte"],["visão geral","Übersicht"],["painel administrativo","Admin-Bereich"],
+    ["gerenciar pedido","Bestellung verwalten"],["problemas com pedidos","Bestellprobleme"],["pedidos e vendas","Bestellungen & Verkäufe"],["não foi possível","konnte nicht"],
+    ["não feche","nicht schließen"],["aguarde","bitte warten"],["carregando","wird geladen"],["atualizando","wird aktualisiert"],["salvando","wird gespeichert"],
+    ["enviando","wird gesendet"],["processando","wird verarbeitet"],["nenhuma","keine"],["nenhum","kein"],["disponível","verfügbar"],["preço","Preis"],["nome","Name"],
+    ["telefone","Telefon"],["endereço","Adresse"],["cidade","Stadt"],["estado","Status"],["dados","Daten"],["conta","Konto"],["senha","Passwort"],["foto","Foto"],
+    ["imagem","Bild"],["mensagem","Nachricht"],["dias","Tage"],["dia","Tag"]
+  ],
+  "zh-CN": [
+    ["solicitação(ões)","请求"],["interação(ões)","互动"],["venda(s)","销售"],["pedido(s)","订单"],["produto(s)","商品"],
+    ["aguardando pagamento","等待付款"],["pagamento aprovado","付款已批准"],["pedido encerrado","订单已关闭"],["pedido enviado","订单已发货"],
+    ["cadastro em massa","批量添加"],["novo produto","新商品"],["todas as categorias","所有分类"],["preço mínimo","最低价格"],["preço máximo","最高价格"],
+    ["mais recentes","最新"],["limpar filtros","清除筛选"],["em oferta","促销中"],["agendados","已计划"],["rascunhos","草稿"],["arquivados","已归档"],
+    ["estoque disponível","可用库存"],["estoque","库存"],["categoria","分类"],["descrição","描述"],["produto","商品"],["produtos","商品"],
+    ["pedidos","订单"],["vendas","销售"],["visualizações","浏览量"],["usuários","用户"],["avaliações","评价"],["agendamentos","计划任务"],
+    ["administradores","管理员"],["integrações","集成"],["suporte","支持"],["problemas","问题"],["cliente","客户"],["pagamento","付款"],["frete","配送"],
+    ["entrega","配送"],["reembolso","退款"],["editar","编辑"],["arquivar","归档"],["excluir","删除"],["salvar","保存"],["enviar","发送"],["voltar","返回"],
+    ["ativo","启用"],["ativos","启用"],["pendente","待处理"],["resolvido","已解决"],["reembolsado","已退款"],["expirado","已过期"],["todos os status","所有状态"],
+    ["todos","全部"],["todas","全部"],["em aberto","处理中"],["modo claro","浅色模式"],["modo escuro","深色模式"],["alterar aparência","更改外观"],["atualizar","刷新"],
+    ["receita por dia","每日收入"],["receita confirmada","已确认收入"],["produtos ativos","在售商品"],["produtos em destaque","热门商品"],["visão geral","概览"],
+    ["painel administrativo","管理后台"],["gerenciar pedido","管理订单"],["problemas com pedidos","订单问题"],["pedidos e vendas","订单与销售"],["não foi possível","无法"],
+    ["não feche","请勿关闭"],["aguarde","请稍候"],["carregando","正在加载"],["atualizando","正在更新"],["salvando","正在保存"],["enviando","正在发送"],
+    ["processando","处理中"],["nenhuma","没有"],["nenhum","没有"],["disponível","可用"],["preço","价格"],["nome","名称"],["telefone","电话"],["endereço","地址"],
+    ["cidade","城市"],["estado","状态"],["dados","资料"],["conta","账户"],["senha","密码"],["foto","照片"],["imagem","图片"],["mensagem","消息"],["dias","天"],["dia","天"]
+  ],
+  "hi-IN": [
+    ["solicitação(ões)","अनुरोध"],["interação(ões)","इंटरैक्शन"],["venda(s)","बिक्री"],["pedido(s)","ऑर्डर"],["produto(s)","उत्पाद"],
+    ["aguardando pagamento","भुगतान की प्रतीक्षा"],["pagamento aprovado","भुगतान स्वीकृत"],["pedido encerrado","ऑर्डर बंद"],["pedido enviado","ऑर्डर भेजा गया"],
+    ["cadastro em massa","बल्क अपलोड"],["novo produto","नया उत्पाद"],["todas as categorias","सभी श्रेणियाँ"],["preço mínimo","न्यूनतम कीमत"],["preço máximo","अधिकतम कीमत"],
+    ["mais recentes","सबसे नए"],["limpar filtros","फ़िल्टर साफ़ करें"],["em oferta","ऑफर पर"],["agendados","शेड्यूल किए गए"],["rascunhos","ड्राफ़्ट"],["arquivados","आर्काइव"],
+    ["estoque disponível","उपलब्ध स्टॉक"],["estoque","स्टॉक"],["categoria","श्रेणी"],["descrição","विवरण"],["produto","उत्पाद"],["produtos","उत्पाद"],
+    ["pedidos","ऑर्डर"],["vendas","बिक्री"],["visualizações","व्यूज़"],["usuários","उपयोगकर्ता"],["avaliações","समीक्षाएँ"],["agendamentos","शेड्यूल"],
+    ["administradores","एडमिनिस्ट्रेटर"],["integrações","इंटीग्रेशन"],["suporte","सहायता"],["problemas","समस्याएँ"],["cliente","ग्राहक"],["pagamento","भुगतान"],
+    ["frete","शिपिंग"],["entrega","डिलीवरी"],["reembolso","रिफंड"],["editar","संपादित करें"],["arquivar","आर्काइव करें"],["excluir","हटाएँ"],["salvar","सहेजें"],
+    ["enviar","भेजें"],["voltar","वापस"],["ativo","सक्रिय"],["ativos","सक्रिय"],["pendente","लंबित"],["resolvido","समाधान"],["reembolsado","रिफंड"],["expirado","समाप्त"],
+    ["todos os status","सभी स्टेटस"],["todos","सभी"],["todas","सभी"],["em aberto","खुला"],["modo claro","लाइट मोड"],["modo escuro","डार्क मोड"],
+    ["alterar aparência","दिखावट बदलें"],["atualizar","रीफ़्रेश"],["receita por dia","दैनिक आय"],["receita confirmada","पुष्ट आय"],["produtos ativos","सक्रिय उत्पाद"],
+    ["produtos em destaque","प्रमुख उत्पाद"],["visão geral","अवलोकन"],["painel administrativo","एडमिन पैनल"],["gerenciar pedido","ऑर्डर प्रबंधित करें"],
+    ["problemas com pedidos","ऑर्डर समस्याएँ"],["pedidos e vendas","ऑर्डर और बिक्री"],["não foi possível","नहीं हो सका"],["não feche","बंद न करें"],["aguarde","कृपया प्रतीक्षा करें"],
+    ["carregando","लोड हो रहा है"],["atualizando","अपडेट हो रहा है"],["salvando","सहेजा जा रहा है"],["enviando","भेजा जा रहा है"],["processando","प्रोसेस हो रहा है"],
+    ["nenhuma","कोई नहीं"],["nenhum","कोई नहीं"],["disponível","उपलब्ध"],["preço","कीमत"],["nome","नाम"],["telefone","फ़ोन"],["endereço","पता"],
+    ["cidade","शहर"],["estado","राज्य"],["dados","जानकारी"],["conta","खाता"],["senha","पासवर्ड"],["foto","फ़ोटो"],["imagem","छवि"],["mensagem","संदेश"],
+    ["dias","दिन"],["dia","दिन"]
+  ],
+  "ar-SA": [
+    ["solicitação(ões)","طلب/طلبات"],["interação(ões)","تفاعل/تفاعلات"],["venda(s)","بيع/مبيعات"],["pedido(s)","طلب/طلبات"],["produto(s)","منتج/منتجات"],
+    ["aguardando pagamento","بانتظار الدفع"],["pagamento aprovado","تمت الموافقة على الدفع"],["pedido encerrado","تم إغلاق الطلب"],["pedido enviado","تم شحن الطلب"],
+    ["cadastro em massa","إضافة جماعية"],["novo produto","منتج جديد"],["todas as categorias","كل الفئات"],["preço mínimo","الحد الأدنى للسعر"],["preço máximo","الحد الأقصى للسعر"],
+    ["mais recentes","الأحدث"],["limpar filtros","مسح الفلاتر"],["em oferta","ضمن عرض"],["agendados","مجدولة"],["rascunhos","مسودات"],["arquivados","مؤرشفة"],
+    ["estoque disponível","المخزون المتاح"],["estoque","المخزون"],["categoria","الفئة"],["descrição","الوصف"],["produto","المنتج"],["produtos","المنتجات"],
+    ["pedidos","الطلبات"],["vendas","المبيعات"],["visualizações","المشاهدات"],["usuários","المستخدمون"],["avaliações","التقييمات"],["agendamentos","الجدولة"],
+    ["administradores","المسؤولون"],["integrações","التكاملات"],["suporte","الدعم"],["problemas","المشكلات"],["cliente","العميل"],["pagamento","الدفع"],
+    ["frete","الشحن"],["entrega","التوصيل"],["reembolso","الاسترداد"],["editar","تعديل"],["arquivar","أرشفة"],["excluir","حذف"],["salvar","حفظ"],["enviar","إرسال"],
+    ["voltar","رجوع"],["ativo","نشط"],["ativos","نشط"],["pendente","معلّق"],["resolvido","تم الحل"],["reembolsado","تم الاسترداد"],["expirado","منتهي الصلاحية"],
+    ["todos os status","كل الحالات"],["todos","الكل"],["todas","الكل"],["em aberto","مفتوح"],["modo claro","الوضع الفاتح"],["modo escuro","الوضع الداكن"],
+    ["alterar aparência","تغيير المظهر"],["atualizar","تحديث"],["receita por dia","الإيرادات اليومية"],["receita confirmada","الإيرادات المؤكدة"],
+    ["produtos ativos","المنتجات النشطة"],["produtos em destaque","المنتجات المميزة"],["visão geral","نظرة عامة"],["painel administrativo","لوحة الإدارة"],
+    ["gerenciar pedido","إدارة الطلب"],["problemas com pedidos","مشكلات الطلبات"],["pedidos e vendas","الطلبات والمبيعات"],["não foi possível","تعذر"],
+    ["não feche","لا تغلق"],["aguarde","انتظر"],["carregando","جارٍ التحميل"],["atualizando","جارٍ التحديث"],["salvando","جارٍ الحفظ"],["enviando","جارٍ الإرسال"],
+    ["processando","جارٍ المعالجة"],["nenhuma","لا يوجد"],["nenhum","لا يوجد"],["disponível","متاح"],["preço","السعر"],["nome","الاسم"],["telefone","الهاتف"],
+    ["endereço","العنوان"],["cidade","المدينة"],["estado","الحالة"],["dados","البيانات"],["conta","الحساب"],["senha","كلمة المرور"],["foto","الصورة"],
+    ["imagem","الصورة"],["mensagem","الرسالة"],["dias","أيام"],["dia","يوم"]
+  ]
+};
+
+function preserveFallbackCase(source, translated) {
+  if (!/[A-Za-zÀ-ÿ]/.test(translated)) return translated;
+  if (/^[A-ZÀ-Ý0-9\s()./:+&↔—–_-]+$/.test(source) && /[A-Za-zÀ-ÿ]/.test(source)) {
+    return translated.toUpperCase();
+  }
+  return translated;
+}
+
+function genericFallbackTranslate(value, language) {
+  const rules = GENERIC_FALLBACK_RULES[language];
+  if (!rules?.length) return value;
+
+  let result = String(value);
+  let changed = false;
+  const ordered = [...rules].sort((a, b) => b[0].length - a[0].length);
+
+  for (const [source, translated] of ordered) {
+    if (!source) continue;
+    const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escaped, "giu");
+    if (!regex.test(result)) continue;
+    regex.lastIndex = 0;
+    result = result.replace(regex, (match) => preserveFallbackCase(match, translated));
+    changed = true;
+  }
+
+  return changed ? result : value;
+}
+
 export function translateUiText(value, language) {
   if (language === "pt-BR" || value === null || value === undefined) return String(value ?? "");
   const raw = String(value);
@@ -1013,6 +1274,43 @@ export function translateUiText(value, language) {
   if (row) return `${leading}${row[INDEX[language]] || core}${trailing}`;
 
   // Dynamic counters and order labels.
+
+  const mixedSales = core.match(/^(\d+)\s+views?\s*·\s*(\d+)\s+venda\(s\)$/i);
+  if (mixedSales) {
+    const views = mixedSales[1];
+    const sales = mixedSales[2];
+    const variants = {
+      "en-US": `${views} views · ${sales} sale(s)`,
+      "es-ES": `${views} visualizaciones · ${sales} venta(s)`,
+      "zh-CN": `${views} 次浏览 · ${sales} 笔销售`,
+      "hi-IN": `${views} व्यू · ${sales} बिक्री`,
+      "ar-SA": `${views} مشاهدة · ${sales} مبيعات`,
+      "fr-FR": `${views} vues · ${sales} vente(s)`,
+      "de-DE": `${views} Aufrufe · ${sales} Verkauf/Verkäufe`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
+  const interactions = core.match(/^(\d+)\s+interação\(ões\)$/i);
+  if (interactions) {
+    const n = interactions[1];
+    const variants = {
+      "en-US": `${n} interaction(s)`, "es-ES": `${n} interacción(es)`, "zh-CN": `${n} 次互动`,
+      "hi-IN": `${n} इंटरैक्शन`, "ar-SA": `${n} تفاعل`, "fr-FR": `${n} interaction(s)`, "de-DE": `${n} Interaktion(en)`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
+  const requestsCount = core.match(/^(\d+)\s+solicitação\(ões\)$/i);
+  if (requestsCount) {
+    const n = requestsCount[1];
+    const variants = {
+      "en-US": `${n} request(s)`, "es-ES": `${n} solicitud(es)`, "zh-CN": `${n} 个请求`,
+      "hi-IN": `${n} अनुरोध`, "ar-SA": `${n} طلب`, "fr-FR": `${n} demande(s)`, "de-DE": `${n} Anfrage(n)`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
   const paidOrdersSummary = core.match(/^([0-9]+) pedido\(s\) pago\(s\)\/concluído\(s\)$/i);
   if (paidOrdersSummary) {
     const n = paidOrdersSummary[1];
@@ -1139,6 +1437,11 @@ export function translateUiText(value, language) {
     const id = plainOrder[1];
     const labels = { "en-US":"Order", "es-ES":"Pedido", "zh-CN":"订单", "hi-IN":"ऑर्डर", "ar-SA":"الطلب", "fr-FR":"Commande", "de-DE":"Bestellung" };
     return `${leading}${labels[language] || "Pedido"} ${id}.${trailing}`;
+  }
+
+  const fallback = genericFallbackTranslate(core, language);
+  if (fallback !== core) {
+    return `${leading}${fallback}${trailing}`;
   }
 
   return raw;
