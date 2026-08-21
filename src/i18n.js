@@ -623,8 +623,100 @@ const CURRENCY_ROWS = [
   ["Até","To","Hasta","到","तक","إلى","À","Bis"],
 ];
 
+
+const ADMIN_ROWS = [
+  ["PAINEL ADMINISTRATIVO","ADMIN PANEL","PANEL ADMINISTRATIVO","管理后台","एडमिन पैनल","لوحة الإدارة","PANNEAU D’ADMINISTRATION","ADMIN-BEREICH"],
+  ["VISÃO GERAL","OVERVIEW","RESUMEN","概览","अवलोकन","نظرة عامة","VUE D’ENSEMBLE","ÜBERSICHT"],
+  ["Dashboard","Dashboard","Panel","仪表板","डैशबोर्ड","لوحة التحكم","Tableau de bord","Dashboard"],
+  ["Resumo dos dados reais disponíveis no Supabase.","Summary of real data available in Supabase.","Resumen de los datos reales disponibles en Supabase.","Supabase 中可用真实数据的摘要。","Supabase में उपलब्ध वास्तविक डेटा का सारांश।","ملخص البيانات الفعلية المتاحة في Supabase.","Résumé des données réelles disponibles dans Supabase.","Zusammenfassung der in Supabase verfügbaren Echtzeitdaten."],
+  ["RECEITA CONFIRMADA","CONFIRMED REVENUE","INGRESOS CONFIRMADOS","已确认收入","पुष्ट आय","الإيرادات المؤكدة","CHIFFRE D’AFFAIRES CONFIRMÉ","BESTÄTIGTER UMSATZ"],
+  ["PEDIDOS","ORDERS","PEDIDOS","订单","ऑर्डर","الطلبات","COMMANDES","BESTELLUNGEN"],
+  ["PRODUTOS ATIVOS","ACTIVE PRODUCTS","PRODUCTOS ACTIVOS","在售商品","सक्रिय उत्पाद","المنتجات النشطة","PRODUITS ACTIFS","AKTIVE PRODUKTE"],
+  ["VISUALIZAÇÕES","VIEWS","VISUALIZACIONES","浏览量","व्यूज़","المشاهدات","VUES","AUFRUFE"],
+  ["VENDAS","SALES","VENTAS","销售","बिक्री","المبيعات","VENTES","VERKÄUFE"],
+  ["Receita por dia","Revenue by day","Ingresos por día","每日收入","दैनिक आय","الإيرادات اليومية","Chiffre d’affaires par jour","Umsatz pro Tag"],
+  ["DESEMPENHO","PERFORMANCE","RENDIMIENTO","表现","प्रदर्शन","الأداء","PERFORMANCE","LEISTUNG"],
+  ["Produtos em destaque","Top products","Productos destacados","热门商品","प्रमुख उत्पाद","المنتجات المميزة","Produits en vedette","Top-Produkte"],
+  ["Modo claro","Light mode","Modo claro","浅色模式","लाइट मोड","الوضع الفاتح","Mode clair","Heller Modus"],
+  ["Modo escuro","Dark mode","Modo oscuro","深色模式","डार्क मोड","الوضع الداكن","Mode sombre","Dunkler Modus"],
+  ["Alterar aparência","Change appearance","Cambiar apariencia","更改外观","दिखावट बदलें","تغيير المظهر","Changer l’apparence","Darstellung ändern"],
+  ["Atualizar","Refresh","Actualizar","刷新","रीफ़्रेश","تحديث","Actualiser","Aktualisieren"],
+  ["↻ Atualizar","↻ Refresh","↻ Actualizar","↻ 刷新","↻ रीफ़्रेश","↻ تحديث","↻ Actualiser","↻ Aktualisieren"],
+  ["Pedidos e vendas","Orders & sales","Pedidos y ventas","订单与销售","ऑर्डर और बिक्री","الطلبات والمبيعات","Commandes et ventes","Bestellungen & Verkäufe"],
+  ["Problemas e suporte","Issues & support","Problemas y soporte","问题与支持","समस्याएँ और सहायता","المشكلات والدعم","Problèmes et assistance","Probleme & Support"],
+  ["Produtos","Products","Productos","商品","उत्पाद","المنتجات","Produits","Produkte"],
+  ["Agendamentos","Schedules","Programaciones","计划任务","शेड्यूल","الجدولة","Planifications","Zeitpläne"],
+  ["Analytics","Analytics","Analíticas","分析","एनालिटिक्स","التحليلات","Analyses","Analysen"],
+  ["Avaliações","Reviews","Reseñas","评价","समीक्षाएँ","التقييمات","Avis","Bewertungen"],
+  ["Usuários","Users","Usuarios","用户","उपयोगकर्ता","المستخدمون","Utilisateurs","Benutzer"],
+  ["Integrações","Integrations","Integraciones","集成","इंटीग्रेशन","التكاملات","Intégrations","Integrationen"],
+  ["Administradores","Administrators","Administradores","管理员","एडमिनिस्ट्रेटर","المسؤولون","Administrateurs","Administratoren"],
+  ["← Voltar para a loja","← Back to store","← Volver a la tienda","← 返回商店","← स्टोर पर वापस","← العودة إلى المتجر","← Retour à la boutique","← Zurück zum Shop"],
+  ["Aguardando pagamento","Awaiting payment","Esperando pago","等待付款","भुगतान की प्रतीक्षा","بانتظار الدفع","En attente de paiement","Zahlung ausstehend"],
+  ["Pagamento aprovado","Payment approved","Pago aprobado","付款已批准","भुगतान स्वीकृत","تمت الموافقة على الدفع","Paiement approuvé","Zahlung genehmigt"],
+  ["Pagamento concluído","Payment completed","Pago completado","付款已完成","भुगतान पूरा हुआ","اكتمل الدفع","Paiement terminé","Zahlung abgeschlossen"],
+  ["Preparando pedido","Preparing order","Preparando pedido","正在准备订单","ऑर्डर तैयार हो रहा है","جارٍ تجهيز الطلب","Préparation de la commande","Bestellung wird vorbereitet"],
+  ["Pedido enviado","Order shipped","Pedido enviado","订单已发货","ऑर्डर भेजा गया","تم شحن الطلب","Commande expédiée","Bestellung versendet"],
+  ["Pedido encerrado","Order closed","Pedido cerrado","订单已关闭","ऑर्डर बंद","تم إغلاق الطلب","Commande clôturée","Bestellung geschlossen"],
+  ["Aguardando atualização","Awaiting update","Esperando actualización","等待更新","अपडेट की प्रतीक्षा","بانتظار التحديث","En attente de mise à jour","Update ausstehend"],
+  ["Aguardando análise","Awaiting review","Esperando revisión","等待审核","समीक्षा की प्रतीक्षा","بانتظار المراجعة","En attente d’analyse","Prüfung ausstehend"],
+  ["Em análise","Under review","En revisión","审核中","समीक्षा में","قيد المراجعة","En cours d’analyse","In Prüfung"],
+  ["CATÁLOGO","CATALOG","CATÁLOGO","商品目录","कैटलॉग","الكتالوج","CATALOGUE","KATALOG"],
+  ["Salvar produto","Save product","Guardar producto","保存商品","उत्पाद सहेजें","حفظ المنتج","Enregistrer le produit","Produkt speichern"],
+  ["Cadastrar produto","Add product","Registrar producto","添加商品","उत्पाद जोड़ें","إضافة منتج","Ajouter un produit","Produkt hinzufügen"],
+  ["Editar produto","Edit product","Editar producto","编辑商品","उत्पाद संपादित करें","تعديل المنتج","Modifier le produit","Produkt bearbeiten"],
+  ["Preço","Price","Precio","价格","कीमत","السعر","Prix","Preis"],
+  ["Preço promocional","Sale price","Precio promocional","促销价","प्रमोशनल कीमत","سعر العرض","Prix promotionnel","Aktionspreis"],
+  ["Estoque","Stock","Stock","库存","स्टॉक","المخزون","Stock","Bestand"],
+  ["Produto","Product","Producto","商品","उत्पाद","المنتج","Produit","Produkt"],
+  ["Todos","All","Todos","全部","सभी","الكل","Tous","Alle"],
+  ["Ativos","Active","Activos","启用","सक्रिय","نشط","Actifs","Aktiv"],
+  ["Pendente","Pending","Pendiente","待处理","लंबित","معلّق","En attente","Ausstehend"],
+  ["EDITAR","EDIT","EDITAR","编辑","संपादित करें","تعديل","MODIFIER","BEARBEITEN"],
+  ["ATUALIZAR","UPDATE","ACTUALIZAR","更新","अपडेट करें","تحديث","METTRE À JOUR","AKTUALISIEREN"],
+  ["CANCELAR","CANCEL","CANCELAR","取消","रद्द करें","إلغاء","ANNULER","ABBRECHEN"],
+  ["VOLTAR","BACK","VOLVER","返回","वापस","رجوع","RETOUR","ZURÜCK"],
+  ["CLIENTE","CUSTOMER","CLIENTE","客户","ग्राहक","العميل","CLIENT","KUNDE"],
+  ["SUPORTE","SUPPORT","SOPORTE","支持","सहायता","الدعم","ASSISTANCE","SUPPORT"],
+  ["E-mail indisponível","Email unavailable","Correo no disponible","邮箱不可用","ईमेल उपलब्ध नहीं","البريد غير متاح","E-mail indisponible","E-Mail nicht verfügbar"],
+  ["Sem comentário.","No comment.","Sin comentario.","无评论。","कोई टिप्पणी नहीं।","لا يوجد تعليق.","Aucun commentaire.","Kein Kommentar."],
+  ["Foto da avaliação","Review photo","Foto de la reseña","评价照片","समीक्षा फ़ोटो","صورة التقييم","Photo de l’avis","Bewertungsfoto"],
+  ["Imagem enviada pelo cliente","Image uploaded by customer","Imagen enviada por el cliente","客户上传的图片","ग्राहक द्वारा भेजी गई छवि","صورة أرسلها العميل","Image envoyée par le client","Vom Kunden hochgeladenes Bild"],
+  ["Cartão de crédito","Credit card","Tarjeta de crédito","信用卡","क्रेडिट कार्ड","بطاقة ائتمان","Carte de crédit","Kreditkarte"],
+  ["Pagamento não informado","Payment not provided","Pago no informado","未提供付款方式","भुगतान जानकारी नहीं","الدفع غير محدد","Paiement non renseigné","Zahlung nicht angegeben"],
+  ["Gráfico de receita por dia","Daily revenue chart","Gráfico de ingresos por día","每日收入图表","दैनिक आय चार्ट","مخطط الإيرادات اليومية","Graphique du chiffre d’affaires quotidien","Tägliches Umsatzdiagramm"],
+  ["Buscar por pedido ou e-mail...","Search by order or email...","Buscar por pedido o correo...","按订单或邮箱搜索...","ऑर्डर या ईमेल से खोजें...","البحث بالطلب أو البريد...","Rechercher par commande ou e-mail...","Nach Bestellung oder E-Mail suchen..."],
+  ["Buscar por pedido, e-mail ou descrição...","Search by order, email or description...","Buscar por pedido, correo o descripción...","按订单、邮箱或描述搜索...","ऑर्डर, ईमेल या विवरण से खोजें...","البحث بالطلب أو البريد أو الوصف...","Rechercher par commande, e-mail ou description...","Nach Bestellung, E-Mail oder Beschreibung suchen..."],
+  ["Buscar por nome, categoria, descrição ou slug...","Search by name, category, description or slug...","Buscar por nombre, categoría, descripción o slug...","按名称、分类、描述或 slug 搜索...","नाम, श्रेणी, विवरण या स्लग से खोजें...","البحث بالاسم أو الفئة أو الوصف أو slug...","Rechercher par nom, catégorie, description ou slug...","Nach Name, Kategorie, Beschreibung oder Slug suchen..."],
+  ["Digite uma mensagem para o cliente...","Type a message to the customer...","Escribe un mensaje al cliente...","给客户输入消息...","ग्राहक को संदेश लिखें...","اكتب رسالة للعميل...","Écrivez un message au client...","Nachricht an den Kunden eingeben..."],
+  ["Explique a decisão, solicite informações ou informe o motivo de uma rejeição.","Explain the decision, request information or provide the reason for rejection.","Explica la decisión, solicita información o indica el motivo del rechazo.","说明决定、请求信息或提供拒绝原因。","निर्णय समझाएँ, जानकारी मांगें या अस्वीकृति का कारण बताएं।","اشرح القرار أو اطلب معلومات أو اذكر سبب الرفض.","Expliquez la décision, demandez des informations ou indiquez le motif du refus.","Erkläre die Entscheidung, fordere Informationen an oder nenne den Ablehnungsgrund."],
+  ["REEMBOLSAR PEDIDO","REFUND ORDER","REEMBOLSAR PEDIDO","退款订单","ऑर्डर रिफंड करें","استرداد الطلب","REMBOURSER LA COMMANDE","BESTELLUNG ERSTATTEN"],
+  ["CANCELAR PEDIDO E REEMBOLSAR","CANCEL ORDER & REFUND","CANCELAR PEDIDO Y REEMBOLSAR","取消订单并退款","ऑर्डर रद्द करें और रिफंड करें","إلغاء الطلب واسترداد المبلغ","ANNULER ET REMBOURSER","BESTELLUNG STORNIEREN & ERSTATTEN"],
+  ["GESTÃO DE PEDIDOS","ORDER MANAGEMENT","GESTIÓN DE PEDIDOS","订单管理","ऑर्डर प्रबंधन","إدارة الطلبات","GESTION DES COMMANDES","BESTELLVERWALTUNG"],
+  ["GESTÃO DE CLIENTES","CUSTOMER MANAGEMENT","GESTIÓN DE CLIENTES","客户管理","ग्राहक प्रबंधन","إدارة العملاء","GESTION DES CLIENTS","KUNDENVERWALTUNG"],
+  ["MODERAÇÃO","MODERATION","MODERACIÓN","审核","मॉडरेशन","الإشراف","MODÉRATION","MODERATION"],
+  ["PERMISSÕES","PERMISSIONS","PERMISOS","权限","अनुमतियाँ","الصلاحيات","AUTORISATIONS","BERECHTIGUNGEN"],
+  ["INTEGRAÇÕES","INTEGRATIONS","INTEGRACIONES","集成","इंटीग्रेशन","التكاملات","INTÉGRATIONS","INTEGRATIONEN"],
+  ["AGENDAMENTO","SCHEDULING","PROGRAMACIÓN","计划","शेड्यूलिंग","الجدولة","PLANIFICATION","PLANUNG"],
+  ["SUPORTE DE PEDIDOS","ORDER SUPPORT","SOPORTE DE PEDIDOS","订单支持","ऑर्डर सहायता","دعم الطلبات","ASSISTANCE COMMANDES","BESTELLSUPPORT"],
+  ["Não foi possível carregar o painel.","Could not load the admin panel.","No se pudo cargar el panel.","无法加载管理后台。","एडमिन पैनल लोड नहीं हो सका।","تعذر تحميل لوحة الإدارة.","Impossible de charger le panneau d’administration.","Admin-Bereich konnte nicht geladen werden."],
+  ["Não foi possível concluir esta ação.","Could not complete this action.","No se pudo completar esta acción.","无法完成此操作。","यह कार्रवाई पूरी नहीं हो सकी।","تعذر إكمال هذا الإجراء.","Impossible de terminer cette action.","Aktion konnte nicht abgeschlossen werden."],
+  ["Alteração concluída","Change completed","Cambio completado","更改已完成","परिवर्तन पूरा हुआ","اكتمل التغيير","Modification terminée","Änderung abgeschlossen"],
+  ["Produto atualizado.","Product updated.","Producto actualizado.","商品已更新。","उत्पाद अपडेट हुआ।","تم تحديث المنتج.","Produit mis à jour.","Produkt aktualisiert."],
+  ["Produto criado.","Product created.","Producto creado.","商品已创建。","उत्पाद बनाया गया।","تم إنشاء المنتج.","Produit créé.","Produkt erstellt."],
+  ["Produto arquivado com sucesso.","Product archived successfully.","Producto archivado correctamente.","商品已成功归档。","उत्पाद सफलतापूर्वक आर्काइव हुआ।","تمت أرشفة المنتج بنجاح.","Produit archivé avec succès.","Produkt erfolgreich archiviert."],
+  ["Produto publicado com sucesso.","Product published successfully.","Producto publicado correctamente.","商品已成功发布。","उत्पाद सफलतापूर्वक प्रकाशित हुआ।","تم نشر المنتج بنجاح.","Produit publié avec succès.","Produkt erfolgreich veröffentlicht."],
+  ["Agendamento cancelado.","Schedule cancelled.","Programación cancelada.","计划已取消。","शेड्यूल रद्द हुआ।","تم إلغاء الجدولة.","Planification annulée.","Planung abgebrochen."],
+  ["Situação da conta atualizada.","Account status updated.","Estado de la cuenta actualizado.","账户状态已更新。","खाता स्थिति अपडेट हुई।","تم تحديث حالة الحساب.","Statut du compte mis à jour.","Kontostatus aktualisiert."],
+  ["Novo administrador adicionado.","New administrator added.","Nuevo administrador añadido.","已添加新管理员。","नया एडमिन जोड़ा गया।","تمت إضافة مسؤول جديد.","Nouvel administrateur ajouté.","Neuer Administrator hinzugefügt."],
+  ["Pedido reembolsado","Order refunded","Pedido reembolsado","订单已退款","ऑर्डर रिफंड हुआ","تم استرداد الطلب","Commande remboursée","Bestellung erstattet"],
+  ["Pedido reembolsado e encerrado.","Order refunded and closed.","Pedido reembolsado y cerrado.","订单已退款并关闭。","ऑर्डर रिफंड और बंद हुआ।","تم استرداد الطلب وإغلاقه.","Commande remboursée et clôturée.","Bestellung erstattet und geschlossen."],
+  ["O andamento da entrega será liberado quando o pagamento estiver aprovado.","Delivery tracking will be available once payment is approved.","El seguimiento de entrega estará disponible cuando el pago sea aprobado.","付款批准后将开放配送进度。","भुगतान स्वीकृत होने पर डिलीवरी ट्रैकिंग उपलब्ध होगी।","سيصبح تتبع التوصيل متاحًا بعد الموافقة على الدفع.","Le suivi de livraison sera disponible une fois le paiement approuvé.","Die Lieferverfolgung wird nach Zahlungsfreigabe verfügbar."],
+  ["Somente pedidos com pagamento aprovado podem ser reembolsados por esta opção.","Only orders with approved payment can be refunded using this option.","Solo los pedidos con pago aprobado pueden reembolsarse con esta opción.","只有付款已批准的订单可使用此选项退款。","केवल स्वीकृत भुगतान वाले ऑर्डर इस विकल्प से रिफंड किए जा सकते हैं।","يمكن استرداد الطلبات ذات الدفع المعتمد فقط عبر هذا الخيار.","Seules les commandes avec paiement approuvé peuvent être remboursées avec cette option.","Nur Bestellungen mit genehmigter Zahlung können über diese Option erstattet werden."],
+];
+
 const INDEX = { "en-US": 1, "es-ES": 2, "zh-CN": 3, "hi-IN": 4, "ar-SA": 5, "fr-FR": 6, "de-DE": 7 };
-const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS].map((row) => [row[0], row]));
+const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS, ...ADMIN_ROWS].map((row) => [row[0], row]));
 
 
 const PRODUCT_NAME_REPLACEMENTS = {
@@ -886,6 +978,56 @@ export function translateUiText(value, language) {
   if (row) return `${leading}${row[INDEX[language]] || core}${trailing}`;
 
   // Dynamic counters and order labels.
+  const paidOrdersSummary = core.match(/^([0-9]+) pedido\(s\) pago\(s\)\/concluído\(s\)$/i);
+  if (paidOrdersSummary) {
+    const n = paidOrdersSummary[1];
+    const variants = {
+      "en-US": `${n} paid/completed order(s)`, "es-ES": `${n} pedido(s) pagado(s)/completado(s)`, "zh-CN": `${n} 个已付款/已完成订单`,
+      "hi-IN": `${n} भुगतान/पूर्ण ऑर्डर`, "ar-SA": `${n} طلب مدفوع/مكتمل`, "fr-FR": `${n} commande(s) payée(s)/terminée(s)`, "de-DE": `${n} bezahlte/abgeschlossene Bestellung(en)`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
+  const awaitingOrders = core.match(/^([0-9]+) aguardando pagamento$/i);
+  if (awaitingOrders) {
+    const n = awaitingOrders[1];
+    const variants = {
+      "en-US": `${n} awaiting payment`, "es-ES": `${n} esperando pago`, "zh-CN": `${n} 个等待付款`,
+      "hi-IN": `${n} भुगतान की प्रतीक्षा`, "ar-SA": `${n} بانتظار الدفع`, "fr-FR": `${n} en attente de paiement`, "de-DE": `${n} Zahlung ausstehend`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
+  const registeredTotal = core.match(/^([0-9]+) cadastrados no total$/i);
+  if (registeredTotal) {
+    const n = registeredTotal[1];
+    const variants = {
+      "en-US": `${n} registered in total`, "es-ES": `${n} registrados en total`, "zh-CN": `共 ${n} 个已登记`,
+      "hi-IN": `कुल ${n} पंजीकृत`, "ar-SA": `${n} مسجل إجمالاً`, "fr-FR": `${n} enregistrés au total`, "de-DE": `${n} insgesamt registriert`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
+  const viewEvents = core.match(/^([0-9]+) eventos de visualização registrados$/i);
+  if (viewEvents) {
+    const n = viewEvents[1];
+    const variants = {
+      "en-US": `${n} view events recorded`, "es-ES": `${n} eventos de visualización registrados`, "zh-CN": `已记录 ${n} 次浏览事件`,
+      "hi-IN": `${n} व्यू इवेंट दर्ज`, "ar-SA": `تم تسجيل ${n} حدث مشاهدة`, "fr-FR": `${n} événements de vue enregistrés`, "de-DE": `${n} Aufrufereignisse erfasst`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
+  const daysFilter = core.match(/^([0-9]+) dias$/i);
+  if (daysFilter) {
+    const n = daysFilter[1];
+    const variants = {
+      "en-US": `${n} days`, "es-ES": `${n} días`, "zh-CN": `${n} 天`, "hi-IN": `${n} दिन`,
+      "ar-SA": `${n} أيام`, "fr-FR": `${n} jours`, "de-DE": `${n} Tage`,
+    };
+    return `${leading}${variants[language] || core}${trailing}`;
+  }
+
   const productCount = core.match(/^(\d+) produtos encontrados$/i);
   if (productCount) {
     const n = productCount[1];
@@ -976,7 +1118,7 @@ function shouldSkipTextNode(node) {
   const parent = node.parentElement;
   if (!parent) return true;
   if (["SCRIPT", "STYLE", "CODE", "PRE"].includes(parent.tagName)) return true;
-  if (parent.closest("[data-i18n-skip='true'], .admin-app")) return true;
+  if (parent.closest("[data-i18n-skip='true']")) return true;
   return false;
 }
 
@@ -1005,7 +1147,7 @@ export function translateDom(root, language, textMemory, attrMemory) {
 
   const attributes = ["placeholder", "title", "aria-label"];
   root.querySelectorAll?.("*").forEach((element) => {
-    if (element.closest?.("[data-i18n-skip=\"true\"], .admin-app")) return;
+    if (element.closest?.("[data-i18n-skip=\"true\"]")) return;
     let map = attrMemory.get(element);
     if (!map) {
       map = new Map();
