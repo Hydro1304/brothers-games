@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "./lib/supabase";
+import robotIcon from "./assets/brothers-assistant-robo.jpg";
 import "./ai-assistant.css";
 
 const COPY = {
@@ -571,9 +572,12 @@ export default function AIShoppingAssistant({
         aria-label={open ? copy.close : copy.open}
         title={open ? copy.close : copy.open}
       >
-        <span className="ai-shop-launcher-glow" />
-        <span className="ai-shop-launcher-icon">✦</span>
-        {!open && <span className="ai-shop-launcher-dot" />}
+        <img
+          className="ai-shop-launcher-image"
+          src={robotIcon}
+          alt=""
+          aria-hidden="true"
+        />
       </button>
     </div>
   );
