@@ -2551,3 +2551,644 @@ html[data-theme="light"] .admin-integration-connected small {
   }
 }
 
+
+/* =========================================================
+   PROBLEMAS E SUPORTE — PAINEL ADMINISTRATIVO
+========================================================= */
+
+.admin-issue-toolbar {
+  margin-bottom: 18px;
+}
+
+.admin-issue-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-issue-card {
+  border: 1px solid #222;
+  border-radius: 12px;
+  background: #0e0e0e;
+  padding: 18px;
+}
+
+.admin-issue-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-issue-card-top > div {
+  min-width: 0;
+}
+
+.admin-issue-card-top > div > span {
+  display: block;
+  color: #777;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.admin-issue-card-top > div > strong {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  font-size: 18px;
+}
+
+.admin-issue-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 29px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #2b2b2b;
+  background: #171717;
+  color: #aaa;
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.admin-issue-status.pending {
+  border-color: rgba(235,184,45,.25);
+  background: rgba(235,184,45,.10);
+  color: #e8bf4b;
+}
+
+.admin-issue-status.in-review,
+.admin-issue-status.chat {
+  border-color: rgba(75,145,255,.25);
+  background: rgba(75,145,255,.10);
+  color: #7aaeff;
+}
+
+.admin-issue-status.refund-approved,
+.admin-issue-status.resolved {
+  border-color: rgba(45,184,96,.25);
+  background: rgba(45,184,96,.10);
+  color: #59da87;
+}
+
+.admin-issue-status.rejected,
+.admin-issue-status.closed {
+  border-color: rgba(232,62,62,.25);
+  background: rgba(232,62,62,.10);
+  color: #ff6868;
+}
+
+.admin-issue-meta {
+  margin: 14px 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #1e1e1e;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: #777;
+  font-size: 11px;
+}
+
+.admin-issue-description {
+  margin: 0;
+  color: #c9c9c9;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-issue-card-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-issue-card-actions button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #e50914;
+  border-radius: 8px;
+  background: #e50914;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  cursor: pointer;
+}
+
+.admin-issue-card-actions button:hover {
+  background: #b80710;
+  border-color: #b80710;
+}
+
+/* =========================================================
+   MODAL DE ATENDIMENTO
+========================================================= */
+
+.admin-issue-manager-modal {
+  width: min(980px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.admin-issue-manager-summary {
+  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-issue-manager-summary > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #222;
+  border-radius: 10px;
+  background: #0b0b0b;
+}
+
+.admin-issue-manager-summary span {
+  display: block;
+  color: #777;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.admin-issue-manager-summary strong {
+  display: block;
+  margin-top: 6px;
+  color: #f1f1f1;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.admin-issue-manager-section {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #222;
+  border-radius: 11px;
+  background: #0d0d0d;
+}
+
+.admin-issue-manager-section > span {
+  display: block;
+  margin-bottom: 9px;
+  color: #e62b2b;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .11em;
+}
+
+.admin-issue-manager-section > p {
+  margin: 0;
+  color: #d2d2d2;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-issue-manager-section > textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid #292929;
+  border-radius: 8px;
+  background: #101010;
+  color: #f0f0f0;
+  outline: none;
+  resize: vertical;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.admin-issue-manager-section > textarea:focus {
+  border-color: #e62b2b;
+}
+
+.admin-issue-evidence {
+  margin-top: 14px;
+}
+
+.admin-issue-evidence a {
+  display: inline-block;
+}
+
+.admin-issue-evidence img {
+  display: block;
+  width: min(100%, 420px);
+  max-height: 360px;
+  object-fit: contain;
+  border: 1px solid #2b2b2b;
+  border-radius: 9px;
+  background: #090909;
+}
+
+.admin-issue-evidence small {
+  color: #777;
+  font-size: 10px;
+}
+
+.admin-issue-status-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-issue-status-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  background: #151515;
+  color: #d7d7d7;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-issue-status-actions button:hover:not(:disabled) {
+  border-color: #e50914;
+  color: #fff;
+}
+
+.admin-issue-status-actions button.success {
+  border-color: rgba(45,184,96,.35);
+  color: #67df92;
+}
+
+.admin-issue-status-actions button.danger {
+  border-color: rgba(232,62,62,.35);
+  color: #ff7272;
+}
+
+.admin-issue-status-actions button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   CHAT ADMIN ↔ CLIENTE
+========================================================= */
+
+.admin-issue-chat {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-issue-chat-heading {
+  padding: 15px 16px;
+  border-bottom: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #101010;
+}
+
+.admin-issue-chat-heading > div {
+  min-width: 0;
+}
+
+.admin-issue-chat-heading span {
+  display: block;
+  color: #e62b2b;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.admin-issue-chat-heading strong {
+  display: block;
+  margin-top: 4px;
+  color: #f1f1f1;
+  font-size: 13px;
+}
+
+.admin-issue-chat-heading small {
+  color: #707070;
+  font-size: 9px;
+}
+
+.admin-issue-messages {
+  min-height: 260px;
+  max-height: 430px;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #0a0a0a;
+}
+
+.admin-issue-message-empty {
+  min-height: 210px;
+  display: grid;
+  place-items: center;
+  color: #666;
+  font-size: 10px;
+  text-align: center;
+}
+
+.admin-issue-message {
+  width: min(78%, 520px);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.admin-issue-message.support {
+  align-self: flex-end;
+  border: 1px solid rgba(229,9,20,.28);
+  background: rgba(229,9,20,.10);
+}
+
+.admin-issue-message.customer {
+  align-self: flex-start;
+  border: 1px solid #292929;
+  background: #171717;
+}
+
+.admin-issue-message > span {
+  display: block;
+  color: #9b9b9b;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.admin-issue-message > p {
+  margin: 5px 0 0;
+  color: #e6e6e6;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-issue-message > small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 8px;
+}
+
+.admin-issue-chat-compose {
+  padding: 12px;
+  border-top: 1px solid #222;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: end;
+  background: #101010;
+}
+
+.admin-issue-chat-compose textarea {
+  width: 100%;
+  min-height: 74px;
+  max-height: 180px;
+  padding: 11px;
+  border: 1px solid #292929;
+  border-radius: 8px;
+  background: #0b0b0b;
+  color: #f0f0f0;
+  outline: none;
+  resize: vertical;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.admin-issue-chat-compose textarea:focus {
+  border-color: #e62b2b;
+}
+
+.admin-issue-chat-compose button {
+  min-width: 92px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #e50914;
+  border-radius: 8px;
+  background: #e50914;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-issue-chat-compose button:hover:not(:disabled) {
+  background: #b80710;
+  border-color: #b80710;
+}
+
+.admin-issue-chat-compose button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.admin-issue-chat-closed {
+  padding: 14px;
+  border-top: 1px solid #222;
+  background: #111;
+  color: #888;
+  font-size: 10px;
+  text-align: center;
+}
+
+.admin-issue-final-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* =========================================================
+   TEMA CLARO — PROBLEMAS E SUPORTE
+========================================================= */
+
+html[data-theme="light"] .admin-issue-card,
+html[data-theme="light"] .admin-issue-manager-section,
+html[data-theme="light"] .admin-issue-manager-summary > div {
+  border-color: #dfe3ea;
+  background: #fff;
+}
+
+html[data-theme="light"] .admin-issue-card-top > div > strong,
+html[data-theme="light"] .admin-issue-manager-summary strong,
+html[data-theme="light"] .admin-issue-chat-heading strong,
+html[data-theme="light"] .admin-issue-manager-section > p,
+html[data-theme="light"] .admin-issue-message > p {
+  color: #17191f;
+}
+
+html[data-theme="light"] .admin-issue-meta,
+html[data-theme="light"] .admin-issue-card-top > div > span,
+html[data-theme="light"] .admin-issue-manager-summary span,
+html[data-theme="light"] .admin-issue-chat-heading small,
+html[data-theme="light"] .admin-issue-message > small {
+  color: #68707d;
+}
+
+html[data-theme="light"] .admin-issue-description {
+  color: #353b45;
+}
+
+html[data-theme="light"] .admin-issue-manager-section > textarea,
+html[data-theme="light"] .admin-issue-chat-compose textarea {
+  border-color: #d7dce5;
+  background: #fff;
+  color: #17191f;
+}
+
+html[data-theme="light"] .admin-issue-chat-heading,
+html[data-theme="light"] .admin-issue-chat-compose,
+html[data-theme="light"] .admin-issue-chat-closed {
+  border-color: #dfe3ea;
+  background: #f7f8fa;
+}
+
+html[data-theme="light"] .admin-issue-messages {
+  background: #f4f6f8;
+}
+
+html[data-theme="light"] .admin-issue-message.customer {
+  border-color: #dfe3e8;
+  background: #fff;
+}
+
+html[data-theme="light"] .admin-issue-message.support {
+  border-color: rgba(229,9,20,.18);
+  background: #fff1f2;
+}
+
+html[data-theme="light"] .admin-issue-evidence img {
+  border-color: #dfe3e8;
+  background: #f6f7f9;
+}
+
+html[data-theme="light"] .admin-issue-status-actions button {
+  border-color: #d6dce5;
+  background: #fff;
+  color: #171a20;
+}
+
+html[data-theme="light"] .admin-issue-status-actions button:hover:not(:disabled) {
+  border-color: #e50914;
+  background: #fff5f5;
+  color: #b80710;
+}
+
+/* =========================================================
+   RESPONSIVO — PROBLEMAS E SUPORTE
+========================================================= */
+
+@media (max-width: 900px) {
+  .admin-issue-manager-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .admin-issue-card-top,
+  .admin-issue-chat-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-issue-status {
+    white-space: normal;
+  }
+
+  .admin-issue-manager-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-issue-status-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-issue-status-actions button {
+    width: 100%;
+  }
+
+  .admin-issue-chat-compose {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-issue-chat-compose button {
+    width: 100%;
+  }
+
+  .admin-issue-message {
+    width: 90%;
+  }
+
+  .admin-issue-final-actions {
+    flex-direction: column;
+  }
+
+  .admin-issue-final-actions > button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .admin-issue-status-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-issue-message {
+    width: 96%;
+  }
+}
+
+
+/* =========================================================
+   CORREÇÃO DEFINITIVA — LARGURA DA SIDEBAR ADMIN
+========================================================= */
+
+@media (min-width: 861px) {
+  .admin-app {
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+  }
+
+  .admin-sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .admin-main {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .admin-nav {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-nav button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  .admin-brand,
+  .admin-account-badge,
+  .admin-theme-toggle,
+  .admin-back-store {
+    width: 100%;
+    min-width: 0;
+  }
+}

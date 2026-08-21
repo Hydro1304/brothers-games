@@ -165,6 +165,24 @@ function fulfillmentLabel(order) {
   return map[normalizedFulfillmentStatus(order)] || "Aguardando atualização";
 }
 
+
+function issueStatusLabel(status) {
+  const map = {
+    pending: "Aguardando análise",
+    in_review: "Em análise",
+    chat: "Em conversa",
+    refund_approved: "Reembolso aprovado",
+    resolved: "Resolvido",
+    rejected: "Rejeitado",
+    closed: "Encerrado",
+  };
+  return map[status] || status || "—";
+}
+
+function issueStatusClass(status) {
+  return String(status || "pending").replace(/_/g, "-");
+}
+
 export default function AdminPanel({
   currentUser,
   isOwner,
@@ -200,6 +218,16 @@ export default function AdminPanel({
   const [reviewFilter, setReviewFilter] = useState("pending");
   const [reviewSavingId, setReviewSavingId] = useState(null);
   const [reviewNotes, setReviewNotes] = useState({});
+
+  const [orderIssues, setOrderIssues] = useState([]);
+  const [issueMessages, setIssueMessages] = useState([]);
+  const [issueFilter, setIssueFilter] = useState("open");
+  const [issueSearch, setIssueSearch] = useState("");
+  const [selectedIssueId, setSelectedIssueId] = useState(null);
+  const [issueMessage, setIssueMessage] = useState("");
+  const [issueAdminNote, setIssueAdminNote] = useState("");
+  const [issueSaving, setIssueSaving] = useState(false);
+  const [issueImageUrl, setIssueImageUrl] = useState("");
 
   const [orderFilter, setOrderFilter] = useState("all");
   const [orderSearch, setOrderSearch] = useState("");
@@ -281,6 +309,14 @@ export default function AdminPanel({
         status: "Atualizando avaliação",
         note: "Aguarde a confirmação da operação.",
       };
+    } else if (issueSaving) {
+      content = {
+        eyebrow: "SUPORTE DE PEDIDOS",
+        title: "Atualizando a solicitação...",
+        message: "Estamos salvando a decisão e sincronizando a conversa com o cliente.",
+        status: "Atualizando atendimento",
+        note: "Aguarde a confirmação da operação.",
+      };
     } else if (melhorEnvioBusy) {
       content = {
         eyebrow: "INTEGRAÇÕES",
@@ -300,6 +336,7 @@ export default function AdminPanel({
     fulfillmentSaving,
     hideSiteLoading,
     melhorEnvioBusy,
+    issueSaving,
     reviewSavingId,
     savingProduct,
     showSiteLoading,
@@ -312,6 +349,54 @@ export default function AdminPanel({
   useEffect(() => {
     if (activeTab === "integrations" && isOwner) void loadMelhorEnvioStatus();
   }, [activeTab, isOwner]);
+
+
+  useEffect(() => {
+    if (!selectedIssueId) return undefined;
+
+    let active = true;
+
+    async function refreshIssueMessages() {
+      const { data, error } = await supabase
+        .from("order_issue_messages")
+        .select("*")
+        .eq("issue_id", selectedIssueId)
+        .order("created_at", { ascending: true });
+
+      if (!error && active) setIssueMessages(data || []);
+    }
+
+    void refreshIssueMessages();
+
+    const channel = supabase
+      .channel(`admin-order-issue-${selectedIssueId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "order_issue_messages",
+          filter: `issue_id=eq.${selectedIssueId}`,
+        },
+        () => void refreshIssueMessages()
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "order_issues",
+          filter: `id=eq.${selectedIssueId}`,
+        },
+        () => void loadAllData(true)
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [selectedIssueId]);
 
   async function refreshAdminPanel() {
     await runWithSiteLoading(
@@ -366,6 +451,7 @@ export default function AdminPanel({
         usersResult,
         reviewsResult,
         reviewPhotosResult,
+        orderIssuesResult,
       ] = await Promise.all([
         supabase
           .from("products")
@@ -401,6 +487,11 @@ export default function AdminPanel({
           .select("*")
           .order("created_at", { ascending: false })
           .limit(3000),
+        supabase
+          .from("order_issues")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1000),
       ]);
 
       const results = [
@@ -412,6 +503,7 @@ export default function AdminPanel({
         usersResult,
         reviewsResult,
         reviewPhotosResult,
+        orderIssuesResult,
       ];
 
       const failed = results.find((result) => result.error);
@@ -425,6 +517,7 @@ export default function AdminPanel({
       setUsers(usersResult.data || []);
       setReviews(reviewsResult.data || []);
       setReviewPhotos(reviewPhotosResult.data || []);
+      setOrderIssues(orderIssuesResult.data || []);
     } catch (error) {
       console.error(error);
       setErrorMessage(error?.message || "Não foi possível carregar o painel.");
@@ -1039,7 +1132,7 @@ export default function AdminPanel({
     setOrderRefundSaving(true);
 
     try {
-      await runAdminMutation(
+      const result = await runAdminMutation(
         async () => {
           const { data, error } = await supabase.functions.invoke("admin-cancel-order", {
             body: { orderId: order.id },
@@ -1074,10 +1167,165 @@ export default function AdminPanel({
           successMessage: `${orderLabel} foi cancelado e o reembolso foi confirmado.`,
         }
       );
+      return result;
     } finally {
       setOrderRefundSaving(false);
     }
   }
+
+
+  async function openOrderIssue(issue) {
+    if (!issue?.id) return;
+
+    setSelectedIssueId(issue.id);
+    setIssueAdminNote(issue.admin_note || "");
+    setIssueMessage("");
+    setIssueImageUrl("");
+
+    if (issue.image_path) {
+      const { data, error } = await supabase.storage
+        .from("order-issues")
+        .createSignedUrl(issue.image_path, 60 * 60);
+
+      if (!error) setIssueImageUrl(data?.signedUrl || "");
+    }
+  }
+
+  function closeOrderIssue() {
+    setSelectedIssueId(null);
+    setIssueMessages([]);
+    setIssueMessage("");
+    setIssueAdminNote("");
+    setIssueImageUrl("");
+  }
+
+  async function setOrderIssueStatus(issue, nextStatus, note = issueAdminNote) {
+    if (!issue?.id || issueSaving) return false;
+
+    if (nextStatus === "rejected" && !String(note || "").trim()) {
+      showSiteAlert("Informe o motivo da rejeição antes de continuar.", {
+        variant: "warning",
+      });
+      return false;
+    }
+
+    setIssueSaving(true);
+    try {
+      const { data, error } = await supabase.rpc("admin_set_order_issue_status", {
+        p_issue_id: issue.id,
+        p_status: nextStatus,
+        p_admin_note: String(note || "").trim() || null,
+      });
+
+      if (error) throw error;
+
+      await loadAllData(true);
+      setIssueAdminNote(data?.admin_note || note || "");
+      showSiteAlert(`Solicitação atualizada para: ${issueStatusLabel(nextStatus)}.`, {
+        variant: "success",
+      });
+      return true;
+    } catch (error) {
+      console.error(error);
+      showSiteAlert(error?.message || "Não foi possível atualizar a solicitação.");
+      return false;
+    } finally {
+      setIssueSaving(false);
+    }
+  }
+
+  async function sendIssueMessage(issue) {
+    const message = issueMessage.trim();
+    if (!issue?.id || !message || issueSaving) return;
+
+    setIssueSaving(true);
+    try {
+      const { error } = await supabase.from("order_issue_messages").insert({
+        issue_id: issue.id,
+        sender_id: currentUser.id,
+        sender_role: isOwner ? "owner" : "admin",
+        message,
+      });
+
+      if (error) throw error;
+
+      if (!["chat", "resolved", "rejected", "closed", "refund_approved"].includes(issue.status)) {
+        const { error: statusError } = await supabase.rpc("admin_set_order_issue_status", {
+          p_issue_id: issue.id,
+          p_status: "chat",
+          p_admin_note: issue.admin_note || null,
+        });
+        if (statusError) throw statusError;
+      }
+
+      setIssueMessage("");
+
+      const { data: messages, error: messagesError } = await supabase
+        .from("order_issue_messages")
+        .select("*")
+        .eq("issue_id", issue.id)
+        .order("created_at", { ascending: true });
+
+      if (!messagesError) setIssueMessages(messages || []);
+      await loadAllData(true);
+    } catch (error) {
+      console.error(error);
+      showSiteAlert(error?.message || "Não foi possível enviar a mensagem.");
+    } finally {
+      setIssueSaving(false);
+    }
+  }
+
+  async function refundOrderIssue(issue) {
+    const order = orders.find((item) => item.id === issue?.order_id);
+    if (!order) {
+      showSiteAlert("Não encontrei o pedido ligado a esta solicitação.");
+      return;
+    }
+
+    if (!SUCCESS_ORDER_STATUSES.includes(order.status)) {
+      showSiteAlert(
+        order.status === "refunded"
+          ? "Este pedido já foi reembolsado."
+          : "Este pedido não está com um pagamento elegível para reembolso.",
+        { variant: "warning" }
+      );
+      return;
+    }
+
+    const refundResult = await refundAndCancelPaidOrder(order);
+    if (!refundResult?.success) return;
+
+    await setOrderIssueStatus(
+      issue,
+      "refund_approved",
+      issueAdminNote || "Reembolso total aprovado e processado pelo Mercado Pago."
+    );
+  }
+
+  const selectedIssue = orderIssues.find((issue) => issue.id === selectedIssueId) || null;
+
+  const filteredOrderIssues = useMemo(() => {
+    const term = issueSearch.trim().toLowerCase();
+
+    return orderIssues.filter((issue) => {
+      const order = orders.find((item) => item.id === issue.order_id);
+      const customer = userById.get(issue.customer_id);
+      const openStatuses = ["pending", "in_review", "chat"];
+      const matchesFilter =
+        issueFilter === "all" ||
+        (issueFilter === "open" && openStatuses.includes(issue.status)) ||
+        issue.status === issueFilter;
+
+      const matchesSearch =
+        !term ||
+        String(order?.order_number || issue.order_id || "").toLowerCase().includes(term) ||
+        String(customer?.email || "").toLowerCase().includes(term) ||
+        String(issue.description || "").toLowerCase().includes(term);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [issueFilter, issueSearch, orderIssues, orders, userById]);
 
   async function updateOrderFulfillment(orderId, nextStatus) {
     if (!orderId || fulfillmentSaving) return;
@@ -1700,6 +1948,263 @@ export default function AdminPanel({
               disabled={orderRefundSaving}
               onClick={() => setManagedOrderId(null)}
             >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+  function renderSupportIssues() {
+    return (
+      <>
+        <div className="admin-heading">
+          <div>
+            <span>PÓS-VENDA</span>
+            <h1>Problemas com pedidos</h1>
+            <p>Analise solicitações abertas até 5 dias após a entrega e converse com o cliente.</p>
+          </div>
+        </div>
+
+        <div className="admin-toolbar admin-issue-toolbar">
+          <input
+            type="search"
+            placeholder="Buscar por pedido, e-mail ou descrição..."
+            value={issueSearch}
+            onChange={(event) => setIssueSearch(event.target.value)}
+          />
+          <select value={issueFilter} onChange={(event) => setIssueFilter(event.target.value)}>
+            <option value="open">Em aberto</option>
+            <option value="all">Todas</option>
+            <option value="pending">Aguardando análise</option>
+            <option value="in_review">Em análise</option>
+            <option value="chat">Em conversa</option>
+            <option value="refund_approved">Reembolso aprovado</option>
+            <option value="resolved">Resolvido</option>
+            <option value="rejected">Rejeitado</option>
+            <option value="closed">Encerrado</option>
+          </select>
+          <span className="admin-toolbar-count">
+            {filteredOrderIssues.length} solicitação(ões)
+          </span>
+        </div>
+
+        <div className="admin-issue-list">
+          {filteredOrderIssues.length === 0 ? (
+            <div className="admin-empty">Nenhuma solicitação encontrada neste filtro.</div>
+          ) : (
+            filteredOrderIssues.map((issue) => {
+              const order = orderById.get(issue.order_id);
+              const customer = userById.get(issue.customer_id);
+
+              return (
+                <article className="admin-issue-card" key={issue.id}>
+                  <div className="admin-issue-card-top">
+                    <div>
+                      <span>PEDIDO</span>
+                      <strong>#{order?.order_number || String(issue.order_id).slice(0, 8)}</strong>
+                    </div>
+                    <span className={`admin-issue-status ${issueStatusClass(issue.status)}`}>
+                      {issueStatusLabel(issue.status)}
+                    </span>
+                  </div>
+
+                  <div className="admin-issue-meta">
+                    <span>{customer?.email || "E-mail indisponível"}</span>
+                    <span>Aberto em {dateTime(issue.created_at)}</span>
+                    <span>Entrega: {dateTime(order?.delivered_at)}</span>
+                  </div>
+
+                  <p className="admin-issue-description">{issue.description}</p>
+
+                  <div className="admin-issue-card-actions">
+                    <button type="button" onClick={() => openOrderIssue(issue)}>
+                      ABRIR ATENDIMENTO
+                    </button>
+                  </div>
+                </article>
+              );
+            })
+          )}
+        </div>
+      </>
+    );
+  }
+
+  function renderIssueManager() {
+    if (!selectedIssue) return null;
+
+    const issue = selectedIssue;
+    const order = orderById.get(issue.order_id);
+    const customer = userById.get(issue.customer_id);
+    const canTalk = !["rejected", "closed"].includes(issue.status);
+    const canRefund =
+      Boolean(order) && SUCCESS_ORDER_STATUSES.includes(order.status);
+
+    return (
+      <div className="admin-modal-overlay" onClick={closeOrderIssue}>
+        <div
+          className="admin-modal admin-issue-manager-modal"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="admin-modal-header">
+            <div>
+              <span>SUPORTE DO PEDIDO</span>
+              <h2>#{order?.order_number || String(issue.order_id).slice(0, 8)}</h2>
+            </div>
+            <button type="button" className="admin-icon-button" onClick={closeOrderIssue}>×</button>
+          </div>
+
+          <div className="admin-issue-manager-summary">
+            <div>
+              <span>CLIENTE</span>
+              <strong>{customer?.email || "E-mail indisponível"}</strong>
+            </div>
+            <div>
+              <span>ENTREGUE EM</span>
+              <strong>{dateTime(order?.delivered_at)}</strong>
+            </div>
+            <div>
+              <span>STATUS</span>
+              <strong>{issueStatusLabel(issue.status)}</strong>
+            </div>
+            <div>
+              <span>VALOR DO PEDIDO</span>
+              <strong>{money(order?.total)}</strong>
+            </div>
+          </div>
+
+          <section className="admin-issue-manager-section">
+            <span>PROBLEMA INFORMADO PELO CLIENTE</span>
+            <p>{issue.description}</p>
+
+            {issue.image_path && (
+              <div className="admin-issue-evidence">
+                {issueImageUrl ? (
+                  <a href={issueImageUrl} target="_blank" rel="noreferrer">
+                    <img src={issueImageUrl} alt="Imagem enviada pelo cliente" />
+                  </a>
+                ) : (
+                  <small>Carregando imagem privada...</small>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="admin-issue-manager-section">
+            <span>OBSERVAÇÃO / JUSTIFICATIVA PARA O CLIENTE</span>
+            <textarea
+              rows="3"
+              maxLength={1000}
+              value={issueAdminNote}
+              onChange={(event) => setIssueAdminNote(event.target.value)}
+              placeholder="Explique a decisão, solicite informações ou informe o motivo de uma rejeição."
+            />
+
+            <div className="admin-issue-status-actions">
+              <button
+                type="button"
+                disabled={issueSaving}
+                onClick={() => setOrderIssueStatus(issue, "in_review")}
+              >
+                EM ANÁLISE
+              </button>
+              <button
+                type="button"
+                disabled={issueSaving}
+                onClick={() => setOrderIssueStatus(issue, "chat")}
+              >
+                CONVERSAR
+              </button>
+              <button
+                type="button"
+                className="success"
+                disabled={issueSaving}
+                onClick={() => setOrderIssueStatus(issue, "resolved")}
+              >
+                RESOLVIDO
+              </button>
+              <button
+                type="button"
+                className="danger"
+                disabled={issueSaving}
+                onClick={() => setOrderIssueStatus(issue, "rejected")}
+              >
+                REJEITAR
+              </button>
+            </div>
+          </section>
+
+          <section className="admin-issue-manager-section admin-issue-chat">
+            <div className="admin-issue-chat-heading">
+              <div>
+                <span>CHAT PRIVADO</span>
+                <strong>Cliente ↔ suporte</strong>
+              </div>
+              <small>As mensagens são atualizadas em tempo real.</small>
+            </div>
+
+            <div className="admin-issue-messages">
+              {issueMessages.length === 0 ? (
+                <div className="admin-issue-message-empty">
+                  Nenhuma mensagem enviada ainda.
+                </div>
+              ) : (
+                issueMessages.map((message) => {
+                  const fromSupport = ["admin", "owner"].includes(message.sender_role);
+                  return (
+                    <div
+                      className={`admin-issue-message ${fromSupport ? "support" : "customer"}`}
+                      key={message.id}
+                    >
+                      <span>{fromSupport ? "SUPORTE" : "CLIENTE"}</span>
+                      <p>{message.message}</p>
+                      <small>{dateTime(message.created_at)}</small>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {canTalk ? (
+              <div className="admin-issue-chat-compose">
+                <textarea
+                  rows="2"
+                  maxLength={3000}
+                  value={issueMessage}
+                  onChange={(event) => setIssueMessage(event.target.value)}
+                  placeholder="Digite uma mensagem para o cliente..."
+                />
+                <button
+                  type="button"
+                  disabled={issueSaving || !issueMessage.trim()}
+                  onClick={() => sendIssueMessage(issue)}
+                >
+                  ENVIAR
+                </button>
+              </div>
+            ) : (
+              <div className="admin-issue-chat-closed">
+                Esta conversa está encerrada para novas mensagens do cliente.
+              </div>
+            )}
+          </section>
+
+          <div className="admin-modal-actions admin-issue-final-actions">
+            {canRefund && (
+              <button
+                type="button"
+                className="admin-danger-button"
+                disabled={issueSaving || orderRefundSaving}
+                onClick={() => refundOrderIssue(issue)}
+              >
+                {orderRefundSaving ? "REEMBOLSANDO..." : "REEMBOLSAR PEDIDO"}
+              </button>
+            )}
+
+            <button type="button" className="admin-secondary" onClick={closeOrderIssue}>
               Fechar
             </button>
           </div>
@@ -2704,6 +3209,7 @@ export default function AdminPanel({
   const navItems = [
     ["dashboard", "📊", "Dashboard"],
     ["orders", "📦", "Pedidos e vendas"],
+    ["support", "💬", "Problemas e suporte"],
     ["products", "🎮", "Produtos"],
     ["schedules", "🕒", "Agendamentos"],
     ["analytics", "📈", "Analytics"],
@@ -2714,6 +3220,7 @@ export default function AdminPanel({
 
   function renderContent() {
     if (activeTab === "orders") return renderOrders();
+    if (activeTab === "support") return renderSupportIssues();
     if (activeTab === "products") return renderProducts();
     if (activeTab === "schedules") return renderSchedules();
     if (activeTab === "analytics") return renderAnalytics();
@@ -2797,6 +3304,7 @@ export default function AdminPanel({
       </div>
 
       {renderOrderManager()}
+      {renderIssueManager()}
     </>
   );
 }

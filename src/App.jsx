@@ -171,14 +171,8 @@ function normalizeProduct(product) {
       Number.isFinite(originalPrice) && originalPrice > 0
         ? originalPrice
         : null,
-    stock_quantity: Math.max(0, Math.floor(Number(product.stock_quantity || 0))),
     image: productImage(product),
   };
-}
-
-function productStock(product) {
-  const stock = Number(product?.stock_quantity || 0);
-  return Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0;
 }
 
 function isPhysicalProduct(product) {
@@ -316,6 +310,32 @@ function reviewModerationLabel(review) {
   };
 
   return labels[review?.moderation_status] || "Aguardando aprovação";
+}
+
+function orderIssueStatusLabel(status) {
+  const labels = {
+    pending: "Aguardando análise",
+    in_review: "Em análise",
+    chat: "Em conversa",
+    refund_approved: "Reembolso aprovado",
+    resolved: "Resolvido",
+    rejected: "Solicitação rejeitada",
+    closed: "Encerrado",
+  };
+  return labels[status] || "Aguardando análise";
+}
+
+function orderIssueDeadline(order) {
+  if (!order?.delivered_at) return null;
+  const deadline = new Date(order.delivered_at);
+  deadline.setTime(deadline.getTime() + 5 * 24 * 60 * 60 * 1000);
+  return deadline;
+}
+
+function canOpenOrderIssue(order) {
+  if (normalizedFulfillmentStatus(order) !== "delivered" || !order?.delivered_at) return false;
+  const deadline = orderIssueDeadline(order);
+  return Boolean(deadline && Date.now() <= deadline.getTime());
 }
 
 // Avaliações visuais para homologação. Elas não são gravadas no Supabase e
@@ -690,6 +710,16 @@ function App() {
   const [myReviewPhotos, setMyReviewPhotos] = useState([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState(null);
+  const [myOrderIssues, setMyOrderIssues] = useState([]);
+  const [issueOrderId, setIssueOrderId] = useState(null);
+  const [issueDescription, setIssueDescription] = useState("");
+  const [issueImageFile, setIssueImageFile] = useState(null);
+  const [issueImagePreview, setIssueImagePreview] = useState("");
+  const [issueImageUrl, setIssueImageUrl] = useState("");
+  const [issueMessages, setIssueMessages] = useState([]);
+  const [issueMessage, setIssueMessage] = useState("");
+  const [issueBusy, setIssueBusy] = useState(false);
+  const [issueMessagesLoading, setIssueMessagesLoading] = useState(false);
 
   const [publicReviews, setPublicReviews] = useState([]);
   const [publicReviewPhotos, setPublicReviewPhotos] = useState([]);
@@ -722,7 +752,6 @@ function App() {
 
   const analyticsSessionId = useRef(null);
   const checkoutRequestIds = useRef({ pix: null, card: null });
-  const pixExpirySyncRef = useRef(null);
 
   useEffect(() => {
     const key = "customer-review";
@@ -847,15 +876,6 @@ function App() {
         .map(normalizeProduct);
 
       setProducts(visible);
-
-      // Mantém os dados do produto no carrinho atualizados sem alterar
-      // a quantidade que o cliente já escolheu.
-      setCart((currentCart) =>
-        currentCart.map((item) => {
-          const updated = visible.find((product) => product.id === item.id);
-          return updated ? { ...updated, quantity: Number(item.quantity || 1) } : item;
-        })
-      );
 
       if (selectedProduct) {
         const updated = visible.find((product) => product.id === selectedProduct.id);
@@ -1133,18 +1153,13 @@ function App() {
         setPixPayment((current) =>
           current ? { ...current, status: current.status === "paid" ? "paid" : "expired" } : current
         );
-
-        if (pixPayment?.orderId && pixExpirySyncRef.current !== pixPayment.orderId) {
-          pixExpirySyncRef.current = pixPayment.orderId;
-          void syncExpiredPixReservation(pixPayment.orderId);
-        }
       }
     };
 
     updateCountdown();
     const interval = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(interval);
-  }, [page, pixPayment?.expiresAt, pixPayment?.orderId]);
+  }, [page, pixPayment?.expiresAt]);
 
   useEffect(() => {
     if (page !== "pixPayment" || !pixPayment?.orderId) return undefined;
@@ -1257,19 +1272,12 @@ function App() {
   }
 
   function insertProduct(currentCart, product) {
-    const available = productStock(product);
-    if (available <= 0) return currentCart;
-
     const existing = currentCart.find((item) => item.id === product.id);
     if (existing) {
-      if (Number(existing.quantity || 0) >= available) return currentCart;
       return currentCart.map((item) =>
-        item.id === product.id
-          ? { ...product, quantity: Math.min(Number(item.quantity || 0) + 1, available) }
-          : item
+        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
       );
     }
-
     return [...currentCart, { ...product, quantity: 1 }];
   }
 
@@ -1281,33 +1289,7 @@ function App() {
 
   function addToCart(product) {
     if (!product) return;
-
-    const latestProduct = products.find((item) => item.id === product.id) || product;
-    const available = productStock(latestProduct);
-    const currentQuantity = Number(
-      cart.find((item) => item.id === product.id)?.quantity || 0
-    );
-
-    if (available <= 0) {
-      showSiteAlert("Este produto está esgotado no momento.", {
-        title: "Produto esgotado",
-        variant: "warning",
-      });
-      return;
-    }
-
-    if (currentQuantity >= available) {
-      showSiteAlert(
-        `Você já adicionou todas as ${available} unidade(s) disponíveis deste produto.`,
-        {
-          title: "Limite de estoque atingido",
-          variant: "warning",
-        }
-      );
-      return;
-    }
-
-    setCart((currentCart) => insertProduct(currentCart, latestProduct));
+    setCart((currentCart) => insertProduct(currentCart, product));
     resetShippingSelection();
     trackProductEvent(product.id, "add_to_cart");
   }
@@ -1477,6 +1459,10 @@ function App() {
 
     setAccountOpen(false);
     setAccountPage("home");
+    setIssueOrderId(null);
+    setIssueMessages([]);
+    setIssueImageUrl("");
+    cleanupIssueImagePreview();
     setPasswordRecovery(emptyPasswordRecoveryState(accountForm.email));
   }
 
@@ -1521,6 +1507,14 @@ function App() {
         itemsData = data || [];
       }
 
+      const { data: issuesData, error: issuesError } = await supabase
+        .from("order_issues")
+        .select("*")
+        .eq("customer_id", authUser.id)
+        .order("created_at", { ascending: false });
+
+      if (issuesError) throw issuesError;
+
       const { data: reviewsData, error: reviewsError } = await supabase
         .from("product_reviews")
         .select("id,product_id,order_id,rating,comment,is_approved,moderation_status,moderation_note,created_at,updated_at")
@@ -1545,6 +1539,7 @@ function App() {
 
       setMyOrders(ordersData || []);
       setMyOrderItems(itemsData);
+      setMyOrderIssues(issuesData || []);
       setMyReviews(reviewsData || []);
       setMyReviewPhotos(reviewPhotosData);
     } catch (error) {
@@ -1569,6 +1564,185 @@ function App() {
     setAccountPage("orderTracking");
     void loadMyOrders(true);
   }
+
+
+  function issueForOrder(orderId) {
+    return myOrderIssues.find((issue) => issue.order_id === orderId) || null;
+  }
+
+  function cleanupIssueImagePreview() {
+    if (issueImagePreview) URL.revokeObjectURL(issueImagePreview);
+    setIssueImagePreview("");
+    setIssueImageFile(null);
+  }
+
+  async function loadIssueImage(issue) {
+    setIssueImageUrl("");
+    if (!issue?.image_path) return;
+    const { data, error } = await supabase.storage
+      .from("order-issues")
+      .createSignedUrl(issue.image_path, 60 * 10);
+    if (!error && data?.signedUrl) setIssueImageUrl(data.signedUrl);
+  }
+
+  async function loadIssueMessages(issueId, silent = false) {
+    if (!issueId) return;
+    if (!silent) setIssueMessagesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("order_issue_messages")
+        .select("*")
+        .eq("issue_id", issueId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setIssueMessages(data || []);
+    } catch (error) {
+      console.error(error);
+      if (!silent) showSiteAlert("Não foi possível carregar a conversa.");
+    } finally {
+      if (!silent) setIssueMessagesLoading(false);
+    }
+  }
+
+  async function openOrderIssue(order) {
+    if (!order?.id) return;
+    setIssueOrderId(order.id);
+    setIssueDescription("");
+    setIssueMessage("");
+    cleanupIssueImagePreview();
+    setIssueImageUrl("");
+    setIssueMessages([]);
+    setAccountPage("orderIssue");
+
+    const existing = issueForOrder(order.id);
+    if (existing) {
+      await Promise.all([loadIssueMessages(existing.id), loadIssueImage(existing)]);
+    }
+  }
+
+  function handleIssueImageChange(event) {
+    const file = event.target.files?.[0] || null;
+    cleanupIssueImagePreview();
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      showSiteAlert("Envie uma imagem JPG, PNG ou WEBP.", { variant: "warning" });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showSiteAlert("A imagem pode ter no máximo 5 MB.", { variant: "warning" });
+      event.target.value = "";
+      return;
+    }
+
+    setIssueImageFile(file);
+    setIssueImagePreview(URL.createObjectURL(file));
+  }
+
+  async function submitOrderIssue(order) {
+    if (!order?.id || issueBusy) return;
+    const description = issueDescription.trim();
+    if (description.length < 10) {
+      showSiteAlert("Descreva o problema com pelo menos 10 caracteres.", { variant: "warning" });
+      return;
+    }
+
+    setIssueBusy(true);
+    showSiteLoading("order-issue", {
+      eyebrow: "SUPORTE DO PEDIDO",
+      title: "Enviando sua solicitação...",
+      message: "Estamos registrando o problema e preparando o atendimento.",
+      status: "Abrindo chamado",
+    });
+
+    try {
+      const { data, error } = await supabase.rpc("customer_open_order_issue", {
+        p_order_id: order.id,
+        p_description: description,
+      });
+      if (error) throw error;
+
+      const issue = Array.isArray(data) ? data[0] : data;
+      if (!issue?.id) throw new Error("O chamado foi criado, mas não foi possível identificá-lo.");
+
+      if (issueImageFile) {
+        const extension = issueImageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const imagePath = `${authUser.id}/${issue.id}/${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await supabase.storage
+          .from("order-issues")
+          .upload(imagePath, issueImageFile, { upsert: false, contentType: issueImageFile.type });
+        if (uploadError) throw uploadError;
+
+        const { error: attachError } = await supabase.rpc("customer_attach_issue_image", {
+          p_issue_id: issue.id,
+          p_image_path: imagePath,
+        });
+        if (attachError) throw attachError;
+      }
+
+      cleanupIssueImagePreview();
+      setIssueDescription("");
+      await loadMyOrders(false);
+      showSiteAlert("Solicitação enviada. Nossa equipe irá analisar o seu caso.", {
+        title: "Chamado aberto",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      showSiteAlert(error?.message || "Não foi possível abrir a solicitação.");
+    } finally {
+      hideSiteLoading("order-issue");
+      setIssueBusy(false);
+    }
+  }
+
+  async function sendIssueMessage(issue) {
+    const message = issueMessage.trim();
+    if (!issue?.id || !message || issueBusy) return;
+
+    setIssueBusy(true);
+    try {
+      const { error } = await supabase.from("order_issue_messages").insert({
+        issue_id: issue.id,
+        sender_id: authUser.id,
+        sender_role: "customer",
+        message,
+      });
+      if (error) throw error;
+      setIssueMessage("");
+      await loadIssueMessages(issue.id, true);
+    } catch (error) {
+      console.error(error);
+      showSiteAlert(error?.message || "Não foi possível enviar a mensagem.");
+    } finally {
+      setIssueBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    const issue = issueForOrder(issueOrderId);
+    if (!issue?.id || accountPage !== "orderIssue") return undefined;
+
+    const channel = supabase
+      .channel(`order-issue-${issue.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "order_issue_messages", filter: `issue_id=eq.${issue.id}` },
+        () => void loadIssueMessages(issue.id, true)
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "order_issues", filter: `id=eq.${issue.id}` },
+        () => void loadMyOrders(false)
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [accountPage, issueOrderId, myOrderIssues]);
 
   function cleanupReviewNewPhotos() {
     for (const photo of reviewNewPhotos) {
@@ -2365,37 +2539,8 @@ function App() {
     });
   }
 
-  function validateCartStock(showAlert = true) {
-    for (const item of cart) {
-      const latest = products.find((product) => product.id === item.id) || item;
-      const available = productStock(latest);
-
-      if (available <= 0 || Number(item.quantity || 0) > available) {
-        if (showAlert) {
-          showSiteAlert(
-            available <= 0
-              ? `${item.name} está esgotado.`
-              : `${item.name} possui somente ${available} unidade(s) disponível(is).`,
-            {
-              title: "Estoque atualizado",
-              variant: "warning",
-            }
-          );
-        }
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   function openCheckout() {
     if (!cart.length) return showSiteAlert("Seu carrinho está vazio.", { variant: "warning" });
-
-    if (!validateCartStock()) {
-      void loadProducts();
-      return;
-    }
 
     if (!user) {
       showSiteAlert("Entre na sua conta para continuar para o checkout.", { variant: "warning" });
@@ -2414,17 +2559,7 @@ function App() {
 
   function buyNow(product) {
     if (!product) return;
-
-    const latestProduct = products.find((item) => item.id === product.id) || product;
-    if (productStock(latestProduct) <= 0) {
-      showSiteAlert("Este produto está esgotado no momento.", {
-        title: "Produto esgotado",
-        variant: "warning",
-      });
-      return;
-    }
-
-    setCart((currentCart) => insertProduct(currentCart, latestProduct));
+    setCart((currentCart) => insertProduct(currentCart, product));
     resetShippingSelection();
     trackProductEvent(product.id, "add_to_cart");
 
@@ -2647,14 +2782,6 @@ function App() {
       return false;
     }
 
-    if (!validateCartStock(false)) {
-      setPaymentError(
-        "O estoque de um ou mais produtos mudou. Atualize o carrinho antes de pagar."
-      );
-      void loadProducts();
-      return false;
-    }
-
     if (!shippingIsReady()) {
       setPaymentError(
         "Calcule o frete e escolha uma opção de entrega antes de iniciar o pagamento."
@@ -2713,7 +2840,6 @@ function App() {
     setPage("orderSuccess");
     goTop();
     void loadMyOrders();
-    void loadProducts();
 
     window.setTimeout(() => {
       hidePaymentOverlay();
@@ -2796,7 +2922,6 @@ function App() {
 
       console.error("Erro PIX:", error);
       setPaymentError(error?.message || "Não foi possível gerar o PIX.");
-      void loadProducts();
       hidePaymentOverlay();
     } finally {
       setPaymentBusy(false);
@@ -2898,7 +3023,6 @@ function App() {
 
       console.error("Erro cartão:", error);
       setPaymentError(error?.message || "Não foi possível processar o cartão.");
-      void loadProducts();
       hidePaymentOverlay();
       throw error;
     } finally {
@@ -2957,7 +3081,6 @@ function App() {
           );
           hidePaymentOverlay();
         }
-        void loadProducts();
         return;
       }
 
@@ -2971,23 +3094,6 @@ function App() {
         setPaymentError("Não foi possível atualizar o status agora.");
         hidePaymentOverlay();
       }
-    }
-  }
-
-  async function syncExpiredPixReservation(orderId) {
-    if (!orderId) return;
-
-    try {
-      // A função de cancelamento confirma o estado no Mercado Pago antes de
-      // expirar o pedido. Se o PIX tiver sido pago no limite, o estoque não volta.
-      await supabase.functions.invoke("cancel-checkout-payment", {
-        body: { orderId },
-      });
-    } catch (error) {
-      console.error("Não foi possível sincronizar automaticamente o PIX expirado:", error);
-    } finally {
-      void refreshPixStatus(true);
-      void loadProducts();
     }
   }
 
@@ -3023,7 +3129,6 @@ function App() {
       setPaymentError("Pedido PIX cancelado. Nenhuma cobrança pendente deve ser reutilizada.");
       hidePaymentOverlay();
       void loadMyOrders();
-      void loadProducts();
     } catch (error) {
       console.error("Erro ao cancelar PIX:", error);
       setPaymentError(error?.message || "Não foi possível cancelar o pedido.");
@@ -3198,8 +3303,6 @@ function App() {
     const reviewCount = getReviewCount(product);
     const discountPercent = getDiscountPercent(product);
     const hasDiscount = discountPercent > 0;
-    const availableStock = productStock(product);
-    const outOfStock = availableStock <= 0;
 
     return (
       <article className="product-card">
@@ -3225,10 +3328,6 @@ function App() {
             <small>({reviewCount})</small>
           </div>
 
-          <div className={`product-stock ${outOfStock ? "out" : availableStock <= 5 ? "low" : "available"}`}>
-            {outOfStock ? "ESGOTADO" : `${availableStock} unidade(s) disponível(is)`}
-          </div>
-
           <div className="product-bottom">
             <div className="offer-price-stack">
               {hasDiscount && (
@@ -3240,14 +3339,7 @@ function App() {
                 {formatPrice(product.price)}
               </strong>
             </div>
-            <button
-              className="add-button"
-              onClick={() => addToCart(product)}
-              disabled={outOfStock}
-              aria-label={outOfStock ? "Produto esgotado" : "Adicionar ao carrinho"}
-            >
-              {outOfStock ? "×" : "+"}
-            </button>
+            <button className="add-button" onClick={() => addToCart(product)}>+</button>
           </div>
         </div>
       </article>
@@ -3514,8 +3606,6 @@ function App() {
     const productReviews = approvedReviewsForProduct(selectedProduct);
     const rating = getProductRating(selectedProduct);
     const reviewCount = getReviewCount(selectedProduct);
-    const availableStock = productStock(selectedProduct);
-    const outOfStock = availableStock <= 0;
     const ratingRows = [5, 4, 3, 2, 1].map((stars) => {
       const count = productReviews.filter((review) => Number(review.rating) === stars).length;
       const percent = reviewCount ? Math.round((count / reviewCount) * 100) : 0;
@@ -3572,19 +3662,6 @@ function App() {
                 <strong>{formatPrice(selectedProduct.price)}</strong>
                 <small>preço do produto</small>
               </div>
-              <div className={`product-detail-stock ${outOfStock ? "out" : availableStock <= 5 ? "low" : "available"}`}>
-                <strong>
-                  {outOfStock
-                    ? "Produto esgotado"
-                    : `${availableStock} unidade(s) disponível(is)`}
-                </strong>
-                <span>
-                  {outOfStock
-                    ? "No momento não há unidades disponíveis para compra."
-                    : "Quantidade disponível para novas compras."}
-                </span>
-              </div>
-
               <p className="product-detail-description">{selectedProduct.description}</p>
 
               <div className="product-purchase-benefits">
@@ -3594,20 +3671,8 @@ function App() {
               </div>
 
               <div className="product-detail-actions">
-                <button
-                  className="buy-now-button"
-                  onClick={() => buyNow(selectedProduct)}
-                  disabled={outOfStock}
-                >
-                  {outOfStock ? "ESGOTADO" : "COMPRAR AGORA"}
-                </button>
-                <button
-                  className="detail-cart-button"
-                  onClick={() => addToCart(selectedProduct)}
-                  disabled={outOfStock}
-                >
-                  🛒 {outOfStock ? "SEM ESTOQUE" : "ADICIONAR AO CARRINHO"}
-                </button>
+                <button className="buy-now-button" onClick={() => buyNow(selectedProduct)}>COMPRAR AGORA</button>
+                <button className="detail-cart-button" onClick={() => addToCart(selectedProduct)}>🛒 ADICIONAR AO CARRINHO</button>
               </div>
             </div>
           </section>
@@ -3725,21 +3790,7 @@ function App() {
                       {item.image ? <img src={item.image} alt={item.name} /> : <span>🎮</span>}
                     </button>
                     <div className="cart-item-info"><span>{item.category}</span><button className="cart-product-name" onClick={() => openProduct(item)}>{item.name}</button><strong>{formatPrice(item.price)}</strong></div>
-                    <div className="quantity">
-                      <button onClick={() => removeFromCart(item.id)}>−</button>
-                      <strong>{item.quantity}</strong>
-                      <button
-                        onClick={() => addToCart(item)}
-                        disabled={Number(item.quantity || 0) >= productStock(item)}
-                        title={
-                          Number(item.quantity || 0) >= productStock(item)
-                            ? "Quantidade máxima disponível atingida"
-                            : "Adicionar mais uma unidade"
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
+                    <div className="quantity"><button onClick={() => removeFromCart(item.id)}>−</button><strong>{item.quantity}</strong><button onClick={() => addToCart(item)}>+</button></div>
                     <strong className="item-total">{formatPrice(Number(item.price) * item.quantity)}</strong>
                   </div>
                 ))}
@@ -4931,6 +4982,10 @@ function App() {
       myReviews.map((review) => [review.product_id, review])
     );
 
+    const issueByOrder = new Map(
+      myOrderIssues.map((issue) => [issue.order_id, issue])
+    );
+
     return (
       <div className="modal-overlay account-overlay" onClick={closeAccount}>
         <div className="account-modal" onClick={(event) => event.stopPropagation()}>
@@ -5077,6 +5132,41 @@ function App() {
                                   })}
                               </div>
                             )}
+
+                            {normalizedFulfillmentStatus(order) === "delivered" && (() => {
+                              const issue = issueByOrder.get(order.id);
+                              const deadline = orderIssueDeadline(order);
+                              const canOpen = canOpenOrderIssue(order) && !issue;
+
+                              return (
+                                <div className="order-issue-summary">
+                                  <div>
+                                    <span>SUPORTE PÓS-ENTREGA</span>
+                                    {issue ? (
+                                      <>
+                                        <strong>{orderIssueStatusLabel(issue.status)}</strong>
+                                        <small>Solicitação aberta em {new Date(issue.created_at).toLocaleString("pt-BR")}.</small>
+                                      </>
+                                    ) : canOpen ? (
+                                      <>
+                                        <strong>Teve algum problema com o pedido?</strong>
+                                        <small>Você pode informar um problema até {deadline?.toLocaleString("pt-BR")}.</small>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <strong>Prazo para suporte encerrado</strong>
+                                        <small>O prazo de 5 dias após a entrega terminou.</small>
+                                      </>
+                                    )}
+                                  </div>
+                                  {(issue || canOpen) && (
+                                    <button type="button" onClick={() => openOrderIssue(order)}>
+                                      {issue ? "VER SOLICITAÇÃO / CHAT" : "TIVE UM PROBLEMA"}
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
 
                             <div className="order-card-progress-summary">
                               <span>{paid ? "ANDAMENTO" : "STATUS DO PEDIDO"}</span>
@@ -5228,6 +5318,30 @@ function App() {
                       ))}
                     </div>
 
+                    {fulfillment === "delivered" && (() => {
+                      const issue = issueByOrder.get(order.id);
+                      const deadline = orderIssueDeadline(order);
+                      const canOpen = canOpenOrderIssue(order) && !issue;
+                      return (
+                        <div className="tracking-issue-card">
+                          <span>SUPORTE PÓS-ENTREGA</span>
+                          <strong>{issue ? orderIssueStatusLabel(issue.status) : canOpen ? "Problemas com o pedido" : "Prazo encerrado"}</strong>
+                          <p>
+                            {issue
+                              ? "Acompanhe a análise e converse com a equipe da Brother's Games."
+                              : canOpen
+                                ? `Você pode abrir uma solicitação até ${deadline?.toLocaleString("pt-BR")}.`
+                                : "O prazo de 5 dias após a entrega para informar problemas foi encerrado."}
+                          </p>
+                          {(issue || canOpen) && (
+                            <button type="button" onClick={() => openOrderIssue(order)}>
+                              {issue ? "ABRIR SOLICITAÇÃO / CHAT" : "TIVE UM PROBLEMA COM ESTE PEDIDO"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     <button
                       type="button"
                       className="tracking-refresh-button"
@@ -5236,6 +5350,137 @@ function App() {
                     >
                       {myOrdersLoading ? "ATUALIZANDO..." : "ATUALIZAR ACOMPANHAMENTO"}
                     </button>
+                  </div>
+                );
+              })()}
+
+              {accountPage === "orderIssue" && (() => {
+                const order = myOrders.find((item) => item.id === issueOrderId);
+                if (!order) return null;
+                const issue = issueByOrder.get(order.id);
+                const deadline = orderIssueDeadline(order);
+                const canOpen = canOpenOrderIssue(order) && !issue;
+                const chatClosed = issue && ["rejected", "closed"].includes(issue.status);
+
+                return (
+                  <div className="account-page order-issue-page">
+                    <button className="account-back" onClick={openMyOrders}>← Voltar aos pedidos</button>
+                    <div className="account-page-title">
+                      <span>SUPORTE DO PEDIDO</span>
+                      <h3>Pedido #{order.order_number || String(order.id).slice(0, 8)}</h3>
+                      <p>{issue ? orderIssueStatusLabel(issue.status) : "Informe o problema ocorrido após a entrega."}</p>
+                    </div>
+
+                    {!issue && canOpen && (
+                      <div className="order-issue-form-card">
+                        <div className="order-issue-deadline">
+                          <span>PRAZO PARA ABERTURA</span>
+                          <strong>até {deadline?.toLocaleString("pt-BR")}</strong>
+                        </div>
+                        <label>
+                          <span>DESCRIÇÃO DO PROBLEMA *</span>
+                          <textarea
+                            value={issueDescription}
+                            onChange={(event) => setIssueDescription(event.target.value)}
+                            maxLength={3000}
+                            placeholder="Explique o que aconteceu com o pedido, produto ou entrega..."
+                          />
+                          <small>{issueDescription.length}/3000</small>
+                        </label>
+                        <label className="order-issue-image-field">
+                          <span>IMAGEM (OPCIONAL)</span>
+                          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleIssueImageChange} />
+                          <small>JPG, PNG ou WEBP · até 5 MB</small>
+                        </label>
+                        {issueImagePreview && (
+                          <div className="order-issue-preview">
+                            <img src={issueImagePreview} alt="Prévia do problema" />
+                            <button type="button" onClick={cleanupIssueImagePreview}>Remover imagem</button>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          className="order-issue-submit"
+                          onClick={() => submitOrderIssue(order)}
+                          disabled={issueBusy}
+                        >
+                          {issueBusy ? "ENVIANDO..." : "ENVIAR SOLICITAÇÃO"}
+                        </button>
+                      </div>
+                    )}
+
+                    {!issue && !canOpen && (
+                      <div className="account-empty">
+                        <div>⌛</div>
+                        <strong>Prazo encerrado</strong>
+                        <p>O prazo de 5 dias após a entrega para abrir um problema terminou.</p>
+                      </div>
+                    )}
+
+                    {issue && (
+                      <>
+                        <div className="order-issue-details-card">
+                          <div className="order-issue-status-row">
+                            <span>STATUS</span>
+                            <strong className={`issue-status ${issue.status}`}>{orderIssueStatusLabel(issue.status)}</strong>
+                          </div>
+                          <div>
+                            <span>PROBLEMA INFORMADO</span>
+                            <p>{issue.description}</p>
+                          </div>
+                          {issue.admin_note && (
+                            <div className="order-issue-admin-note">
+                              <span>RESPOSTA DA EQUIPE</span>
+                              <p>{issue.admin_note}</p>
+                            </div>
+                          )}
+                          {issue.image_path && (
+                            <div className="order-issue-evidence">
+                              <span>IMAGEM ENVIADA</span>
+                              {issueImageUrl ? <img src={issueImageUrl} alt="Imagem enviada no chamado" /> : <small>Carregando imagem...</small>}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="order-issue-chat-card">
+                          <div className="order-issue-chat-heading">
+                            <div><span>CONVERSA</span><strong>Atendimento do pedido</strong></div>
+                            <small>{chatClosed ? "Conversa encerrada" : "Mensagens em tempo real"}</small>
+                          </div>
+
+                          <div className="order-issue-messages">
+                            {issueMessagesLoading ? (
+                              <div className="order-issue-message-empty">Carregando conversa...</div>
+                            ) : issueMessages.length === 0 ? (
+                              <div className="order-issue-message-empty">Ainda não há mensagens. A equipe poderá iniciar uma conversa durante a análise.</div>
+                            ) : issueMessages.map((message) => (
+                              <div
+                                key={message.id}
+                                className={`order-issue-message ${message.sender_role === "customer" ? "customer" : "support"}`}
+                              >
+                                <span>{message.sender_role === "customer" ? "Você" : "Suporte Brother's Games"}</span>
+                                <p>{message.message}</p>
+                                <small>{new Date(message.created_at).toLocaleString("pt-BR")}</small>
+                              </div>
+                            ))}
+                          </div>
+
+                          {!chatClosed && (
+                            <div className="order-issue-chat-compose">
+                              <textarea
+                                value={issueMessage}
+                                onChange={(event) => setIssueMessage(event.target.value)}
+                                maxLength={3000}
+                                placeholder="Digite uma mensagem para o suporte..."
+                              />
+                              <button type="button" onClick={() => sendIssueMessage(issue)} disabled={issueBusy || !issueMessage.trim()}>
+                                ENVIAR
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })()}

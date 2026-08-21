@@ -4299,151 +4299,617 @@ select:focus {
   }
 }
 
+
 /* =========================================================
-   CONTROLE DE ESTOQUE — BROTHER'S GAMES
+   CENTRAL DE PROBLEMAS DO PEDIDO — CLIENTE
 ========================================================= */
 
-.product-stock {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 9px;
-  border: 1px solid #2a2a2a;
-  border-radius: 999px;
-  background: #151515;
-  color: #aaa;
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
-
-.product-stock.available {
-  border-color: rgba(44, 196, 104, .28);
-  background: rgba(44, 196, 104, .08);
-  color: #58d98b;
-}
-
-.product-stock.low {
-  border-color: rgba(255, 176, 32, .34);
-  background: rgba(255, 176, 32, .09);
-  color: #ffbd4a;
-}
-
-.product-stock.out {
-  border-color: rgba(255, 60, 70, .32);
-  background: rgba(255, 60, 70, .08);
-  color: #ff626b;
-}
-
-.product-detail-stock {
+.order-issue-summary {
   margin-top: 16px;
-  padding: 13px 14px;
-  border: 1px solid #292929;
-  border-radius: 9px;
-  background: #111;
+  padding: 14px;
+  border: 1px solid rgba(229, 9, 20, 0.25);
+  border-radius: 8px;
+  background: rgba(229, 9, 20, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
 }
 
-.product-detail-stock strong,
-.product-detail-stock span {
-  display: block;
+.order-issue-summary > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.product-detail-stock strong {
-  font-size: 12px;
+.order-issue-summary > div > span {
+  color: #ff3b43;
+  font-size: 8px;
   font-weight: 900;
+  letter-spacing: 1.4px;
 }
 
-.product-detail-stock span {
-  margin-top: 4px;
-  color: #777;
-  font-size: 10px;
+.order-issue-summary > div > strong {
+  color: #f5f5f5;
+  font-size: 12px;
+}
+
+.order-issue-summary > div > small {
+  color: #7f7f7f;
+  font-size: 9px;
   line-height: 1.45;
 }
 
-.product-detail-stock.available {
-  border-color: rgba(44, 196, 104, .3);
-  background: rgba(44, 196, 104, .06);
+.order-issue-summary > button,
+.tracking-issue-card > button,
+.order-issue-submit,
+.order-issue-chat-compose > button {
+  border: 1px solid #e50914;
+  border-radius: 6px;
+  background: #e50914;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
-.product-detail-stock.available strong {
-  color: #58d98b;
+.order-issue-summary > button {
+  flex: 0 0 auto;
+  padding: 10px 12px;
 }
 
-.product-detail-stock.low {
-  border-color: rgba(255, 176, 32, .34);
-  background: rgba(255, 176, 32, .065);
+.order-issue-summary > button:hover,
+.tracking-issue-card > button:hover,
+.order-issue-submit:hover:not(:disabled),
+.order-issue-chat-compose > button:hover:not(:disabled) {
+  background: #ff1723;
+  border-color: #ff1723;
+  transform: translateY(-1px);
 }
 
-.product-detail-stock.low strong {
-  color: #ffbd4a;
+.order-issue-summary > button:active,
+.tracking-issue-card > button:active,
+.order-issue-submit:active:not(:disabled),
+.order-issue-chat-compose > button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.product-detail-stock.out {
-  border-color: rgba(255, 60, 70, .34);
-  background: rgba(255, 60, 70, .065);
+/* =========================================================
+   ACOMPANHAMENTO — BLOCO DE SUPORTE
+========================================================= */
+
+.tracking-issue-card {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(229, 9, 20, 0.22);
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(229, 9, 20, 0.065), rgba(229, 9, 20, 0.025)),
+    #111;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
 }
 
-.product-detail-stock.out strong {
-  color: #ff626b;
+.tracking-issue-card > span {
+  color: #ff3b43;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
 }
 
-.add-button:disabled,
-.buy-now-button:disabled,
-.detail-cart-button:disabled {
+.tracking-issue-card > strong {
+  color: #f3f3f3;
+  font-size: 14px;
+}
+
+.tracking-issue-card > p {
+  margin: 0;
+  color: #7d7d7d;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.tracking-issue-card > button {
+  margin-top: 5px;
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+/* =========================================================
+   PÁGINA DO CHAMADO
+========================================================= */
+
+.order-issue-page {
+  width: 100%;
+}
+
+.order-issue-form-card,
+.order-issue-details-card,
+.order-issue-chat-card {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #252525;
+  border-radius: 9px;
+  background: #121212;
+}
+
+.order-issue-deadline {
+  margin-bottom: 16px;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 180, 50, 0.2);
+  border-radius: 7px;
+  background: rgba(255, 180, 50, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-issue-deadline span {
+  color: #8b8b8b;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.order-issue-deadline strong {
+  color: #e2ad51;
+  font-size: 10px;
+}
+
+.order-issue-form-card > label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.order-issue-form-card > label + label {
+  margin-top: 15px;
+}
+
+.order-issue-form-card label > span {
+  color: #898989;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+.order-issue-form-card textarea,
+.order-issue-chat-compose textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #2a2a2a;
+  border-radius: 7px;
+  background: #0c0c0c;
+  color: #eee;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+}
+
+.order-issue-form-card textarea:focus,
+.order-issue-chat-compose textarea:focus {
+  border-color: rgba(229, 9, 20, 0.7);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.08);
+}
+
+.order-issue-form-card label > small,
+.order-issue-image-field > small {
+  color: #666;
+  font-size: 8px;
+}
+
+.order-issue-image-field input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed #303030;
+  border-radius: 7px;
+  background: #0d0d0d;
+  color: #888;
+  font-size: 9px;
+}
+
+.order-issue-preview {
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  background: #0c0c0c;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-issue-preview img {
+  width: 88px;
+  height: 88px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #2d2d2d;
+}
+
+.order-issue-preview button {
+  border: 0;
+  background: transparent;
+  color: #ff4d55;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.order-issue-submit {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 18px;
+}
+
+.order-issue-submit:disabled,
+.order-issue-chat-compose > button:disabled {
   cursor: not-allowed;
-  opacity: .5;
-  transform: none !important;
+  opacity: 0.55;
+  transform: none;
 }
 
-.add-button:disabled:hover,
-.buy-now-button:disabled:hover,
-.detail-cart-button:disabled:hover {
-  transform: none !important;
-  filter: none;
+/* =========================================================
+   DETALHES / STATUS DO CHAMADO
+========================================================= */
+
+.order-issue-details-card {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-html[data-theme="light"] .product-stock {
-  background: #f5f6f8;
-  border-color: #d8dce2;
+.order-issue-details-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-html[data-theme="light"] .product-stock.available {
-  background: rgba(29, 145, 76, .08);
-  border-color: rgba(29, 145, 76, .24);
-  color: #177a42;
+.order-issue-details-card > div > span,
+.order-issue-status-row > span {
+  color: #707070;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
 }
 
-html[data-theme="light"] .product-stock.low {
-  background: rgba(190, 119, 0, .08);
-  border-color: rgba(190, 119, 0, .25);
-  color: #9c6200;
+.order-issue-details-card p {
+  margin: 0;
+  color: #c8c8c8;
+  font-size: 10px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-html[data-theme="light"] .product-stock.out {
-  background: rgba(197, 35, 44, .07);
-  border-color: rgba(197, 35, 44, .22);
-  color: #b21e27;
+.order-issue-status-row {
+  padding-bottom: 13px;
+  border-bottom: 1px solid #242424;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-html[data-theme="light"] .product-detail-stock {
+.issue-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 27px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.issue-status.pending {
+  background: rgba(255, 180, 50, 0.08);
+  border: 1px solid rgba(255, 180, 50, 0.22);
+  color: #e2ad51;
+}
+
+.issue-status.in_review,
+.issue-status.chat {
+  background: rgba(75, 145, 255, 0.08);
+  border: 1px solid rgba(75, 145, 255, 0.24);
+  color: #6da6ff;
+}
+
+.issue-status.refund_approved,
+.issue-status.resolved {
+  background: rgba(54, 196, 118, 0.08);
+  border: 1px solid rgba(54, 196, 118, 0.22);
+  color: #58d78e;
+}
+
+.issue-status.rejected,
+.issue-status.closed {
+  background: rgba(229, 9, 20, 0.08);
+  border: 1px solid rgba(229, 9, 20, 0.22);
+  color: #ff555d;
+}
+
+.order-issue-admin-note {
+  padding: 12px;
+  border: 1px solid rgba(75, 145, 255, 0.2);
+  border-radius: 7px;
+  background: rgba(75, 145, 255, 0.04);
+}
+
+.order-issue-evidence img {
+  display: block;
+  width: min(100%, 360px);
+  max-height: 320px;
+  border: 1px solid #292929;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #090909;
+}
+
+.order-issue-evidence small {
+  color: #777;
+  font-size: 9px;
+}
+
+/* =========================================================
+   CHAT DO CHAMADO
+========================================================= */
+
+.order-issue-chat-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.order-issue-chat-heading {
+  padding: 15px 17px;
+  border-bottom: 1px solid #242424;
+  background: #101010;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-issue-chat-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.order-issue-chat-heading span {
+  color: #ff3b43;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+}
+
+.order-issue-chat-heading strong {
+  color: #eee;
+  font-size: 12px;
+}
+
+.order-issue-chat-heading small {
+  color: #666;
+  font-size: 8px;
+}
+
+.order-issue-messages {
+  min-height: 220px;
+  max-height: 420px;
+  padding: 16px;
+  overflow-y: auto;
+  background: #0d0d0d;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-issue-message-empty {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.order-issue-message {
+  width: min(78%, 420px);
+  padding: 10px 12px;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-issue-message.customer {
+  align-self: flex-end;
+  border: 1px solid rgba(229, 9, 20, 0.22);
+  background: rgba(229, 9, 20, 0.10);
+}
+
+.order-issue-message.support {
+  align-self: flex-start;
+  border: 1px solid #292929;
+  background: #171717;
+}
+
+.order-issue-message > span {
+  color: #9b9b9b;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+}
+
+.order-issue-message > p {
+  margin: 0;
+  color: #e3e3e3;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.order-issue-message > small {
+  color: #666;
+  font-size: 7px;
+}
+
+.order-issue-chat-compose {
+  padding: 12px;
+  border-top: 1px solid #242424;
+  background: #111;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: end;
+}
+
+.order-issue-chat-compose textarea {
+  min-height: 72px;
+  max-height: 180px;
+}
+
+.order-issue-chat-compose > button {
+  min-width: 84px;
+  height: 40px;
+  padding: 0 14px;
+}
+
+/* =========================================================
+   TEMA CLARO — CENTRAL DE PROBLEMAS
+========================================================= */
+
+html[data-theme="light"] .order-issue-summary,
+html[data-theme="light"] .tracking-issue-card {
+  border-color: rgba(229, 9, 20, 0.20);
+  background: #fff7f8;
+}
+
+html[data-theme="light"] .order-issue-summary > div > strong,
+html[data-theme="light"] .tracking-issue-card > strong {
+  color: #17191f;
+}
+
+html[data-theme="light"] .order-issue-summary > div > small,
+html[data-theme="light"] .tracking-issue-card > p {
+  color: #69707a;
+}
+
+html[data-theme="light"] .order-issue-form-card,
+html[data-theme="light"] .order-issue-details-card,
+html[data-theme="light"] .order-issue-chat-card {
+  border-color: #dfe3ea;
+  background: #fff;
+}
+
+html[data-theme="light"] .order-issue-deadline {
+  border-color: #ead9bb;
+  background: #fffaf0;
+}
+
+html[data-theme="light"] .order-issue-form-card textarea,
+html[data-theme="light"] .order-issue-chat-compose textarea,
+html[data-theme="light"] .order-issue-image-field input[type="file"] {
+  border-color: #d8dde5;
+  background: #fff;
+  color: #17191f;
+}
+
+html[data-theme="light"] .order-issue-preview,
+html[data-theme="light"] .order-issue-messages,
+html[data-theme="light"] .order-issue-chat-heading,
+html[data-theme="light"] .order-issue-chat-compose {
+  border-color: #e1e5eb;
   background: #f7f8fa;
-  border-color: #dfe2e7;
 }
 
-html[data-theme="light"] .product-detail-stock span {
-  color: #69717d;
+html[data-theme="light"] .order-issue-details-card p,
+html[data-theme="light"] .order-issue-message > p,
+html[data-theme="light"] .order-issue-chat-heading strong {
+  color: #23262c;
 }
 
-html[data-theme="light"] .product-detail-stock.available strong {
-  color: #177a42;
+html[data-theme="light"] .order-issue-message.support {
+  border-color: #dfe3e8;
+  background: #fff;
 }
 
-html[data-theme="light"] .product-detail-stock.low strong {
-  color: #9c6200;
+html[data-theme="light"] .order-issue-message.customer {
+  border-color: rgba(229, 9, 20, 0.20);
+  background: #fff0f1;
 }
 
-html[data-theme="light"] .product-detail-stock.out strong {
-  color: #b21e27;
+html[data-theme="light"] .order-issue-evidence img {
+  border-color: #dfe3e8;
+  background: #f5f6f8;
+}
+
+/* =========================================================
+   RESPONSIVO — CENTRAL DE PROBLEMAS
+========================================================= */
+
+@media (max-width: 700px) {
+  .order-issue-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .order-issue-summary > button {
+    width: 100%;
+  }
+
+  .order-issue-deadline,
+  .order-issue-chat-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .order-issue-chat-compose {
+    grid-template-columns: 1fr;
+  }
+
+  .order-issue-chat-compose > button {
+    width: 100%;
+  }
+
+  .order-issue-message {
+    width: 88%;
+  }
+}
+
+@media (max-width: 460px) {
+  .order-issue-form-card,
+  .order-issue-details-card {
+    padding: 14px;
+  }
+
+  .order-issue-preview {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .order-issue-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 240px;
+  }
+
+  .order-issue-message {
+    width: 94%;
+  }
 }
