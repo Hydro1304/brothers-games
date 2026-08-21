@@ -4,7 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "./lib/supabase";
 import AdminPanel from "./AdminPanel";
 import { useSitePopup } from "./SitePopup";
-import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom, translateProductName } from "./i18n";
+import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom, translateProductName, translateCategoryName } from "./i18n";
 import "./styles.css";
 import "./avatar-transitions.css";
 
@@ -1345,9 +1345,10 @@ function App() {
         (category === "Periféricos" && isPeripheralCategory(product.category)) ||
         product.category === category;
       const translatedName = translateProductName(product.name || "", language);
+      const translatedCategory = translateCategoryName(product.category || "", language);
       const text = `${product.name || ""} ${translatedName} ${product.description || ""} ${
         product.category || ""
-      }`.toLowerCase();
+      } ${translatedCategory}`.toLowerCase();
       const matchesSearch = text.includes(search.toLowerCase());
       const price = Number(product.price || 0);
       const minimum = priceMin === "" || price >= Number(priceMin);
@@ -3641,7 +3642,7 @@ function App() {
         </button>
 
         <div className="product-info">
-          <span className="product-category">{product.category}</span>
+          <span className="product-category">{translateCategoryName(product.category, language)}</span>
           <button className="product-name-button" onClick={() => openProduct(product)}>
             <span className="product-name-hover-row">
               <span className="product-name-text">{translateProductName(product.name, language)}</span>
@@ -3745,7 +3746,7 @@ function App() {
                     <CategoryHomeIcon category={item} />
                   </span>
                   <span className="category-home-copy">
-                    <strong>{item}</strong>
+                    <strong>{translateCategoryName(item, language)}</strong>
                     <small>Explorar categoria</small>
                   </span>
                   <span className="category-home-arrow" aria-hidden="true">↗</span>
@@ -3871,7 +3872,7 @@ function App() {
                       onClick={() => setCategory(item)}
                     >
                       <span className="filter-radio">{category === item ? "●" : "○"}</span>
-                      {item}
+                      {translateCategoryName(item, language)}
                     </button>
                   ))}
                 </div>
