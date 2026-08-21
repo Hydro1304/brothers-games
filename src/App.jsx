@@ -672,6 +672,10 @@ function App() {
   const [page, setPage] = useState("home");
   const [previousPage, setPreviousPage] = useState("products");
 
+  // Sincroniza a navegação interna com Voltar/Avançar do navegador.
+  const browserHistoryReadyRef = useRef(false);
+  const browserHistoryPopRef = useRef(false);
+
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState("");
@@ -819,6 +823,87 @@ function App() {
   const isAdmin =
     profile?.status === "active" && ["admin", "owner"].includes(profile?.role);
   const isOwner = profile?.status === "active" && profile?.role === "owner";
+
+
+  useEffect(() => {
+    const currentState =
+      window.history.state && typeof window.history.state === "object"
+        ? window.history.state
+        : {};
+
+    // A entrada atual representa a Home; isso habilita o histórico sem duplicar a página inicial.
+    window.history.replaceState(
+      {
+        ...currentState,
+        brothersGames: true,
+        brothersGamesPage: "home",
+      },
+      "",
+      window.location.href
+    );
+
+    browserHistoryReadyRef.current = true;
+
+    function handleBrowserPopState(event) {
+      const state = event.state || {};
+      const requestedPage =
+        state.brothersGames && state.brothersGamesPage
+          ? state.brothersGamesPage
+          : "home";
+
+      browserHistoryPopRef.current = true;
+
+      // Fecha overlays para o botão do navegador retornar à tela anterior de forma limpa.
+      setAccountOpen(false);
+      setInstitutionalPage(null);
+
+      if (requestedPage === "admin" && !isAdmin) {
+        setPage("home");
+      } else {
+        setPage(requestedPage);
+      }
+
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+
+    window.addEventListener("popstate", handleBrowserPopState);
+
+    return () => {
+      window.removeEventListener("popstate", handleBrowserPopState);
+    };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!browserHistoryReadyRef.current) return;
+
+    // Se a troca de página veio do próprio histórico, não criamos outra entrada.
+    if (browserHistoryPopRef.current) {
+      browserHistoryPopRef.current = false;
+      return;
+    }
+
+    const currentState =
+      window.history.state && typeof window.history.state === "object"
+        ? window.history.state
+        : {};
+
+    if (
+      currentState.brothersGames &&
+      currentState.brothersGamesPage === page
+    ) {
+      return;
+    }
+
+    window.history.pushState(
+      {
+        ...currentState,
+        brothersGames: true,
+        brothersGamesPage: page,
+      },
+      "",
+      window.location.href
+    );
+  }, [page]);
 
   function toggleTheme() {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
