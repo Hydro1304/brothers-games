@@ -81,8 +81,8 @@ interface ClientAction {
   [key: string]: unknown;
 }
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
-const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-5.4-mini";
+const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") || "";
+const GROQ_MODEL = Deno.env.get("GROQ_MODEL") || "openai/gpt-oss-20b";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "";
 
@@ -558,41 +558,59 @@ When multiple suitable products exist, use show_products so the UI renders real 
 `;
 }
 
-function outputText(response: JsonObject) {
-  const output = Array.isArray(response.output) ? response.output : [];
-
-  for (const item of output) {
-    if (!item || typeof item !== "object") continue;
-    const row = item as JsonObject;
-    if (row.type !== "message" || !Array.isArray(row.content)) continue;
-
-    for (const content of row.content) {
-      if (!content || typeof content !== "object") continue;
-      const part = content as JsonObject;
-      if (part.type === "output_text" && typeof part.text === "string") {
-        return part.text.trim();
-      }
-    }
-  }
-
-  return "";
+function groqTools() {
+  return tools().map((tool) => ({
+    type: "function",
+    function: {
+      name: String(tool.name || ""),
+      description: String(tool.description || ""),
+      parameters:
+        tool.parameters && typeof tool.parameters === "object"
+          ? tool.parameters
+          : {
+              type: "object",
+              properties: {},
+              required: [],
+              additionalProperties: false,
+            },
+    },
+  }));
 }
 
-function functionCalls(response: JsonObject) {
-  const output = Array.isArray(response.output) ? response.output : [];
-  return output.filter(
-    (item) =>
-      item &&
-      typeof item === "object" &&
-      (item as JsonObject).type === "function_call"
+function groqAssistantMessage(response: JsonObject) {
+  const choices = Array.isArray(response.choices) ? response.choices : [];
+  const first = choices[0];
+
+  if (!first || typeof first !== "object") return null;
+
+  const message = (first as JsonObject).message;
+  return message && typeof message === "object"
+    ? (message as JsonObject)
+    : null;
+}
+
+function groqOutputText(response: JsonObject) {
+  const message = groqAssistantMessage(response);
+  return typeof message?.content === "string" ? message.content.trim() : "";
+}
+
+function groqFunctionCalls(response: JsonObject) {
+  const message = groqAssistantMessage(response);
+  const calls = Array.isArray(message?.tool_calls) ? message.tool_calls : [];
+
+  return calls.filter(
+    (call) =>
+      call &&
+      typeof call === "object" &&
+      (call as JsonObject).type === "function"
   ) as JsonObject[];
 }
 
-async function callOpenAI(body: JsonObject) {
-  const response = await fetch("https://api.openai.com/v1/responses", {
+async function callGroq(body: JsonObject) {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${GROQ_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
@@ -601,14 +619,18 @@ async function callOpenAI(body: JsonObject) {
   const payload = (await response.json().catch(() => ({}))) as JsonObject;
 
   if (!response.ok) {
-    console.error("AI assistant: OpenAI error", {
+    const error =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as JsonObject)
+        : {};
+
+    console.error("AI assistant: Groq error", {
       status: response.status,
-      type:
-        payload?.error && typeof payload.error === "object"
-          ? (payload.error as JsonObject).type
-          : "unknown",
+      type: String(error.type || "unknown"),
+      message: String(error.message || "unknown"),
     });
-    throw new Error(`OPENAI_ERROR:${response.status}`);
+
+    throw new Error(`GROQ_ERROR:${response.status}`);
   }
 
   return payload;
@@ -620,8 +642,13 @@ function executeTool(
   cart: CartItem[],
   actions: ClientAction[]
 ) {
-  const name = String(call.name || "");
-  const rawArguments = String(call.arguments || "{}");
+  const fn =
+    call.function && typeof call.function === "object"
+      ? (call.function as JsonObject)
+      : {};
+
+  const name = String(fn.name || "");
+  const rawArguments = String(fn.arguments || "{}");
   let args: JsonObject = {};
 
   try {
@@ -814,7 +841,7 @@ Deno.serve(async (request) => {
   }
 
   if (
-    !OPENAI_API_KEY ||
+    !GROQ_API_KEY ||
     !SUPABASE_URL ||
     !SUPABASE_SECRET_KEY
   ) {
@@ -866,65 +893,83 @@ Deno.serve(async (request) => {
     const catalog = await loadCatalog(admin);
     const actions: ClientAction[] = [];
 
-    const input = history.length
-      ? history.map((item) => ({
-          role: item.role,
-          content: [{ type: "input_text", text: item.content }],
-        }))
-      : [
-          {
-            role: "user",
-            content: [{ type: "input_text", text: message }],
-          },
-        ];
+    const messages: JsonObject[] = [
+      {
+        role: "system",
+        content: instructions(language, page, cart),
+      },
+      ...history.map((item) => ({
+        role: item.role,
+        content: item.content,
+      })),
+    ];
 
     // Garante que a mensagem atual esteja presente quando o frontend mandar
     // histórico sem ela por alguma razão.
     const lastHistory = history[history.length - 1];
-    if (!lastHistory || lastHistory.role !== "user" || lastHistory.content !== message) {
-      input.push({
+    if (
+      !lastHistory ||
+      lastHistory.role !== "user" ||
+      lastHistory.content !== message
+    ) {
+      messages.push({
         role: "user",
-        content: [{ type: "input_text", text: message }],
+        content: message,
       });
     }
 
-    let response = await callOpenAI({
-      model: OPENAI_MODEL,
-      instructions: instructions(language, page, cart),
-      input,
-      tools: tools(),
+    let response = await callGroq({
+      model: GROQ_MODEL,
+      messages,
+      tools: groqTools(),
       tool_choice: "auto",
-      reasoning: { effort: "low" },
-      text: { verbosity: "low" },
+      temperature: 0.2,
+      max_completion_tokens: 700,
     });
 
     for (let loop = 0; loop < MAX_TOOL_LOOPS; loop += 1) {
-      const calls = functionCalls(response);
+      const calls = groqFunctionCalls(response);
       if (!calls.length) break;
 
-      const toolOutputs = [];
-      for (const call of calls) {
-        const result = executeTool(call, catalog, cart, actions);
-        toolOutputs.push({
-          type: "function_call_output",
-          call_id: String(call.call_id || ""),
-          output: JSON.stringify(result),
+      const assistantMessage = groqAssistantMessage(response);
+      if (assistantMessage) {
+        messages.push({
+          role: "assistant",
+          content:
+            typeof assistantMessage.content === "string"
+              ? assistantMessage.content
+              : null,
+          tool_calls: calls,
         });
       }
 
-      response = await callOpenAI({
-        model: OPENAI_MODEL,
-        previous_response_id: String(response.id || ""),
-        input: toolOutputs,
-        tools: tools(),
+      for (const call of calls) {
+        const result = executeTool(call, catalog, cart, actions);
+        const fn =
+          call.function && typeof call.function === "object"
+            ? (call.function as JsonObject)
+            : {};
+
+        messages.push({
+          role: "tool",
+          tool_call_id: String(call.id || ""),
+          name: String(fn.name || ""),
+          content: JSON.stringify(result),
+        });
+      }
+
+      response = await callGroq({
+        model: GROQ_MODEL,
+        messages,
+        tools: groqTools(),
         tool_choice: "auto",
-        reasoning: { effort: "low" },
-        text: { verbosity: "low" },
+        temperature: 0.2,
+        max_completion_tokens: 700,
       });
     }
 
     const text =
-      outputText(response) ||
+      groqOutputText(response) ||
       (language === "en-US"
         ? "Done. How else can I help with your shopping?"
         : "Pronto. Como mais posso ajudar com suas compras?");
@@ -933,7 +978,7 @@ Deno.serve(async (request) => {
       ok: true,
       message: text,
       actions,
-      model: OPENAI_MODEL,
+      model: GROQ_MODEL,
     });
   } catch (error) {
     console.error(
