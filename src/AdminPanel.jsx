@@ -1303,29 +1303,6 @@ export default function AdminPanel({
     );
   }
 
-  const selectedIssue = orderIssues.find((issue) => issue.id === selectedIssueId) || null;
-
-  const filteredOrderIssues = useMemo(() => {
-    const term = issueSearch.trim().toLowerCase();
-
-    return orderIssues.filter((issue) => {
-      const order = orders.find((item) => item.id === issue.order_id);
-      const customer = userById.get(issue.customer_id);
-      const openStatuses = ["pending", "in_review", "chat"];
-      const matchesFilter =
-        issueFilter === "all" ||
-        (issueFilter === "open" && openStatuses.includes(issue.status)) ||
-        issue.status === issueFilter;
-
-      const matchesSearch =
-        !term ||
-        String(order?.order_number || issue.order_id || "").toLowerCase().includes(term) ||
-        String(customer?.email || "").toLowerCase().includes(term) ||
-        String(issue.description || "").toLowerCase().includes(term);
-
-      return matchesFilter && matchesSearch;
-    });
-  }, [issueFilter, issueSearch, orderIssues, orders, userById]);
 
   async function updateOrderFulfillment(orderId, nextStatus) {
     if (!orderId || fulfillmentSaving) return;
@@ -1362,6 +1339,30 @@ export default function AdminPanel({
   const userById = useMemo(() => {
     return new Map(users.map((user) => [user.id, user]));
   }, [users]);
+
+  const selectedIssue = orderIssues.find((issue) => issue.id === selectedIssueId) || null;
+
+  const filteredOrderIssues = useMemo(() => {
+    const term = issueSearch.trim().toLowerCase();
+
+    return orderIssues.filter((issue) => {
+      const order = orders.find((item) => item.id === issue.order_id);
+      const customer = userById.get(issue.customer_id);
+      const openStatuses = ["pending", "in_review", "chat"];
+      const matchesFilter =
+        issueFilter === "all" ||
+        (issueFilter === "open" && openStatuses.includes(issue.status)) ||
+        issue.status === issueFilter;
+
+      const matchesSearch =
+        !term ||
+        String(order?.order_number || issue.order_id || "").toLowerCase().includes(term) ||
+        String(customer?.email || "").toLowerCase().includes(term) ||
+        String(issue.description || "").toLowerCase().includes(term);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [issueFilter, issueSearch, orderIssues, orders, userById]);
 
   const productById = useMemo(() => {
     return new Map(products.map((product) => [product.id, product]));
