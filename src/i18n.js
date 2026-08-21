@@ -614,8 +614,17 @@ const LONG_COPY_ROWS = [
   ["Aplicamos controles de acesso e validações para reduzir uso indevido da plataforma. O cliente também deve proteger sua senha e seus dispositivos.","We apply access controls and validations to reduce misuse of the platform. Customers must also protect their password and devices.","Aplicamos controles de acceso y validaciones para reducir el uso indebido de la plataforma. El cliente también debe proteger su contraseña y sus dispositivos.","我们采用访问控制和验证机制以减少平台滥用。客户也应保护密码和设备。","हम प्लेटफ़ॉर्म के दुरुपयोग को कम करने के लिए एक्सेस कंट्रोल और सत्यापन लागू करते हैं। ग्राहक को अपना पासवर्ड और डिवाइस भी सुरक्षित रखना चाहिए।","نطبق ضوابط وصول وعمليات تحقق للحد من إساءة استخدام المنصة. يجب على العميل أيضًا حماية كلمة المرور وأجهزته.","Nous appliquons des contrôles d’accès et des validations pour réduire les usages abusifs de la plateforme. Le client doit également protéger son mot de passe et ses appareils.","Wir setzen Zugriffskontrollen und Prüfungen ein, um Missbrauch der Plattform zu reduzieren. Kunden müssen auch Passwort und Geräte schützen."],
 ];
 
+
+const CURRENCY_ROWS = [
+  ["Nas compras acima de","On purchases over","En compras superiores a","订单满","खरीदारी पर","للمشتريات التي تزيد عن","Pour les achats supérieurs à","Bei Einkäufen über"],
+  ["Seu subtotal de produtos físicos atingiu","Your physical products subtotal reached","El subtotal de productos físicos alcanzó","实体商品小计已达到","भौतिक उत्पादों का उप-योग पहुँच गया","وصل المجموع الفرعي للمنتجات المادية إلى","Le sous-total de vos produits physiques a atteint","Die Zwischensumme deiner physischen Produkte hat erreicht"],
+  ["Usaremos a opção disponível de menor custo.","We will use the lowest-cost available option.","Usaremos la opción disponible de menor costo.","我们将使用当前可用的最低费用配送方式。","हम उपलब्ध सबसे कम लागत वाला विकल्प उपयोग करेंगे।","سنستخدم أقل خيار متاح تكلفةً.","Nous utiliserons l’option disponible la moins chère.","Wir verwenden die günstigste verfügbare Option."],
+  ["De","From","Desde","从","से","من","De","Von"],
+  ["Até","To","Hasta","到","तक","إلى","À","Bis"],
+];
+
 const INDEX = { "en-US": 1, "es-ES": 2, "zh-CN": 3, "hi-IN": 4, "ar-SA": 5, "fr-FR": 6, "de-DE": 7 };
-const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS].map((row) => [row[0], row]));
+const LOOKUP = new Map([...rows, ...EXTRA_ROWS, ...LONG_COPY_ROWS, ...CURRENCY_ROWS].map((row) => [row[0], row]));
 
 
 const PRODUCT_NAME_REPLACEMENTS = {

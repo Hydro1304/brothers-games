@@ -23,11 +23,42 @@ if (mercadoPagoPublicKey) {
   initMercadoPago(mercadoPagoPublicKey);
 }
 
-function formatPrice(value) {
-  return Number(value || 0).toLocaleString("pt-BR", {
+const CURRENCY_BY_LANGUAGE = {
+  "pt-BR": { locale: "pt-BR", currency: "BRL" },
+  "en-US": { locale: "en-US", currency: "USD" },
+  "es-ES": { locale: "es-ES", currency: "EUR" },
+  "zh-CN": { locale: "zh-CN", currency: "CNY" },
+  "hi-IN": { locale: "hi-IN", currency: "INR" },
+  "ar-SA": { locale: "ar-SA", currency: "SAR" },
+  "fr-FR": { locale: "fr-FR", currency: "EUR" },
+  "de-DE": { locale: "de-DE", currency: "EUR" },
+};
+
+const FALLBACK_BRL_RATES = {
+  BRL: 1,
+  USD: 0.185,
+  EUR: 0.158,
+  CNY: 1.33,
+  INR: 16.1,
+  SAR: 0.694,
+};
+
+function currencyMeta(language) {
+  return CURRENCY_BY_LANGUAGE[language] || CURRENCY_BY_LANGUAGE["pt-BR"];
+}
+
+function formatLocalizedPrice(value, language, rates) {
+  const { locale, currency } = currencyMeta(language);
+  const baseValue = Number(value || 0);
+  const rate = Number(rates?.[currency] ?? FALLBACK_BRL_RATES[currency] ?? 1);
+  const converted = Number.isFinite(baseValue) ? baseValue * rate : 0;
+
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "BRL",
-  });
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(converted);
 }
 
 function formatCep(value) {
@@ -673,6 +704,8 @@ function App() {
   const [language, setLanguage] = useState(() => detectInitialLanguage());
   const [pendingLanguage, setPendingLanguage] = useState(null);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState(() => ({ ...FALLBACK_BRL_RATES }));
+  const [exchangeRatesUpdatedAt, setExchangeRatesUpdatedAt] = useState(null);
   const languageRef = useRef(language);
   const languageMenuRef = useRef(null);
   const i18nTextMemoryRef = useRef(new WeakMap());
@@ -1324,6 +1357,97 @@ function App() {
     return () => window.clearInterval(interval);
   }, [page, pixPayment?.orderId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadExchangeRates() {
+      const cacheKey = "brothersGamesExchangeRatesV1";
+      const maxAge = 12 * 60 * 60 * 1000;
+
+      try {
+        const cachedRaw = localStorage.getItem(cacheKey);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          const cachedAt = Number(cached?.updatedAt || 0);
+          if (
+            cached?.rates &&
+            Number.isFinite(cachedAt) &&
+            Date.now() - cachedAt < maxAge
+          ) {
+            if (!cancelled) {
+              setExchangeRates({ ...FALLBACK_BRL_RATES, ...cached.rates, BRL: 1 });
+              setExchangeRatesUpdatedAt(cachedAt);
+            }
+            return;
+          }
+        }
+      } catch {
+        // Cache indisponível: continua para a consulta online.
+      }
+
+      try {
+        const response = await fetch("https://open.er-api.com/v6/latest/BRL", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) throw new Error("EXCHANGE_RATE_HTTP_ERROR");
+
+        const payload = await response.json();
+        const onlineRates = payload?.rates || {};
+        const nextRates = {
+          ...FALLBACK_BRL_RATES,
+          BRL: 1,
+          USD: Number(onlineRates.USD) || FALLBACK_BRL_RATES.USD,
+          EUR: Number(onlineRates.EUR) || FALLBACK_BRL_RATES.EUR,
+          CNY: Number(onlineRates.CNY) || FALLBACK_BRL_RATES.CNY,
+          INR: Number(onlineRates.INR) || FALLBACK_BRL_RATES.INR,
+          SAR: Number(onlineRates.SAR) || FALLBACK_BRL_RATES.SAR,
+        };
+        const updatedAt = Date.now();
+
+        try {
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ rates: nextRates, updatedAt })
+          );
+        } catch {
+          // O site continua normalmente mesmo sem localStorage.
+        }
+
+        if (!cancelled) {
+          setExchangeRates(nextRates);
+          setExchangeRatesUpdatedAt(updatedAt);
+        }
+      } catch (error) {
+        console.warn("Câmbio: usando taxas de fallback para exibição.", error);
+      }
+    }
+
+    void loadExchangeRates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function formatPrice(value) {
+    return formatLocalizedPrice(value, language, exchangeRates);
+  }
+
+  function displayCurrencyToBRL(value) {
+    if (value === "" || value === null || value === undefined) return null;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const { currency } = currencyMeta(language);
+    const rate = Number(exchangeRates?.[currency] ?? FALLBACK_BRL_RATES[currency] ?? 1);
+    return rate > 0 ? numeric / rate : numeric;
+  }
+
+  function freeShippingThresholdLabel() {
+    return formatPrice(299);
+  }
+
   const categories = useMemo(
     () => ["Todos", ...new Set(products.map((product) => product.category).filter(Boolean))],
     [products]
@@ -1351,8 +1475,10 @@ function App() {
       } ${translatedCategory}`.toLowerCase();
       const matchesSearch = text.includes(search.toLowerCase());
       const price = Number(product.price || 0);
-      const minimum = priceMin === "" || price >= Number(priceMin);
-      const maximum = priceMax === "" || price <= Number(priceMax);
+      const minimumBRL = displayCurrencyToBRL(priceMin);
+      const maximumBRL = displayCurrencyToBRL(priceMax);
+      const minimum = priceMin === "" || minimumBRL === null || price >= minimumBRL;
+      const maximum = priceMax === "" || maximumBRL === null || price <= maximumBRL;
       const matchesOffer = !offersOnly || Boolean(product.is_offer);
 
       return matchesCategory && matchesSearch && minimum && maximum && matchesOffer;
@@ -1365,7 +1491,7 @@ function App() {
     }
 
     return result;
-  }, [products, category, search, priceMin, priceMax, sort, offersOnly, language]);
+  }, [products, category, search, priceMin, priceMax, sort, offersOnly, language, exchangeRates]);
 
   const offerSummary = useMemo(() => {
     const activeOffers = products.filter((product) => Boolean(product.is_offer));
@@ -3721,7 +3847,7 @@ function App() {
 
         <section className="benefits-section">
           <div className="section-container benefits-grid">
-            <div className="benefit"><strong>🚚</strong><div><b>Frete grátis</b><span>Nas compras acima de R$ 299</span></div></div>
+            <div className="benefit"><strong>🚚</strong><div><b>Frete grátis</b><span>Nas compras acima de {freeShippingThresholdLabel()}</span></div></div>
             <div className="benefit"><strong>🎮</strong><div><b>Jogos digitais</b><span>Entrega por e-mail</span></div></div>
             <div className="benefit"><strong>🔒</strong><div><b>Sua conta</b><span>Autenticação com Supabase</span></div></div>
           </div>
@@ -3881,8 +4007,8 @@ function App() {
               <div className="filter-group">
                 <span className="filter-title">Faixa de preço</span>
                 <div className="price-inputs">
-                  <label><span>De</span><input type="number" placeholder="R$ 0" value={priceMin} onChange={(event) => setPriceMin(event.target.value)} /></label>
-                  <label><span>Até</span><input type="number" placeholder="R$ 9999" value={priceMax} onChange={(event) => setPriceMax(event.target.value)} /></label>
+                  <label><span>De ({currencyMeta(language).currency})</span><input type="number" placeholder={formatPrice(0)} value={priceMin} onChange={(event) => setPriceMin(event.target.value)} /></label>
+                  <label><span>Até ({currencyMeta(language).currency})</span><input type="number" placeholder={formatPrice(9999)} value={priceMax} onChange={(event) => setPriceMax(event.target.value)} /></label>
                 </div>
               </div>
 
@@ -4218,7 +4344,7 @@ function App() {
                         <span>✓</span>
                         <div>
                           <strong>FRETE GRÁTIS</strong>
-                          <small>Seu subtotal de produtos físicos atingiu R$ 299. Usaremos a opção disponível de menor custo.</small>
+                          <small>Seu subtotal de produtos físicos atingiu {freeShippingThresholdLabel()}. Usaremos a opção disponível de menor custo.</small>
                         </div>
                       </div>
                     )}
