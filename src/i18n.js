@@ -437,6 +437,233 @@ const rows = [
 const INDEX = { "en-US": 1, "es-ES": 2, "zh-CN": 3, "hi-IN": 4, "ar-SA": 5, "fr-FR": 6, "de-DE": 7 };
 const LOOKUP = new Map(rows.map((row) => [row[0], row]));
 
+
+const PRODUCT_NAME_REPLACEMENTS = {
+  "en-US": [
+    ["mousepad gamer", "gaming mouse pad"],
+    ["mouse gamer", "gaming mouse"],
+    ["teclado gamer", "gaming keyboard"],
+    ["headset gamer", "gaming headset"],
+    ["monitor gamer", "gaming monitor"],
+    ["controle gamer", "gaming controller"],
+    ["controle sem fio", "wireless controller"],
+    ["sem fio", "wireless"],
+    ["com fio", "wired"],
+    ["mecânico", "mechanical"],
+    ["mecânico", "mechanical"],
+    ["teclado", "keyboard"],
+    ["mousepad", "mouse pad"],
+    ["controle", "controller"],
+    ["monitor", "monitor"],
+    ["headset", "headset"],
+    ["gamer", "gaming"],
+    ["teste", "test"],
+    ["velocidade", "speed"],
+    ["preto", "black"],
+    ["branco", "white"],
+    ["vermelho", "red"],
+    ["azul", "blue"],
+  ],
+  "es-ES": [
+    ["mousepad gamer", "alfombrilla gaming"],
+    ["mouse gamer", "ratón gaming"],
+    ["teclado gamer", "teclado gaming"],
+    ["headset gamer", "auriculares gaming"],
+    ["monitor gamer", "monitor gaming"],
+    ["controle gamer", "mando gaming"],
+    ["controle sem fio", "mando inalámbrico"],
+    ["sem fio", "inalámbrico"],
+    ["com fio", "con cable"],
+    ["mecânico", "mecánico"],
+    ["mecânico", "mecánico"],
+    ["teclado", "teclado"],
+    ["mousepad", "alfombrilla"],
+    ["controle", "mando"],
+    ["monitor", "monitor"],
+    ["headset", "auriculares"],
+    ["gamer", "gaming"],
+    ["teste", "prueba"],
+    ["velocidade", "velocidad"],
+    ["preto", "negro"],
+    ["branco", "blanco"],
+    ["vermelho", "rojo"],
+    ["azul", "azul"],
+  ],
+  "zh-CN": [
+    ["mousepad gamer", "游戏鼠标垫"],
+    ["mouse gamer", "游戏鼠标"],
+    ["teclado gamer", "游戏键盘"],
+    ["headset gamer", "游戏耳机"],
+    ["monitor gamer", "游戏显示器"],
+    ["controle gamer", "游戏手柄"],
+    ["controle sem fio", "无线手柄"],
+    ["sem fio", "无线"],
+    ["com fio", "有线"],
+    ["mecânico", "机械"],
+    ["mecânico", "机械"],
+    ["teclado", "键盘"],
+    ["mousepad", "鼠标垫"],
+    ["controle", "手柄"],
+    ["monitor", "显示器"],
+    ["headset", "耳机"],
+    ["gamer", "游戏"],
+    ["teste", "测试"],
+    ["velocidade", "速度"],
+    ["preto", "黑色"],
+    ["branco", "白色"],
+    ["vermelho", "红色"],
+    ["azul", "蓝色"],
+  ],
+  "hi-IN": [
+    ["mousepad gamer", "गेमिंग माउसपैड"],
+    ["mouse gamer", "गेमिंग माउस"],
+    ["teclado gamer", "गेमिंग कीबोर्ड"],
+    ["headset gamer", "गेमिंग हेडसेट"],
+    ["monitor gamer", "गेमिंग मॉनिटर"],
+    ["controle gamer", "गेमिंग कंट्रोलर"],
+    ["controle sem fio", "वायरलेस कंट्रोलर"],
+    ["sem fio", "वायरलेस"],
+    ["com fio", "वायर्ड"],
+    ["mecânico", "मैकेनिकल"],
+    ["mecânico", "मैकेनिकल"],
+    ["teclado", "कीबोर्ड"],
+    ["mousepad", "माउसपैड"],
+    ["controle", "कंट्रोलर"],
+    ["monitor", "मॉनिटर"],
+    ["headset", "हेडसेट"],
+    ["gamer", "गेमिंग"],
+    ["teste", "परीक्षण"],
+    ["velocidade", "स्पीड"],
+    ["preto", "काला"],
+    ["branco", "सफेद"],
+    ["vermelho", "लाल"],
+    ["azul", "नीला"],
+  ],
+  "ar-SA": [
+    ["mousepad gamer", "لوحة فأرة للألعاب"],
+    ["mouse gamer", "فأرة ألعاب"],
+    ["teclado gamer", "لوحة مفاتيح ألعاب"],
+    ["headset gamer", "سماعة ألعاب"],
+    ["monitor gamer", "شاشة ألعاب"],
+    ["controle gamer", "وحدة تحكم ألعاب"],
+    ["controle sem fio", "وحدة تحكم لاسلكية"],
+    ["sem fio", "لاسلكي"],
+    ["com fio", "سلكي"],
+    ["mecânico", "ميكانيكي"],
+    ["mecânico", "ميكانيكي"],
+    ["teclado", "لوحة مفاتيح"],
+    ["mousepad", "لوحة فأرة"],
+    ["controle", "وحدة تحكم"],
+    ["monitor", "شاشة"],
+    ["headset", "سماعة"],
+    ["gamer", "للألعاب"],
+    ["teste", "اختبار"],
+    ["velocidade", "سرعة"],
+    ["preto", "أسود"],
+    ["branco", "أبيض"],
+    ["vermelho", "أحمر"],
+    ["azul", "أزرق"],
+  ],
+  "fr-FR": [
+    ["mousepad gamer", "tapis de souris gaming"],
+    ["mouse gamer", "souris gaming"],
+    ["teclado gamer", "clavier gaming"],
+    ["headset gamer", "casque gaming"],
+    ["monitor gamer", "écran gaming"],
+    ["controle gamer", "manette gaming"],
+    ["controle sem fio", "manette sans fil"],
+    ["sem fio", "sans fil"],
+    ["com fio", "filaire"],
+    ["mecânico", "mécanique"],
+    ["mecânico", "mécanique"],
+    ["teclado", "clavier"],
+    ["mousepad", "tapis de souris"],
+    ["controle", "manette"],
+    ["monitor", "écran"],
+    ["headset", "casque"],
+    ["gamer", "gaming"],
+    ["teste", "test"],
+    ["velocidade", "vitesse"],
+    ["preto", "noir"],
+    ["branco", "blanc"],
+    ["vermelho", "rouge"],
+    ["azul", "bleu"],
+  ],
+  "de-DE": [
+    ["mousepad gamer", "Gaming-Mauspad"],
+    ["mouse gamer", "Gaming-Maus"],
+    ["teclado gamer", "Gaming-Tastatur"],
+    ["headset gamer", "Gaming-Headset"],
+    ["monitor gamer", "Gaming-Monitor"],
+    ["controle gamer", "Gaming-Controller"],
+    ["controle sem fio", "kabelloser Controller"],
+    ["sem fio", "kabellos"],
+    ["com fio", "kabelgebunden"],
+    ["mecânico", "mechanisch"],
+    ["mecânico", "mechanisch"],
+    ["teclado", "Tastatur"],
+    ["mousepad", "Mauspad"],
+    ["controle", "Controller"],
+    ["monitor", "Monitor"],
+    ["headset", "Headset"],
+    ["gamer", "Gaming"],
+    ["teste", "Test"],
+    ["velocidade", "Geschwindigkeit"],
+    ["preto", "schwarz"],
+    ["branco", "weiß"],
+    ["vermelho", "rot"],
+    ["azul", "blau"],
+  ],
+};
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function preserveProductCase(source, translated) {
+  const original = String(source || "");
+  if (!original) return translated;
+
+  // Keep translations readable instead of forcing uppercase for scripts
+  // where case does not exist.
+  if (/^[A-ZÀ-Ý0-9\s\-_/]+$/.test(original) && /[A-Za-zÀ-ÿ]/.test(translated)) {
+    return translated.toUpperCase();
+  }
+
+  if (
+    original[0] === original[0]?.toUpperCase() &&
+    original.slice(1) === original.slice(1).toLowerCase() &&
+    /[A-Za-zÀ-ÿ]/.test(translated[0] || "")
+  ) {
+    return translated.charAt(0).toUpperCase() + translated.slice(1);
+  }
+
+  return translated;
+}
+
+export function translateProductName(value, language) {
+  const raw = String(value ?? "");
+  if (!raw || language === "pt-BR") return raw;
+
+  const replacements = PRODUCT_NAME_REPLACEMENTS[language];
+  if (!replacements?.length) return raw;
+
+  let result = raw;
+
+  for (const [source, translated] of replacements) {
+    const pattern = new RegExp(
+      `(^|[^\\p{L}\\p{N}])(${escapeRegExp(source)})(?=$|[^\\p{L}\\p{N}])`,
+      "giu"
+    );
+
+    result = result.replace(pattern, (match, prefix, matchedText) => {
+      return `${prefix}${preserveProductCase(matchedText, translated)}`;
+    });
+  }
+
+  return result;
+}
+
 export function detectInitialLanguage() {
   try {
     const saved = localStorage.getItem("brothersGamesLanguage");

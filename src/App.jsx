@@ -4,7 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "./lib/supabase";
 import AdminPanel from "./AdminPanel";
 import { useSitePopup } from "./SitePopup";
-import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom } from "./i18n";
+import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom, translateProductName } from "./i18n";
 import "./styles.css";
 import "./avatar-transitions.css";
 
@@ -1344,7 +1344,8 @@ function App() {
         category === "Todos" ||
         (category === "Periféricos" && isPeripheralCategory(product.category)) ||
         product.category === category;
-      const text = `${product.name || ""} ${product.description || ""} ${
+      const translatedName = translateProductName(product.name || "", language);
+      const text = `${product.name || ""} ${translatedName} ${product.description || ""} ${
         product.category || ""
       }`.toLowerCase();
       const matchesSearch = text.includes(search.toLowerCase());
@@ -1359,11 +1360,11 @@ function App() {
     if (sort === "price-low") result = [...result].sort((a, b) => a.price - b.price);
     if (sort === "price-high") result = [...result].sort((a, b) => b.price - a.price);
     if (sort === "name") {
-      result = [...result].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+      result = [...result].sort((a, b) => translateProductName(a.name, language).localeCompare(translateProductName(b.name, language)));
     }
 
     return result;
-  }, [products, category, search, priceMin, priceMax, sort, offersOnly]);
+  }, [products, category, search, priceMin, priceMax, sort, offersOnly, language]);
 
   const offerSummary = useMemo(() => {
     const activeOffers = products.filter((product) => Boolean(product.is_offer));
@@ -3636,14 +3637,14 @@ function App() {
           {hasDiscount && (
             <span className="offer-discount-badge">-{discountPercent}%</span>
           )}
-          {product.image ? <img src={product.image} alt={product.name} /> : <span>🎮</span>}
+          {product.image ? <img src={product.image} alt={translateProductName(product.name, language)} /> : <span>🎮</span>}
         </button>
 
         <div className="product-info">
           <span className="product-category">{product.category}</span>
           <button className="product-name-button" onClick={() => openProduct(product)}>
             <span className="product-name-hover-row">
-              <span className="product-name-text">{product.name}</span>
+              <span className="product-name-text">{translateProductName(product.name, language)}</span>
               <ProductHoverAnimation product={product} />
             </span>
           </button>
@@ -3949,18 +3950,18 @@ function App() {
           <div className="product-breadcrumb">
             <button onClick={goHome}>Início</button><span>/</span>
             <button onClick={() => openProducts(selectedProduct.category)}>{selectedProduct.category}</button><span>/</span>
-            <strong>{selectedProduct.name}</strong>
+            <strong>{translateProductName(selectedProduct.name, language)}</strong>
           </div>
 
           <section className="product-detail">
             <div className="product-detail-image">
-              {selectedProduct.image ? <img src={selectedProduct.image} alt={selectedProduct.name} /> : <span>🎮</span>}
+              {selectedProduct.image ? <img src={selectedProduct.image} alt={translateProductName(selectedProduct.name, language)} /> : <span>🎮</span>}
             </div>
 
             <div className="product-detail-info">
               <span className="detail-category">{selectedProduct.category}</span>
               <div className="product-detail-title-row">
-                <h1>{selectedProduct.name}</h1>
+                <h1>{translateProductName(selectedProduct.name, language)}</h1>
                 <ProductHoverAnimation product={selectedProduct} size="detail" />
               </div>
 
@@ -4113,9 +4114,9 @@ function App() {
                 {cart.map((item) => (
                   <div className="cart-item" key={item.id}>
                     <button className="cart-image-button" onClick={() => openProduct(item)}>
-                      {item.image ? <img src={item.image} alt={item.name} /> : <span>🎮</span>}
+                      {item.image ? <img src={item.image} alt={translateProductName(item.name, language)} /> : <span>🎮</span>}
                     </button>
-                    <div className="cart-item-info"><span>{item.category}</span><button className="cart-product-name" onClick={() => openProduct(item)}>{item.name}</button><strong>{formatPrice(item.price)}</strong></div>
+                    <div className="cart-item-info"><span>{item.category}</span><button className="cart-product-name" onClick={() => openProduct(item)}>{translateProductName(item.name, language)}</button><strong>{formatPrice(item.price)}</strong></div>
                     <div className="quantity"><button onClick={() => removeFromCart(item.id)}>−</button><strong>{item.quantity}</strong><button onClick={() => addToCart(item)}>+</button></div>
                     <strong className="item-total">{formatPrice(Number(item.price) * item.quantity)}</strong>
                   </div>
@@ -4366,7 +4367,7 @@ function App() {
               <div className="checkout-items">
                 {cart.map((item) => (
                   <div className="checkout-item" style={{ gridTemplateColumns: "minmax(0, 1fr) auto" }} key={item.id}>
-                    <div className="checkout-item-info"><strong>{item.name}</strong><span>{item.quantity}x {formatPrice(item.price)}</span></div>
+                    <div className="checkout-item-info"><strong>{translateProductName(item.name, language)}</strong><span>{item.quantity}x {formatPrice(item.price)}</span></div>
                     <b>{formatPrice(Number(item.price) * item.quantity)}</b>
                   </div>
                 ))}
@@ -5421,7 +5422,7 @@ function App() {
                             <div className="order-products">
                               {(itemsByOrder.get(order.id) || []).map((item) => (
                                 <div key={item.id}>
-                                  <span>{item.quantity}x {item.product_name}</span>
+                                  <span>{item.quantity}x {translateProductName(item.product_name, language)}</span>
                                   <strong>
                                     {formatPrice(Number(item.unit_price) * item.quantity)}
                                   </strong>
@@ -5451,7 +5452,7 @@ function App() {
                                         <small>
                                           {existingReview
                                             ? reviewModerationLabel(existingReview)
-                                            : item.product_name}
+                                            : translateProductName(item.product_name, language)}
                                         </small>
                                       </button>
                                     );
@@ -5638,7 +5639,7 @@ function App() {
                       <span>ITENS DO PEDIDO</span>
                       {trackingItems.map((item) => (
                         <div key={item.id}>
-                          <span>{item.quantity}x {item.product_name}</span>
+                          <span>{item.quantity}x {translateProductName(item.product_name, language)}</span>
                           <strong>{formatPrice(Number(item.unit_price) * item.quantity)}</strong>
                         </div>
                       ))}
