@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "./lib/supabase";
-import robotIcon from "./assets/brothers-assistant-robo.jpg";
+import robotIcon from "./assets/brothers_assistant_robo.jpg";
 import "./ai-assistant.css";
 
 const COPY = {
