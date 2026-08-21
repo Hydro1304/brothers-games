@@ -184,6 +184,54 @@ function localCopy(language) {
   return COPY[language] || COPY["pt-BR"];
 }
 
+function aiErrorText(code, language) {
+  const isPt = language === "pt-BR";
+  const messages = {
+    AI_ASSISTANT_NOT_CONFIGURED: isPt
+      ? "A IA ainda não está configurada. Verifique a chave GROQ_API_KEY nos Secrets do Supabase."
+      : "AI is not configured yet. Check the GROQ_API_KEY secret in Supabase.",
+    GROQ_AUTH_FAILED: isPt
+      ? "A chave da Groq foi recusada. Gere uma nova chave e atualize GROQ_API_KEY no Supabase."
+      : "The Groq key was rejected. Create a new key and update GROQ_API_KEY in Supabase.",
+    GROQ_RATE_LIMITED: isPt
+      ? "O limite gratuito da IA foi atingido. Tente novamente mais tarde."
+      : "The free AI usage limit was reached. Try again later.",
+    GROQ_REQUEST_INVALID: isPt
+      ? "A Groq recusou a solicitação da IA. A função precisa ser atualizada."
+      : "Groq rejected the AI request. The function needs to be updated.",
+    RATE_LIMITED: isPt
+      ? "Muitas mensagens foram enviadas em pouco tempo. Aguarde alguns minutos."
+      : "Too many messages were sent in a short time. Wait a few minutes.",
+    CATALOG_UNAVAILABLE: isPt
+      ? "Não consegui consultar os produtos da loja agora."
+      : "I couldn't load the store products right now.",
+    ORIGIN_NOT_ALLOWED: isPt
+      ? "Este endereço do site ainda não está autorizado a usar a IA."
+      : "This site address is not authorized to use the AI yet.",
+  };
+
+  return messages[code] || localCopy(language).error;
+}
+
+async function extractFunctionError(error, data, language) {
+  let code = String(data?.error || "").trim();
+
+  if (!code && error?.context) {
+    try {
+      const response = error.context;
+      const payload =
+        typeof response.clone === "function"
+          ? await response.clone().json()
+          : await response.json();
+      code = String(payload?.error || "").trim();
+    } catch {
+      // Mantém a mensagem genérica quando a resposta não contém JSON.
+    }
+  }
+
+  return aiErrorText(code, language);
+}
+
 function safeMessages(value) {
   if (!Array.isArray(value)) return [];
   return value
@@ -357,9 +405,15 @@ export default function AIShoppingAssistant({
         { body }
       );
 
-      if (error) throw error;
-      if (!data || data.ok !== true) {
-        throw new Error(data?.error || "AI_ASSISTANT_FAILED");
+      if (error || !data || data.ok !== true) {
+        const readableMessage = await extractFunctionError(
+          error,
+          data,
+          language
+        );
+        const failure = new Error(readableMessage);
+        failure.cause = error || data?.error || "AI_ASSISTANT_FAILED";
+        throw failure;
       }
 
       const productCards = [];
@@ -384,7 +438,10 @@ export default function AIShoppingAssistant({
         {
           id: `assistant-error-${Date.now()}`,
           role: "assistant",
-          content: copy.error,
+          content:
+            error instanceof Error && error.message
+              ? error.message
+              : copy.error,
           error: true,
         },
       ]);

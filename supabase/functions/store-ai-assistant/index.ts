@@ -301,16 +301,16 @@ async function enforceRateLimit(
   });
 
   if (error) {
-    console.error(
-      "AI assistant: rate limit indisponível:",
+    console.warn(
+      "AI assistant: rate limit RPC indisponível; seguindo sem bloqueio local:",
       error.code || error.message
     );
-    return { ok: false, status: 503 };
+    return { ok: true, status: 200, degraded: true };
   }
 
   return data === true
-    ? { ok: true, status: 200 }
-    : { ok: false, status: 429 };
+    ? { ok: true, status: 200, degraded: false }
+    : { ok: false, status: 429, degraded: false };
 }
 
 async function loadCatalog(admin: AdminClientLike) {
@@ -630,7 +630,17 @@ async function callGroq(body: JsonObject) {
       message: String(error.message || "unknown"),
     });
 
-    throw new Error(`GROQ_ERROR:${response.status}`);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("GROQ_AUTH_FAILED");
+    }
+    if (response.status === 429) {
+      throw new Error("GROQ_RATE_LIMITED");
+    }
+    if (response.status === 400 || response.status === 422) {
+      throw new Error("GROQ_REQUEST_INVALID");
+    }
+
+    throw new Error(`GROQ_HTTP_${response.status}`);
   }
 
   return payload;
@@ -923,6 +933,8 @@ Deno.serve(async (request) => {
       messages,
       tools: groqTools(),
       tool_choice: "auto",
+      parallel_tool_calls: false,
+      reasoning_effort: "low",
       temperature: 0.2,
       max_completion_tokens: 700,
     });
@@ -963,6 +975,8 @@ Deno.serve(async (request) => {
         messages,
         tools: groqTools(),
         tool_choice: "auto",
+        parallel_tool_calls: false,
+        reasoning_effort: "low",
         temperature: 0.2,
         max_completion_tokens: 700,
       });
@@ -981,15 +995,35 @@ Deno.serve(async (request) => {
       model: GROQ_MODEL,
     });
   } catch (error) {
-    console.error(
-      "AI assistant:",
-      error instanceof Error ? error.message : "unknown"
-    );
+    const message =
+      error instanceof Error ? error.message : "AI_ASSISTANT_FAILED";
 
-    return jsonResponse(
-      request,
-      { ok: false, error: "AI_ASSISTANT_FAILED" },
-      500
-    );
+    console.error("AI assistant:", message);
+
+    const safeErrors = new Set([
+      "GROQ_AUTH_FAILED",
+      "GROQ_RATE_LIMITED",
+      "GROQ_REQUEST_INVALID",
+      "CATALOG_UNAVAILABLE",
+    ]);
+
+    const code = message.startsWith("PRODUCT_QUERY_FAILED:")
+      ? "CATALOG_UNAVAILABLE"
+      : safeErrors.has(message)
+        ? message
+        : "AI_ASSISTANT_FAILED";
+
+    const status =
+      code === "GROQ_AUTH_FAILED"
+        ? 503
+        : code === "GROQ_RATE_LIMITED"
+          ? 429
+          : code === "GROQ_REQUEST_INVALID"
+            ? 502
+            : code === "CATALOG_UNAVAILABLE"
+              ? 503
+              : 500;
+
+    return jsonResponse(request, { ok: false, error: code }, status);
   }
 });
