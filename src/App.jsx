@@ -4,7 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "./lib/supabase";
 import AdminPanel from "./AdminPanel";
 import { useSitePopup } from "./SitePopup";
-import { LANGUAGES, detectInitialLanguage, languageMeta, translateDom } from "./i18n";
+import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom } from "./i18n";
 import "./styles.css";
 import "./avatar-transitions.css";
 
@@ -671,6 +671,7 @@ function App() {
   });
 
   const [language, setLanguage] = useState(() => detectInitialLanguage());
+  const [pendingLanguage, setPendingLanguage] = useState(null);
   const languageRef = useRef(language);
   const i18nTextMemoryRef = useRef(new WeakMap());
   const i18nAttrMemoryRef = useRef(new WeakMap());
@@ -3307,6 +3308,84 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
+  function requestLanguageChange(nextLanguage) {
+    if (!nextLanguage || nextLanguage === language) return;
+    setPendingLanguage(nextLanguage);
+  }
+
+  function confirmLanguageChange() {
+    if (!pendingLanguage) return;
+    setLanguage(pendingLanguage);
+    setPendingLanguage(null);
+  }
+
+  function cancelLanguageChange() {
+    setPendingLanguage(null);
+  }
+
+  function LanguageChangeConfirmationModal() {
+    if (!pendingLanguage) return null;
+
+    const target = languageMeta(pendingLanguage);
+    const copy = languageChangeCopy(language);
+    const modalDir = languageMeta(language).dir;
+
+    return (
+      <div
+        className="language-confirm-backdrop"
+        role="presentation"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) cancelLanguageChange();
+        }}
+      >
+        <div
+          className="language-confirm-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="language-confirm-title"
+          dir={modalDir}
+        >
+          <button
+            type="button"
+            className="language-confirm-close"
+            onClick={cancelLanguageChange}
+            aria-label={copy.cancel}
+            title={copy.cancel}
+          >
+            ×
+          </button>
+
+          <div className="language-confirm-icon" aria-hidden="true">🌐</div>
+          <p className="language-confirm-eyebrow">{copy.eyebrow}</p>
+          <h2 id="language-confirm-title">{copy.title}</h2>
+          <p className="language-confirm-message">{copy.message(target.label)}</p>
+
+          <div className="language-confirm-target">
+            <span>{target.short}</span>
+            <strong>{target.label}</strong>
+          </div>
+
+          <div className="language-confirm-actions">
+            <button
+              type="button"
+              className="language-confirm-cancel"
+              onClick={cancelLanguageChange}
+            >
+              {copy.cancel}
+            </button>
+            <button
+              type="button"
+              className="language-confirm-accept"
+              onClick={confirmLanguageChange}
+            >
+              {copy.confirm}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   function LanguageSelector({ compact = false }) {
     const current = languageMeta(language);
 
@@ -3319,7 +3398,7 @@ function App() {
         <span className="language-selector-icon" aria-hidden="true">🌐</span>
         <select
           value={language}
-          onChange={(event) => setLanguage(event.target.value)}
+          onChange={(event) => requestLanguageChange(event.target.value)}
           aria-label="Selecionar idioma"
         >
           {LANGUAGES.map((item) => (
@@ -5794,6 +5873,7 @@ function App() {
       {page === "pixPayment" && PixPaymentPage()}
       {page === "orderSuccess" && OrderSuccessPage()}
       {Footer()}
+      {LanguageChangeConfirmationModal()}
       {InstitutionalModal()}
       {AccountModal()}
       {ReviewModal()}

@@ -9,6 +9,66 @@ export const LANGUAGES = [
   { code: "de-DE", short: "DE", label: "Deutsch", dir: "ltr" },
 ];
 
+
+export const LANGUAGE_CONFIRMATIONS = {
+  "pt-BR": {
+    eyebrow: "IDIOMA DO SITE",
+    title: "Alterar idioma?",
+    message: "Deseja alterar o idioma do site para {language}?",
+    cancel: "Cancelar",
+    confirm: "Alterar idioma",
+  },
+  "en-US": {
+    eyebrow: "SITE LANGUAGE",
+    title: "Change language?",
+    message: "Would you like to change the site language to {language}?",
+    cancel: "Cancel",
+    confirm: "Change language",
+  },
+  "es-ES": {
+    eyebrow: "IDIOMA DEL SITIO",
+    title: "¿Cambiar idioma?",
+    message: "¿Deseas cambiar el idioma del sitio a {language}?",
+    cancel: "Cancelar",
+    confirm: "Cambiar idioma",
+  },
+  "zh-CN": {
+    eyebrow: "网站语言",
+    title: "更改语言？",
+    message: "是否将网站语言更改为 {language}？",
+    cancel: "取消",
+    confirm: "更改语言",
+  },
+  "hi-IN": {
+    eyebrow: "साइट की भाषा",
+    title: "भाषा बदलें?",
+    message: "क्या आप साइट की भाषा {language} में बदलना चाहते हैं?",
+    cancel: "रद्द करें",
+    confirm: "भाषा बदलें",
+  },
+  "ar-SA": {
+    eyebrow: "لغة الموقع",
+    title: "تغيير اللغة؟",
+    message: "هل تريد تغيير لغة الموقع إلى {language}؟",
+    cancel: "إلغاء",
+    confirm: "تغيير اللغة",
+  },
+  "fr-FR": {
+    eyebrow: "LANGUE DU SITE",
+    title: "Changer de langue ?",
+    message: "Souhaitez-vous changer la langue du site en {language} ?",
+    cancel: "Annuler",
+    confirm: "Changer la langue",
+  },
+  "de-DE": {
+    eyebrow: "WEBSITE-SPRACHE",
+    title: "Sprache ändern?",
+    message: "Möchtest du die Sprache der Website auf {language} ändern?",
+    cancel: "Abbrechen",
+    confirm: "Sprache ändern",
+  },
+};
+
 const rows = [
   ["Início","Home","Inicio","首页","होम","الرئيسية","Accueil","Startseite"],
   ["Jogos","Games","Juegos","游戏","गेम्स","الألعاب","Jeux","Spiele"],

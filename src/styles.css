@@ -5121,3 +5121,223 @@ html[dir="rtl"] .admin-app {
     font-size: 13px;
   }
 }
+
+
+/* =========================================================
+   CONFIRMAÇÃO DE TROCA DE IDIOMA
+========================================================= */
+
+.language-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99995;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: language-confirm-fade .16s ease-out;
+}
+
+.language-confirm-modal {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 30px;
+  border: 1px solid rgba(255, 255, 255, .11);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(229, 9, 20, .12), transparent 42%),
+    #111;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+  color: #f5f5f5;
+  text-align: center;
+  animation: language-confirm-pop .2s ease-out;
+}
+
+.language-confirm-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #303030;
+  border-radius: 999px;
+  background: #171717;
+  color: #ddd;
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.language-confirm-close:hover {
+  border-color: #e50914;
+  color: #fff;
+}
+
+.language-confirm-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+  border: 1px solid rgba(229, 9, 20, .42);
+  border-radius: 16px;
+  background: rgba(229, 9, 20, .10);
+  font-size: 24px;
+}
+
+.language-confirm-eyebrow {
+  margin: 0 0 8px;
+  color: #ff2635;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.language-confirm-modal h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(22px, 4vw, 29px);
+  line-height: 1.12;
+}
+
+.language-confirm-message {
+  margin: 12px auto 0;
+  max-width: 340px;
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.language-confirm-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 22px 0;
+  padding: 13px 16px;
+  border: 1px solid #292929;
+  border-radius: 10px;
+  background: #171717;
+}
+
+.language-confirm-target span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: rgba(229, 9, 20, .14);
+  color: #ff2635;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.language-confirm-target strong {
+  color: #f4f4f4;
+  font-size: 13px;
+}
+
+.language-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.language-confirm-actions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background-color .15s ease;
+}
+
+.language-confirm-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.language-confirm-cancel {
+  border: 1px solid #303030;
+  background: #171717;
+  color: #ddd;
+}
+
+.language-confirm-cancel:hover {
+  border-color: #555;
+  background: #1c1c1c;
+}
+
+.language-confirm-accept {
+  border: 1px solid #ff1f2e;
+  background: #ff1f2e;
+  color: #fff;
+}
+
+.language-confirm-accept:hover {
+  background: #e50914;
+  border-color: #e50914;
+}
+
+html[data-theme="light"] .language-confirm-backdrop {
+  background: rgba(20, 24, 32, .52);
+}
+
+html[data-theme="light"] .language-confirm-modal {
+  border-color: #e2e5eb;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(229, 9, 20, .08), transparent 42%),
+    #fff;
+  color: #17191f;
+  box-shadow: 0 24px 70px rgba(30, 36, 48, .20);
+}
+
+html[data-theme="light"] .language-confirm-close,
+html[data-theme="light"] .language-confirm-target,
+html[data-theme="light"] .language-confirm-cancel {
+  border-color: #dfe3e9;
+  background: #f7f8fa;
+  color: #272b32;
+}
+
+html[data-theme="light"] .language-confirm-modal h2,
+html[data-theme="light"] .language-confirm-target strong {
+  color: #17191f;
+}
+
+html[data-theme="light"] .language-confirm-message {
+  color: #68707d;
+}
+
+html[dir="rtl"] .language-confirm-close {
+  right: auto;
+  left: 12px;
+}
+
+@keyframes language-confirm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes language-confirm-pop {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 520px) {
+  .language-confirm-modal {
+    padding: 26px 18px 18px;
+    border-radius: 15px;
+  }
+
+  .language-confirm-actions {
+    grid-template-columns: 1fr;
+  }
+}
