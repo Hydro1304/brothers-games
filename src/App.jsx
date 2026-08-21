@@ -3,6 +3,7 @@ import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "./lib/supabase";
 import AdminPanel from "./AdminPanel";
+import AIShoppingAssistant from "./AIShoppingAssistant";
 import { useSitePopup } from "./SitePopup";
 import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom, translateProductName, translateCategoryName } from "./i18n";
 import "./styles.css";
@@ -1573,6 +1574,47 @@ function App() {
     setCart((currentCart) => insertProduct(currentCart, product));
     resetShippingSelection();
     trackProductEvent(product.id, "add_to_cart");
+  }
+
+  function aiAddToCart(product, quantity = 1) {
+    if (!product) return;
+    const safeQuantity = Math.max(1, Math.min(10, Number(quantity) || 1));
+
+    setCart((currentCart) => {
+      let next = currentCart;
+      for (let index = 0; index < safeQuantity; index += 1) {
+        next = insertProduct(next, product);
+      }
+      return next;
+    });
+
+    resetShippingSelection();
+    trackProductEvent(product.id, "add_to_cart");
+  }
+
+  function aiRemoveFromCart(productId) {
+    if (!productId) return;
+    setCart((currentCart) =>
+      currentCart.filter((item) => String(item.id) !== String(productId))
+    );
+    resetShippingSelection();
+  }
+
+  function aiSetCartQuantity(productId, quantity) {
+    if (!productId) return;
+    const safeQuantity = Math.max(0, Math.min(20, Number(quantity) || 0));
+
+    setCart((currentCart) =>
+      currentCart
+        .map((item) =>
+          String(item.id) === String(productId)
+            ? { ...item, quantity: safeQuantity }
+            : item
+        )
+        .filter((item) => Number(item.quantity || 0) > 0)
+    );
+
+    resetShippingSelection();
   }
 
   function removeFromCart(productId) {
@@ -6079,6 +6121,22 @@ function App() {
       {AuthActionOverlay()}
       {PaymentProcessingOverlay()}
       {LanguageConfirmationModal()}
+
+      <AIShoppingAssistant
+        language={language}
+        page={page}
+        products={products}
+        cart={cart}
+        formatPrice={formatPrice}
+        onAddToCart={aiAddToCart}
+        onRemoveFromCart={aiRemoveFromCart}
+        onSetCartQuantity={aiSetCartQuantity}
+        onOpenProducts={openProducts}
+        onOpenProduct={openProduct}
+        onOpenCart={openCart}
+        onOpenCheckout={openCheckout}
+        onOpenOffers={openOffers}
+      />
     </div>
   );
 }
