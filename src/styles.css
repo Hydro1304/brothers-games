@@ -4913,3 +4913,211 @@ html[data-theme="light"] .order-issue-evidence img {
     width: 94%;
   }
 }
+
+
+/* =========================================================
+   SELETOR DE IDIOMA / INTERNACIONALIZAÇÃO
+========================================================= */
+
+.language-selector {
+  position: relative;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid #272727;
+  border-radius: 8px;
+  background: #101010;
+  color: #f1f1f1;
+  cursor: pointer;
+  transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+}
+
+.language-selector:hover {
+  border-color: rgba(229, 9, 20, .7);
+  background: #151515;
+}
+
+.language-selector:focus-within {
+  border-color: #e50914;
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, .08);
+}
+
+.language-selector-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.language-selector select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 118px;
+  max-width: 160px;
+  padding: 0 19px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.language-selector::after {
+  content: "▾";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-52%);
+  color: #777;
+  font-size: 9px;
+  pointer-events: none;
+}
+
+.language-selector-code {
+  display: none;
+}
+
+.language-selector option {
+  background: #111;
+  color: #f4f4f4;
+}
+
+.language-selector-compact {
+  min-height: 36px;
+  padding: 0 8px;
+}
+
+.language-selector-compact select {
+  min-width: 48px;
+  max-width: 58px;
+  padding-right: 15px;
+}
+
+html[data-theme="light"] .language-selector {
+  border-color: #d8dde6;
+  background: #fff;
+  color: #17191f;
+}
+
+html[data-theme="light"] .language-selector:hover {
+  border-color: #e50914;
+  background: #fff7f8;
+}
+
+html[data-theme="light"] .language-selector option {
+  background: #fff;
+  color: #17191f;
+}
+
+/* =========================================================
+   RTL — ÁRABE
+   Mantém o logo e códigos técnicos em LTR, mas inverte a
+   leitura e o fluxo das áreas de interface para o árabe.
+========================================================= */
+
+html[dir="rtl"] body,
+html[dir="rtl"] .app {
+  direction: rtl;
+}
+
+html[dir="rtl"] .logo,
+html[dir="rtl"] .storefront-logo,
+html[dir="rtl"] .footer-logo,
+html[dir="rtl"] .pix-code-card,
+html[dir="rtl"] code,
+html[dir="rtl"] pre,
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="tel"] {
+  direction: ltr;
+}
+
+html[dir="rtl"] .language-selector::after {
+  right: auto;
+  left: 8px;
+}
+
+html[dir="rtl"] .language-selector select {
+  padding-right: 0;
+  padding-left: 19px;
+  text-align: right;
+}
+
+html[dir="rtl"] .language-selector-compact select {
+  padding-right: 0;
+  padding-left: 15px;
+}
+
+html[dir="rtl"] .storefront-search-icon {
+  left: auto;
+  right: 12px;
+}
+
+html[dir="rtl"] .storefront-search input {
+  padding-left: 12px;
+  padding-right: 38px;
+  text-align: right;
+}
+
+html[dir="rtl"] .account-page-title,
+html[dir="rtl"] .tracking-step-copy,
+html[dir="rtl"] .order-issue-details-card,
+html[dir="rtl"] .order-issue-form-card,
+html[dir="rtl"] .checkout-section,
+html[dir="rtl"] .checkout-summary,
+html[dir="rtl"] .institutional-modal,
+html[dir="rtl"] .data-section {
+  text-align: right;
+}
+
+html[dir="rtl"] .order-issue-message.customer {
+  align-self: flex-start;
+}
+
+html[dir="rtl"] .order-issue-message.support {
+  align-self: flex-end;
+}
+
+/* O painel administrativo permanece em português e LTR. */
+html[dir="rtl"] .admin-app {
+  direction: ltr;
+  text-align: left;
+}
+
+@media (max-width: 1080px) {
+  .language-selector select {
+    min-width: 92px;
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 860px) {
+  .language-selector {
+    min-width: 42px;
+  }
+
+  .language-selector:not(.language-selector-compact) select {
+    min-width: 64px;
+    max-width: 82px;
+  }
+}
+
+@media (max-width: 560px) {
+  .language-selector {
+    padding: 0 7px;
+    gap: 4px;
+  }
+
+  .language-selector:not(.language-selector-compact) select {
+    min-width: 46px;
+    max-width: 56px;
+    font-size: 8px;
+  }
+
+  .language-selector-icon {
+    font-size: 13px;
+  }
+}

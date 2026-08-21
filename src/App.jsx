@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "./lib/supabase";
 import AdminPanel from "./AdminPanel";
 import { useSitePopup } from "./SitePopup";
+import { LANGUAGES, detectInitialLanguage, languageMeta, translateDom } from "./i18n";
 import "./styles.css";
 import "./avatar-transitions.css";
 
@@ -669,6 +670,11 @@ function App() {
     }
   });
 
+  const [language, setLanguage] = useState(() => detectInitialLanguage());
+  const languageRef = useRef(language);
+  const i18nTextMemoryRef = useRef(new WeakMap());
+  const i18nAttrMemoryRef = useRef(new WeakMap());
+
   const [page, setPage] = useState("home");
   const [previousPage, setPreviousPage] = useState("products");
 
@@ -823,6 +829,65 @@ function App() {
   const isAdmin =
     profile?.status === "active" && ["admin", "owner"].includes(profile?.role);
   const isOwner = profile?.status === "active" && profile?.role === "owner";
+
+  useEffect(() => {
+    languageRef.current = language;
+    const meta = languageMeta(language);
+
+    try {
+      localStorage.setItem("brothersGamesLanguage", language);
+    } catch {}
+
+    document.documentElement.lang = language;
+    document.documentElement.dir = meta.dir;
+    document.body?.setAttribute("dir", meta.dir);
+
+    const root = document.getElementById("root");
+    if (root) {
+      requestAnimationFrame(() => {
+        translateDom(
+          root,
+          language,
+          i18nTextMemoryRef.current,
+          i18nAttrMemoryRef.current
+        );
+      });
+    }
+  }, [language]);
+
+  useEffect(() => {
+    const root = document.getElementById("root");
+    if (!root) return undefined;
+
+    let scheduled = false;
+    const apply = () => {
+      scheduled = false;
+      translateDom(
+        root,
+        languageRef.current,
+        i18nTextMemoryRef.current,
+        i18nAttrMemoryRef.current
+      );
+    };
+
+    const observer = new MutationObserver(() => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(apply);
+    });
+
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["placeholder", "title", "aria-label"],
+    });
+
+    requestAnimationFrame(apply);
+
+    return () => observer.disconnect();
+  }, []);
 
 
   useEffect(() => {
@@ -3242,6 +3307,32 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
+  function LanguageSelector({ compact = false }) {
+    const current = languageMeta(language);
+
+    return (
+      <label
+        className={`language-selector ${compact ? "language-selector-compact" : ""}`}
+        title="Idioma / Language"
+        aria-label="Selecionar idioma"
+      >
+        <span className="language-selector-icon" aria-hidden="true">🌐</span>
+        <select
+          value={language}
+          onChange={(event) => setLanguage(event.target.value)}
+          aria-label="Selecionar idioma"
+        >
+          {LANGUAGES.map((item) => (
+            <option key={item.code} value={item.code}>
+              {compact ? item.short : item.label}
+            </option>
+          ))}
+        </select>
+        {!compact && <span className="language-selector-code">{current.short}</span>}
+      </label>
+    );
+  }
+
   function ThemeToggle({ compact = false }) {
     const nextModeLabel = theme === "dark" ? "claro" : "escuro";
 
@@ -3336,6 +3427,7 @@ function App() {
 
           {checkoutMode ? (
             <div className="checkout-header-actions">
+              <LanguageSelector compact />
               <ThemeToggle compact />
               <button
                 className="checkout-header-back"
@@ -3346,6 +3438,7 @@ function App() {
             </div>
           ) : (
             <div className="header-actions">
+              <LanguageSelector />
               <ThemeToggle />
               <button
                 className="account-button"
