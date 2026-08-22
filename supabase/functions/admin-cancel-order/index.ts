@@ -212,15 +212,96 @@ async function mercadoPagoJson(
     },
   });
 
+  const rawText = await response.text();
+
   let data: JsonObject | null = null;
-  try {
-    const parsed: unknown = await response.json();
-    data = isJsonObject(parsed) ? parsed : null;
-  } catch {
-    data = null;
+  if (rawText) {
+    try {
+      const parsed: unknown = JSON.parse(rawText);
+      data = isJsonObject(parsed) ? parsed : null;
+    } catch {
+      data = null;
+    }
   }
 
-  return { response, data };
+  return {
+    response,
+    data,
+    rawText: rawText.slice(0, 4000),
+  };
+}
+
+function mercadoPagoErrorInfo(
+  data: JsonObject | null,
+  rawText: string,
+  httpStatus: number
+) {
+  const cause = jsonArray(data, "cause");
+  const causes = jsonArray(data, "causes");
+  const errors = jsonArray(data, "errors");
+
+  const firstCause =
+    cause.length > 0 && isJsonObject(cause[0])
+      ? cause[0]
+      : causes.length > 0 && isJsonObject(causes[0])
+        ? causes[0]
+        : errors.length > 0 && isJsonObject(errors[0])
+          ? errors[0]
+          : null;
+
+  const code = String(
+    jsonString(data, "code") ||
+      jsonString(data, "error") ||
+      jsonString(firstCause, "code") ||
+      jsonString(firstCause, "error") ||
+      jsonString(firstCause, "id") ||
+      ""
+  ).trim();
+
+  const providerMessage = String(
+    jsonString(data, "message") ||
+      jsonString(data, "status_detail") ||
+      jsonString(firstCause, "description") ||
+      jsonString(firstCause, "message") ||
+      ""
+  ).trim();
+
+  const knownMessages: Record<string, string> = {
+    payment_not_refundable:
+      "Este pagamento não está elegível para reembolso no Mercado Pago.",
+    amount_not_refundable:
+      "O Mercado Pago informou que o valor desta order não pode ser reembolsado.",
+    max_refunds_exceeded:
+      "O limite de reembolsos permitido para esta order foi atingido.",
+    order_payment_not_yet_enabled_for_refund:
+      "O pagamento ainda não foi liberado pelo Mercado Pago para reembolso. Aguarde alguns minutos e tente novamente.",
+    refund_in_progress:
+      "Já existe um reembolso em processamento para esta order. Aguarde alguns minutos.",
+    movement_operations_pending:
+      "O Mercado Pago ainda possui movimentações pendentes nesta order. Aguarde alguns minutos e tente novamente.",
+    order_already_refunded:
+      "O Mercado Pago informa que esta order já foi reembolsada.",
+    cannot_refund_order:
+      "O status atual da order não permite reembolso.",
+    action_not_allowed_for_current_state:
+      "O estado atual do pagamento ainda não permite esta ação.",
+    refund_period_exceeded:
+      "O prazo permitido pelo Mercado Pago para reembolso foi excedido.",
+    insufficient_money_for_refund:
+      "O Mercado Pago informou saldo insuficiente para concluir o reembolso.",
+  };
+
+  const friendly =
+    knownMessages[code] ||
+    providerMessage ||
+    (rawText ? rawText.slice(0, 500) : "") ||
+    `HTTP ${httpStatus}`;
+
+  return {
+    code: code || null,
+    providerMessage: providerMessage || null,
+    friendly: friendly.slice(0, 500),
+  };
 }
 
 Deno.serve(async (request) => {
@@ -476,12 +557,19 @@ Deno.serve(async (request) => {
       });
     }
 
-    // Orders normalmente ficam "processed" quando o pagamento foi concluído.
-    if (!["processed", "approved"].includes(providerOrderStatus)) {
+    // Na Orders API, o reembolso deve ser solicitado quando a order já foi processada.
+    // Se o provedor ainda não chegou a "processed", não enviamos um refund que será recusado.
+    if (providerOrderStatus !== "processed") {
+      const providerOrderStatusDetail =
+        jsonString(orderCheck.data, "status_detail") || "sem detalhe";
+
       return jsonResponse(
         request,
         {
-          error: `O Mercado Pago não permite reembolso enquanto a order está com status ${providerOrderStatus || "desconhecido"}.`,
+          error:
+            `O Mercado Pago ainda não liberou esta order para reembolso. ` +
+            `Status atual: ${providerOrderStatus || "desconhecido"} ` +
+            `(${providerOrderStatusDetail}). Aguarde a order ficar processed e tente novamente.`,
         },
         409
       );
@@ -495,28 +583,33 @@ Deno.serve(async (request) => {
       {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "X-Idempotency-Key": `admin-refund-${order.id}`,
         },
       }
     );
 
     if (!refund.response.ok || !refund.data) {
-      const cause = jsonArray(refund.data, "cause");
-      const firstCause =
-        cause.length > 0 && isJsonObject(cause[0]) ? cause[0] : null;
+      const providerError = mercadoPagoErrorInfo(
+        refund.data,
+        refund.rawText,
+        refund.response.status
+      );
 
-      const detail = String(
-        jsonString(refund.data, "message") ||
-          jsonString(refund.data, "error") ||
-          jsonString(firstCause, "description") ||
-          `HTTP ${refund.response.status}`
-      ).slice(0, 400);
+      const providerStatusDetail =
+        jsonString(orderCheck.data, "status_detail") || null;
 
       console.error("Mercado Pago recusou reembolso administrativo:", {
         orderId: order.id,
         providerOrderId,
+        paymentId: order.payment_id || null,
+        providerOrderStatus,
+        providerStatusDetail,
         httpStatus: refund.response.status,
-        detail,
+        errorCode: providerError.code,
+        providerMessage: providerError.providerMessage,
+        detail: providerError.friendly,
+        rawResponse: refund.rawText || null,
       });
 
       await admin.from("order_events").insert({
@@ -526,14 +619,30 @@ Deno.serve(async (request) => {
           admin_user_id: user.id,
           provider: "mercado_pago",
           provider_order_id: providerOrderId,
+          payment_id: order.payment_id || null,
+          provider_order_status: providerOrderStatus || null,
+          provider_order_status_detail: providerStatusDetail,
           http_status: refund.response.status,
-          detail,
+          provider_error_code: providerError.code,
+          provider_message: providerError.providerMessage,
+          detail: providerError.friendly,
+          raw_response: refund.rawText || null,
         },
       });
 
+      const errorPrefix = providerError.code
+        ? `${providerError.code}: `
+        : "";
+
       return jsonResponse(
         request,
-        { error: `O Mercado Pago não confirmou o reembolso: ${detail}` },
+        {
+          error:
+            `O Mercado Pago não confirmou o reembolso: ` +
+            `${errorPrefix}${providerError.friendly}`,
+          mercadoPagoCode: providerError.code,
+          mercadoPagoHttpStatus: refund.response.status,
+        },
         409
       );
     }
