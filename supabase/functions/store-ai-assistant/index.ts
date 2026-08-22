@@ -903,7 +903,7 @@ function localFallback(
     if (options.length) {
       actions.push({
         type: "show_products",
-        product_ids: options.map((product) => String(product.id)),
+        products: options.map(productSnapshot),
       });
 
       return {
@@ -953,14 +953,31 @@ function localFallback(
     }
 
     const keyboards = catalog
-      .map((product) => ({
-        product,
-        score: Math.max(
-          scoreProduct(product, "teclado"),
-          scoreProduct(product, "keyboard")
-        ),
-      }))
-      .filter((item) => item.score > 0 && availableForCart(item.product))
+      .map((product) => {
+        const haystack = normalizeSearch(
+          [
+            product.name,
+            product.category,
+            product.description,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+
+        const keywordMatch =
+          haystack.includes("teclad") ||
+          haystack.includes("keyboard");
+
+        return {
+          product,
+          score: Math.max(
+            scoreProduct(product, "teclado"),
+            scoreProduct(product, "keyboard"),
+            keywordMatch ? 80 : 0
+          ),
+        };
+      })
+      .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 8)
       .map((item) => item.product);
@@ -968,7 +985,7 @@ function localFallback(
     if (keyboards.length) {
       actions.push({
         type: "show_products",
-        product_ids: keyboards.map((product) => String(product.id)),
+        products: keyboards.map(productSnapshot),
       });
     }
 
@@ -1038,7 +1055,7 @@ function localFallback(
     if (matches.length) {
       actions.push({
         type: "show_products",
-        product_ids: matches.map((product) => String(product.id)),
+        products: matches.map(productSnapshot),
       });
 
       return {

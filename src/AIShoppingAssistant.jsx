@@ -5,6 +5,7 @@ import "./ai-assistant.css";
 
 const COPY = {
   "pt-BR": {
+    gtaNoKeyboard: "Encontrei e adicionei o GTA V, mas não encontrei nenhum teclado no catálogo agora.",
     checkoutCta: "IR PARA O CHECKOUT",
     checkoutHint: "Produto adicionado. Quando quiser, você pode finalizar a compra.",
     title: "Assistente BROTHER'S",
@@ -32,6 +33,7 @@ const COPY = {
     ],
   },
   "en-US": {
+    gtaNoKeyboard: "I found and added GTA V, but I couldn't find any keyboards in the catalog right now.",
     checkoutCta: "GO TO CHECKOUT",
     checkoutHint: "Product added. When you're ready, you can complete your purchase.",
     title: "BROTHER'S Assistant",
@@ -59,6 +61,7 @@ const COPY = {
     ],
   },
   "es-ES": {
+    gtaNoKeyboard: "Encontré y añadí GTA V, pero no encontré ningún teclado en el catálogo ahora.",
     checkoutCta: "IR AL CHECKOUT",
     checkoutHint: "Producto añadido. Cuando quieras, puedes finalizar la compra.",
     title: "Asistente BROTHER'S",
@@ -86,6 +89,7 @@ const COPY = {
     ],
   },
   "zh-CN": {
+    gtaNoKeyboard: "我找到了 GTA V 并已加入购物车，但当前目录中没有找到键盘。",
     checkoutCta: "前往结账",
     checkoutHint: "商品已加入购物车。准备好后即可完成购买。",
     title: "BROTHER'S 智能助手",
@@ -107,6 +111,7 @@ const COPY = {
     quick: ["帮我搭配一套设备", "有哪些最佳优惠？", "我想要一个键盘", "打开我的购物车"],
   },
   "hi-IN": {
+    gtaNoKeyboard: "मुझे GTA V मिला और मैंने उसे कार्ट में जोड़ दिया, लेकिन अभी कैटलॉग में कोई कीबोर्ड नहीं मिला।",
     checkoutCta: "चेकआउट पर जाएँ",
     checkoutHint: "उत्पाद कार्ट में जोड़ दिया गया है। तैयार होने पर खरीदारी पूरी करें।",
     title: "BROTHER'S सहायक",
@@ -129,6 +134,7 @@ const COPY = {
     quick: ["मेरे लिए सेटअप बनाएं", "सबसे अच्छे ऑफ़र कौन से हैं?", "मुझे कीबोर्ड चाहिए", "मेरा कार्ट खोलें"],
   },
   "ar-SA": {
+    gtaNoKeyboard: "عثرت على GTA V وأضفته إلى السلة، لكنني لم أجد أي لوحة مفاتيح في الكتالوج الآن.",
     checkoutCta: "الانتقال إلى الدفع",
     checkoutHint: "تمت إضافة المنتج. عندما تكون جاهزًا يمكنك إكمال الشراء.",
     title: "مساعد BROTHER'S",
@@ -151,6 +157,7 @@ const COPY = {
     quick: ["جهّز لي إعدادًا", "ما أفضل العروض؟", "أريد لوحة مفاتيح", "افتح سلتي"],
   },
   "fr-FR": {
+    gtaNoKeyboard: "J’ai trouvé GTA V et je l’ai ajouté au panier, mais je n’ai trouvé aucun clavier dans le catalogue pour le moment.",
     checkoutCta: "PASSER AU PAIEMENT",
     checkoutHint: "Produit ajouté. Lorsque vous êtes prêt, vous pouvez finaliser l’achat.",
     title: "Assistant BROTHER'S",
@@ -173,6 +180,7 @@ const COPY = {
     quick: ["Composez un setup pour moi", "Quelles sont les meilleures offres ?", "Je veux un clavier", "Ouvrir mon panier"],
   },
   "de-DE": {
+    gtaNoKeyboard: "Ich habe GTA V gefunden und zum Warenkorb hinzugefügt, aber derzeit keine Tastatur im Katalog gefunden.",
     checkoutCta: "ZUR KASSE",
     checkoutHint: "Produkt hinzugefügt. Wenn du bereit bist, kannst du den Kauf abschließen.",
     title: "BROTHER'S Assistent",
@@ -505,14 +513,32 @@ function buildClientFallback({
       .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score);
 
-    const keyboards = availableProducts
-      .map((product) => ({
-        product,
-        score: Math.max(
+    const keyboards = (products || [])
+      .map((product) => {
+        const haystack = normalizeAssistantText(
+          [
+            product?.name,
+            product?.category,
+            product?.description,
+            product?.subcategory,
+            product?.tags,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+
+        const keywordMatch =
+          haystack.includes("teclad") ||
+          haystack.includes("keyboard");
+
+        const score = Math.max(
           productSearchScore(product, "teclado"),
-          productSearchScore(product, "keyboard")
-        ),
-      }))
+          productSearchScore(product, "keyboard"),
+          keywordMatch ? 80 : 0
+        );
+
+        return { product, score };
+      })
       .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 8)
@@ -523,13 +549,15 @@ function buildClientFallback({
     }
 
     return {
-      content: fallbackText(
-        language,
-        gta.length === 1 ? "gtaKeyboardAdded" : "gtaKeyboardFound"
-      ),
-      products: keyboards.length
-        ? keyboards
-        : gta.slice(0, 8).map((item) => item.product),
+      content:
+        gta.length === 1 && keyboards.length === 0
+          ? fallbackText(language, "gtaNoKeyboard")
+          : fallbackText(
+              language,
+              gta.length === 1 ? "gtaKeyboardAdded" : "gtaKeyboardFound"
+            ),
+      // GTA já foi adicionado. Aqui mostramos somente as opções de teclado.
+      products: keyboards,
     };
   }
 
