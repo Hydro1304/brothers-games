@@ -245,6 +245,149 @@ function safeMessages(value) {
 }
 
 
+
+const FALLBACK_TEXT = {
+  "pt-BR": {
+    cart: "Abrindo seu carrinho.",
+    offers: "Vou abrir as ofertas disponíveis.",
+    gtaKeyboardAdded:
+      "Encontrei o GTA V e adicionei ao carrinho. Também encontrei opções de teclado; escolha uma abaixo.",
+    gtaKeyboardFound:
+      "Encontrei opções relacionadas ao GTA V e teclados. Veja abaixo.",
+    setupBudget:
+      "Separei opções reais da loja dentro de aproximadamente {budget}.",
+    setup:
+      "Separei algumas opções reais da loja para começar seu setup. Se você me disser o orçamento, consigo filtrar melhor.",
+    added: "{product} foi adicionado ao carrinho.",
+    found: "Encontrei estas opções reais no catálogo da loja.",
+    notFound:
+      "Não encontrei um produto claro para esse pedido. Tente informar o nome do produto, categoria ou orçamento.",
+  },
+  "en-US": {
+    cart: "Opening your cart.",
+    offers: "I'll open the available deals.",
+    gtaKeyboardAdded:
+      "I found GTA V and added it to your cart. I also found keyboard options; choose one below.",
+    gtaKeyboardFound:
+      "I found options related to GTA V and keyboards. Check them below.",
+    setupBudget:
+      "I found real store options within approximately {budget}.",
+    setup:
+      "I found some real store options to start your setup. Tell me your budget and I can narrow them down.",
+    added: "{product} was added to your cart.",
+    found: "I found these real options in the store catalog.",
+    notFound:
+      "I couldn't find a clear product for that request. Try the product name, category, or budget.",
+  },
+  "es-ES": {
+    cart: "Abriendo tu carrito.",
+    offers: "Voy a abrir las ofertas disponibles.",
+    gtaKeyboardAdded:
+      "Encontré GTA V y lo añadí al carrito. También encontré opciones de teclado; elige una abajo.",
+    gtaKeyboardFound:
+      "Encontré opciones relacionadas con GTA V y teclados. Míralas abajo.",
+    setupBudget:
+      "Separé opciones reales de la tienda dentro de aproximadamente {budget}.",
+    setup:
+      "Separé algunas opciones reales de la tienda para empezar tu setup. Si me dices tu presupuesto, puedo filtrar mejor.",
+    added: "{product} fue añadido al carrito.",
+    found: "Encontré estas opciones reales en el catálogo de la tienda.",
+    notFound:
+      "No encontré un producto claro para ese pedido. Intenta indicar el nombre del producto, la categoría o tu presupuesto.",
+  },
+  "zh-CN": {
+    cart: "正在打开你的购物车。",
+    offers: "正在打开当前可用优惠。",
+    gtaKeyboardAdded:
+      "我找到了 GTA V 并已加入购物车。我也找到了键盘选项，请在下面选择一个。",
+    gtaKeyboardFound:
+      "我找到了与 GTA V 和键盘相关的商品，请在下面查看。",
+    setupBudget:
+      "我筛选了价格约在 {budget} 以内的真实商品。",
+    setup:
+      "我筛选了一些真实商品来开始搭配你的设备。如果你告诉我预算，我可以进一步筛选。",
+    added: "{product} 已加入购物车。",
+    found: "我在商店目录中找到了这些真实商品。",
+    notFound:
+      "没有找到明确匹配的商品。请尝试提供商品名称、类别或预算。",
+  },
+  "hi-IN": {
+    cart: "आपका कार्ट खोला जा रहा है।",
+    offers: "उपलब्ध ऑफ़र खोले जा रहे हैं।",
+    gtaKeyboardAdded:
+      "मुझे GTA V मिल गया और मैंने उसे कार्ट में जोड़ दिया। कीबोर्ड के विकल्प भी मिले हैं; नीचे से एक चुनें।",
+    gtaKeyboardFound:
+      "मुझे GTA V और कीबोर्ड से जुड़े विकल्प मिले हैं। नीचे देखें।",
+    setupBudget:
+      "मैंने लगभग {budget} के भीतर स्टोर के वास्तविक विकल्प चुने हैं।",
+    setup:
+      "मैंने आपके सेटअप के लिए स्टोर के कुछ वास्तविक विकल्प चुने हैं। बजट बताएं तो मैं बेहतर फ़िल्टर कर सकता हूँ।",
+    added: "{product} कार्ट में जोड़ दिया गया है।",
+    found: "मुझे स्टोर कैटलॉग में ये वास्तविक विकल्प मिले हैं।",
+    notFound:
+      "इस अनुरोध के लिए कोई स्पष्ट उत्पाद नहीं मिला। उत्पाद का नाम, श्रेणी या बजट बताने की कोशिश करें।",
+  },
+  "ar-SA": {
+    cart: "جارٍ فتح سلة التسوق.",
+    offers: "سأفتح العروض المتاحة.",
+    gtaKeyboardAdded:
+      "عثرت على GTA V وأضفته إلى السلة. كما وجدت خيارات للوحة المفاتيح؛ اختر أحدها أدناه.",
+    gtaKeyboardFound:
+      "عثرت على خيارات مرتبطة بـ GTA V ولوحات المفاتيح. راجعها أدناه.",
+    setupBudget:
+      "اخترت منتجات حقيقية من المتجر ضمن حوالي {budget}.",
+    setup:
+      "اخترت بعض المنتجات الحقيقية من المتجر لبدء تجهيز إعدادك. إذا أخبرتني بالميزانية يمكنني التصفية بشكل أفضل.",
+    added: "تمت إضافة {product} إلى السلة.",
+    found: "عثرت على هذه الخيارات الحقيقية في كتالوج المتجر.",
+    notFound:
+      "لم أجد منتجًا واضحًا لهذا الطلب. حاول ذكر اسم المنتج أو الفئة أو الميزانية.",
+  },
+  "fr-FR": {
+    cart: "Ouverture de votre panier.",
+    offers: "Je vais ouvrir les offres disponibles.",
+    gtaKeyboardAdded:
+      "J’ai trouvé GTA V et je l’ai ajouté au panier. J’ai aussi trouvé des claviers ; choisissez-en un ci-dessous.",
+    gtaKeyboardFound:
+      "J’ai trouvé des options liées à GTA V et aux claviers. Consultez-les ci-dessous.",
+    setupBudget:
+      "J’ai sélectionné des produits réels de la boutique autour de {budget}.",
+    setup:
+      "J’ai sélectionné quelques produits réels de la boutique pour commencer votre setup. Donnez-moi votre budget pour affiner la sélection.",
+    added: "{product} a été ajouté au panier.",
+    found: "J’ai trouvé ces options réelles dans le catalogue de la boutique.",
+    notFound:
+      "Je n’ai pas trouvé de produit clairement correspondant. Essayez d’indiquer le nom du produit, la catégorie ou votre budget.",
+  },
+  "de-DE": {
+    cart: "Dein Warenkorb wird geöffnet.",
+    offers: "Ich öffne die verfügbaren Angebote.",
+    gtaKeyboardAdded:
+      "Ich habe GTA V gefunden und zum Warenkorb hinzugefügt. Außerdem habe ich Tastaturen gefunden; wähle unten eine aus.",
+    gtaKeyboardFound:
+      "Ich habe passende Optionen zu GTA V und Tastaturen gefunden. Sieh sie dir unten an.",
+    setupBudget:
+      "Ich habe echte Shop-Produkte bis ungefähr {budget} ausgewählt.",
+    setup:
+      "Ich habe einige echte Produkte aus dem Shop für dein Setup ausgewählt. Wenn du mir dein Budget nennst, kann ich genauer filtern.",
+    added: "{product} wurde zum Warenkorb hinzugefügt.",
+    found: "Ich habe diese echten Optionen im Shop-Katalog gefunden.",
+    notFound:
+      "Ich konnte kein eindeutiges Produkt für diese Anfrage finden. Nenne bitte Produktname, Kategorie oder Budget.",
+  },
+};
+
+function fallbackText(language, key, vars = {}) {
+  const dictionary = FALLBACK_TEXT[language] || FALLBACK_TEXT["pt-BR"];
+  let value = dictionary[key] || FALLBACK_TEXT["pt-BR"][key] || "";
+
+  for (const [name, replacement] of Object.entries(vars)) {
+    value = value.replaceAll(`{${name}}`, String(replacement));
+  }
+
+  return value;
+}
+
 function normalizeAssistantText(value) {
   return String(value || "")
     .normalize("NFD")
@@ -294,13 +437,11 @@ function buildClientFallback({
   onOpenOffers,
 }) {
   const text = normalizeAssistantText(message);
-  const en = language === "en-US";
-  const reply = (pt, english) => (en ? english : pt);
 
   if (text.includes("carrinho") || text.includes("cart")) {
     onOpenCart?.();
     return {
-      content: reply("Abrindo seu carrinho.", "Opening your cart."),
+      content: fallbackText(language, "cart"),
       products: [],
     };
   }
@@ -312,10 +453,7 @@ function buildClientFallback({
   ) {
     onOpenOffers?.();
     return {
-      content: reply(
-        "Vou abrir as ofertas disponíveis.",
-        "I'll open the available deals."
-      ),
+      content: fallbackText(language, "offers"),
       products: [],
     };
   }
@@ -369,13 +507,9 @@ function buildClientFallback({
     }
 
     return {
-      content: reply(
-        gta.length === 1
-          ? "Encontrei o GTA V e adicionei ao carrinho. Também encontrei opções de teclado; escolha uma abaixo."
-          : "Encontrei opções relacionadas ao GTA V e teclados. Veja abaixo.",
-        gta.length === 1
-          ? "I found GTA V and added it to your cart. I also found keyboard options; choose one below."
-          : "I found options related to GTA V and keyboards. Check them below."
+      content: fallbackText(
+        language,
+        gta.length === 1 ? "gtaKeyboardAdded" : "gtaKeyboardFound"
       ),
       products: keyboards.length
         ? keyboards
@@ -402,16 +536,10 @@ function buildClientFallback({
 
     return {
       content: budget
-        ? reply(
-            `Separei opções reais da loja dentro de aproximadamente R$ ${budget
-              .toFixed(2)
-              .replace(".", ",")}.`,
-            `I found real store options within roughly R$ ${budget.toFixed(2)}.`
-          )
-        : reply(
-            "Separei algumas opções reais da loja para começar seu setup. Se você me disser o orçamento, consigo filtrar melhor.",
-            "I found some real store options to start your setup. Tell me your budget and I can narrow them down."
-          ),
+        ? fallbackText(language, "setupBudget", {
+            budget: `R$ ${budget.toFixed(2).replace(".", ",")}`,
+          })
+        : fallbackText(language, "setup"),
       products: setupProducts,
     };
   }
@@ -450,10 +578,9 @@ function buildClientFallback({
     if (purchaseIntent) {
       onAddToCart?.(matches[0], 1);
       return {
-        content: reply(
-          `${matches[0]?.name || "Produto"} foi adicionado ao carrinho.`,
-          `${matches[0]?.name || "Product"} was added to your cart.`
-        ),
+        content: fallbackText(language, "added", {
+          product: matches[0]?.name || "Produto",
+        }),
         products: [matches[0]],
       };
     }
@@ -461,19 +588,13 @@ function buildClientFallback({
 
   if (matches.length) {
     return {
-      content: reply(
-        "Encontrei estas opções reais no catálogo da loja.",
-        "I found these real options in the store catalog."
-      ),
+      content: fallbackText(language, "found"),
       products: matches,
     };
   }
 
   return {
-    content: reply(
-      "Não encontrei um produto claro para esse pedido. Tente informar o nome do produto, categoria ou orçamento.",
-      "I couldn't find a clear product for that request. Try the product name, category, or budget."
-    ),
+    content: fallbackText(language, "notFound"),
     products: [],
   };
 }
@@ -505,11 +626,16 @@ export default function AIShoppingAssistant({
   const listRef = useRef(null);
 
   useEffect(() => {
-    setMessages((current) => {
-      if (current.length !== 1 || current[0]?.id !== "welcome") return current;
-      return [{ id: "welcome", role: "assistant", content: copy.hello }];
-    });
-  }, [copy.hello]);
+    setMessages([
+      {
+        id: `welcome-${language}`,
+        role: "assistant",
+        content: copy.hello,
+      },
+    ]);
+    setInput("");
+    setAddedIds(new Set());
+  }, [language, copy.hello]);
 
   useEffect(() => {
     if (!open) return;

@@ -7325,3 +7325,260 @@ html[data-theme="light"] .review-card.demo .review-avatar {
   color: #744500 !important;
 }
 
+/* =========================================================
+   BROTHER'S GAMES — CORREÇÃO FINAL DO MODO CLARO
+   Este bloco fica no fim do arquivo para vencer os estilos
+   escuros adicionados posteriormente no storefront.
+========================================================= */
+
+html[data-theme="light"] body {
+  background: #f5f7fb !important;
+  color: #17191f !important;
+}
+
+/* Cabeçalho principal */
+html[data-theme="light"] .storefront-header,
+html[data-theme="light"] .storefront-header .header-inner {
+  border-bottom-color: #dfe3ea !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  color: #17191f !important;
+  box-shadow: 0 6px 22px rgba(17, 24, 39, 0.06) !important;
+  backdrop-filter: blur(18px);
+}
+
+html[data-theme="light"] .storefront-header .logo,
+html[data-theme="light"] .storefront-header .storefront-nav button,
+html[data-theme="light"] .storefront-header .account-button,
+html[data-theme="light"] .storefront-header .cart-button,
+html[data-theme="light"] .storefront-header .theme-toggle-icon {
+  color: #1d222b !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-nav button:hover,
+html[data-theme="light"] .storefront-header .storefront-nav button.active {
+  color: #11151b !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-nav button::after {
+  background: #e50914 !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-search {
+  border-color: #d8dde6 !important;
+  background: #f7f8fb !important;
+  color: #5b6471 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-search:focus-within {
+  border-color: rgba(229, 9, 20, 0.55) !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.07) !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-search input {
+  color: #20242b !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-search input::placeholder {
+  color: #8b929d !important;
+}
+
+html[data-theme="light"] .storefront-header .storefront-search-icon {
+  color: #747d89 !important;
+}
+
+html[data-theme="light"] .storefront-header .theme-toggle,
+html[data-theme="light"] .storefront-header .account-button,
+html[data-theme="light"] .storefront-header .cart-button {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: #252a32 !important;
+}
+
+html[data-theme="light"] .storefront-header .theme-toggle:hover,
+html[data-theme="light"] .storefront-header .account-button:hover,
+html[data-theme="light"] .storefront-header .cart-button:hover {
+  border-color: #dfe3ea !important;
+  background: #f1f3f7 !important;
+  color: #11151b !important;
+}
+
+/* Seletor de idioma */
+html[data-theme="light"] .language-selector-trigger {
+  border-color: #d8dde6 !important;
+  background: #ffffff !important;
+  color: #242a34 !important;
+  box-shadow: 0 3px 12px rgba(17, 24, 39, 0.05) !important;
+}
+
+html[data-theme="light"] .language-selector-trigger:hover {
+  border-color: rgba(229, 9, 20, 0.38) !important;
+  background: #fff8f8 !important;
+}
+
+html[data-theme="light"] .language-selector-current,
+html[data-theme="light"] .language-selector-chevron {
+  color: #242a34 !important;
+}
+
+html[data-theme="light"] .language-dropdown {
+  border-color: #d8dde6 !important;
+  background: #ffffff !important;
+  color: #242a34 !important;
+  box-shadow: 0 20px 50px rgba(17, 24, 39, 0.16) !important;
+}
+
+html[data-theme="light"] .language-dropdown-header {
+  border-bottom-color: #e4e7ec !important;
+  color: #6d7480 !important;
+}
+
+html[data-theme="light"] .language-dropdown-option {
+  color: #303640 !important;
+}
+
+html[data-theme="light"] .language-dropdown-option:hover {
+  background: #f5f6f8 !important;
+  color: #11151b !important;
+}
+
+html[data-theme="light"] .language-dropdown-option.selected {
+  background: #fff0f1 !important;
+  color: #a40a12 !important;
+}
+
+/* Área de produtos e filtros */
+html[data-theme="light"] .products-page,
+html[data-theme="light"] .products-main,
+html[data-theme="light"] .products-content {
+  background: #f5f7fb !important;
+  color: #17191f !important;
+}
+
+html[data-theme="light"] .filters {
+  border-color: #dfe3e9 !important;
+  background: #ffffff !important;
+  color: #242a34 !important;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05) !important;
+}
+
+html[data-theme="light"] .filters-header {
+  border-bottom-color: #e4e7ec !important;
+}
+
+html[data-theme="light"] .filters-header h3,
+html[data-theme="light"] .filter-title {
+  color: #1d222b !important;
+}
+
+html[data-theme="light"] .filters-header button,
+html[data-theme="light"] .filter-option,
+html[data-theme="light"] .filter-radio,
+html[data-theme="light"] .price-inputs label span {
+  color: #646c78 !important;
+}
+
+html[data-theme="light"] .filter-option:hover,
+html[data-theme="light"] .filter-radio:hover {
+  color: #17191f !important;
+}
+
+html[data-theme="light"] .filter-option.active,
+html[data-theme="light"] .filter-radio.active {
+  color: #c80b14 !important;
+}
+
+html[data-theme="light"] .price-inputs input,
+html[data-theme="light"] .filters input,
+html[data-theme="light"] .filters select {
+  border-color: #d4d9e1 !important;
+  background: #f8f9fb !important;
+  color: #242a34 !important;
+}
+
+html[data-theme="light"] .products-results-header,
+html[data-theme="light"] .products-results-header div,
+html[data-theme="light"] .products-results-header strong {
+  color: #242a34 !important;
+}
+
+html[data-theme="light"] .products-results-header select {
+  border-color: #cfd5de !important;
+  background: #ffffff !important;
+  color: #242a34 !important;
+}
+
+/* Cards e superfícies comuns */
+html[data-theme="light"] .product-card,
+html[data-theme="light"] .category-home-card,
+html[data-theme="light"] .account-modal,
+html[data-theme="light"] .cart-drawer,
+html[data-theme="light"] .checkout-card,
+html[data-theme="light"] .checkout-summary,
+html[data-theme="light"] .order-card,
+html[data-theme="light"] .review-card,
+html[data-theme="light"] .product-detail-card {
+  border-color: #dfe3e9 !important;
+  background: #ffffff !important;
+  color: #20242b !important;
+}
+
+html[data-theme="light"] .product-name,
+html[data-theme="light"] .product-card strong,
+html[data-theme="light"] .category-home-card strong,
+html[data-theme="light"] .order-card strong,
+html[data-theme="light"] .review-card strong {
+  color: #17191f !important;
+}
+
+html[data-theme="light"] .product-category,
+html[data-theme="light"] .category-home-card small,
+html[data-theme="light"] .product-card p,
+html[data-theme="light"] .product-card small {
+  color: #69717d !important;
+}
+
+/* Modais / conta / carrinho */
+html[data-theme="light"] .account-overlay,
+html[data-theme="light"] .cart-overlay,
+html[data-theme="light"] .product-modal-overlay,
+html[data-theme="light"] .review-modal-overlay {
+  background: rgba(28, 33, 42, 0.46) !important;
+}
+
+html[data-theme="light"] .account-form input,
+html[data-theme="light"] .account-form select,
+html[data-theme="light"] .data-input input,
+html[data-theme="light"] .data-input select,
+html[data-theme="light"] .checkout-form input,
+html[data-theme="light"] .checkout-form select,
+html[data-theme="light"] textarea {
+  border-color: #d5dae2 !important;
+  background: #f8f9fb !important;
+  color: #20242b !important;
+}
+
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+  color: #8b929d !important;
+}
+
+/* Rodapé */
+html[data-theme="light"] .footer {
+  border-top-color: #dde2e9 !important;
+  background: #ffffff !important;
+  color: #4e5662 !important;
+}
+
+html[data-theme="light"] .footer strong,
+html[data-theme="light"] .footer h3,
+html[data-theme="light"] .footer h4 {
+  color: #1b2028 !important;
+}
+
+/* Mantém áreas propositalmente visuais/escuras sem quebrar contraste */
+html[data-theme="light"] .gaming-hero {
+  color: #ffffff !important;
+}
+
