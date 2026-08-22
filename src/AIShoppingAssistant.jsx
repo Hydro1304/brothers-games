@@ -654,6 +654,11 @@ function setupProductsForSection(products, sectionId) {
     const matches = section.productTerms.some((term) => haystack.includes(term));
     if (!matches) return false;
 
+    // No wizard do setup, produto sem estoque NÃO é exibido como opção.
+    // Se todos os itens da seção estiverem sem estoque, a mensagem
+    // "não temos disponível no momento, mas teremos em breve" aparece.
+    if (!productAvailable(product)) return false;
+
     const id = String(product?.id || "");
     if (!id || seen.has(id)) return false;
 
