@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./lib/supabase";
 import { useSitePopup } from "./SitePopup";
-import { translateDom } from "./i18n";
 import "./admin.css";
+import "./fulfillment.css";
 
 const SUCCESS_ORDER_STATUSES = ["paid", "processing", "completed"];
 
@@ -187,7 +187,6 @@ function issueStatusClass(status) {
 export default function AdminPanel({
   currentUser,
   isOwner,
-  language = "pt-BR",
   theme = "dark",
   onToggleTheme,
   onBack,
@@ -201,27 +200,6 @@ export default function AdminPanel({
     runWithSiteLoading,
   } = useSitePopup();
 
-  const adminI18nTextMemoryRef = useRef(new WeakMap());
-  const adminI18nAttrMemoryRef = useRef(new WeakMap());
-
-  // O painel possui muitos textos gerados por estado e dados do Supabase.
-  // Traduzimos novamente depois de cada render do React para evitar que
-  // uma atualização de Dashboard/Pedidos/Produtos restaure o português.
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const root = document.getElementById("root");
-      if (!root) return;
-      translateDom(
-        root,
-        language,
-        adminI18nTextMemoryRef.current,
-        adminI18nAttrMemoryRef.current
-      );
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  });
-
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -233,6 +211,8 @@ export default function AdminPanel({
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [orderItems, setOrderItems] = useState([]);
+  const [itemFulfillments, setItemFulfillments] = useState([]);
+  const [fulfillmentDrafts, setFulfillmentDrafts] = useState({});
   const [orderEvents, setOrderEvents] = useState([]);
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
@@ -469,6 +449,7 @@ export default function AdminPanel({
         productsResult,
         ordersResult,
         orderItemsResult,
+        itemFulfillmentsResult,
         orderEventsResult,
         eventsResult,
         usersResult,
@@ -486,6 +467,10 @@ export default function AdminPanel({
           .order("created_at", { ascending: false })
           .limit(500),
         supabase.from("order_items").select("*").limit(3000),
+        supabase
+          .from("order_item_fulfillments")
+          .select("*")
+          .limit(3000),
         supabase
           .from("order_events")
           .select("*")
@@ -521,6 +506,7 @@ export default function AdminPanel({
         productsResult,
         ordersResult,
         orderItemsResult,
+        itemFulfillmentsResult,
         orderEventsResult,
         eventsResult,
         usersResult,
@@ -535,6 +521,7 @@ export default function AdminPanel({
       setProducts(productsResult.data || []);
       setOrders(ordersResult.data || []);
       setOrderItems(orderItemsResult.data || []);
+      setItemFulfillments(itemFulfillmentsResult.data || []);
       setOrderEvents(orderEventsResult.data || []);
       setEvents(eventsResult.data || []);
       setUsers(usersResult.data || []);
@@ -1355,6 +1342,177 @@ export default function AdminPanel({
     }
   }
 
+
+  function fulfillmentForItem(itemId) {
+    return (
+      itemFulfillments.find(
+        (fulfillment) =>
+          fulfillment.order_item_id === itemId
+      ) || null
+    );
+  }
+
+  function itemDeliveryType(item) {
+    if (
+      item?.delivery_type === "digital" ||
+      item?.delivery_type === "physical"
+    ) {
+      return item.delivery_type;
+    }
+
+    const product = products.find(
+      (entry) => entry.id === item?.product_id
+    );
+
+    if (
+      product?.delivery_type === "digital" ||
+      product?.delivery_type === "physical"
+    ) {
+      return product.delivery_type;
+    }
+
+    return String(product?.category || "")
+      .trim()
+      .toLowerCase() === "jogos"
+      ? "digital"
+      : "physical";
+  }
+
+  function fulfillmentStatusText(
+    status,
+    deliveryType
+  ) {
+    const map = {
+      awaiting_payment: "Aguardando pagamento",
+      awaiting_delivery: "Aguardando entrega digital",
+      preparing: "Preparando envio",
+      shipped: "Enviado",
+      delivered: "Entregue",
+      cancelled: "Encerrado",
+    };
+
+    return (
+      map[status] ||
+      (deliveryType === "digital"
+        ? "Aguardando entrega digital"
+        : "Preparando envio")
+    );
+  }
+
+  function fulfillmentDraft(item, order) {
+    const saved = fulfillmentForItem(item.id);
+    const current = fulfillmentDrafts[item.id] || {};
+
+    return {
+      digital_content:
+        current.digital_content ??
+        saved?.digital_content ??
+        "",
+      carrier:
+        current.carrier ??
+        saved?.carrier ??
+        order?.shipping_carrier ??
+        "",
+      tracking_code:
+        current.tracking_code ??
+        saved?.tracking_code ??
+        "",
+      tracking_url:
+        current.tracking_url ??
+        saved?.tracking_url ??
+        "",
+    };
+  }
+
+  function updateFulfillmentDraft(
+    itemId,
+    field,
+    value
+  ) {
+    setFulfillmentDrafts((current) => ({
+      ...current,
+      [itemId]: {
+        ...(current[itemId] || {}),
+        [field]: value,
+      },
+    }));
+  }
+
+  async function saveItemFulfillment(
+    item,
+    order,
+    nextStatus
+  ) {
+    if (!item?.id || fulfillmentSaving) return;
+
+    const deliveryType = itemDeliveryType(item);
+    const draft = fulfillmentDraft(item, order);
+
+    if (
+      deliveryType === "digital" &&
+      nextStatus === "delivered" &&
+      !draft.digital_content.trim()
+    ) {
+      showSiteAlert(
+        "Informe a chave, link ou instruções da entrega digital.",
+        { variant: "warning" }
+      );
+      return;
+    }
+
+    if (
+      deliveryType === "physical" &&
+      ["shipped", "delivered"].includes(nextStatus) &&
+      !draft.tracking_code.trim()
+    ) {
+      showSiteAlert(
+        "Informe o código de rastreio antes de marcar como enviado.",
+        { variant: "warning" }
+      );
+      return;
+    }
+
+    setFulfillmentSaving(true);
+
+    try {
+      const { error } = await supabase.rpc(
+        "admin_update_order_item_fulfillment",
+        {
+          p_order_item_id: item.id,
+          p_status: nextStatus,
+          p_digital_content:
+            deliveryType === "digital"
+              ? draft.digital_content
+              : null,
+          p_carrier:
+            deliveryType === "physical"
+              ? draft.carrier
+              : null,
+          p_tracking_code:
+            deliveryType === "physical"
+              ? draft.tracking_code
+              : null,
+          p_tracking_url:
+            deliveryType === "physical"
+              ? draft.tracking_url
+              : null,
+        }
+      );
+
+      if (error) throw error;
+
+      await loadAllData(true);
+    } catch (error) {
+      console.error(error);
+      showSiteAlert(
+        error?.message ||
+          "Não foi possível atualizar a entrega deste item."
+      );
+    } finally {
+      setFulfillmentSaving(false);
+    }
+  }
+
   const orderById = useMemo(() => {
     return new Map(orders.map((order) => [order.id, order]));
   }, [orders]);
@@ -1400,6 +1558,15 @@ export default function AdminPanel({
     }
     return map;
   }, [orderItems]);
+
+  const fulfillmentByItem = useMemo(() => {
+    return new Map(
+      itemFulfillments.map((item) => [
+        item.order_item_id,
+        item,
+      ])
+    );
+  }, [itemFulfillments]);
 
   const interactionsByOrder = useMemo(() => {
     const map = new Map();
@@ -1868,7 +2035,6 @@ export default function AdminPanel({
     const items = itemsByOrder.get(order.id) || [];
     const customerEmail = userById.get(order.customer_id)?.email || "E-mail indisponível";
     const paid = SUCCESS_ORDER_STATUSES.includes(order.status);
-    const currentFulfillment = normalizedFulfillmentStatus(order);
 
     return (
       <div className="admin-modal-overlay" onClick={() => setManagedOrderId(null)}>
@@ -1907,50 +2073,246 @@ export default function AdminPanel({
           </div>
 
           <div className="admin-order-manager-items">
-            <span>ITENS</span>
-            {items.map((item) => (
-              <div key={item.id}>
-                <span>{item.quantity}x {item.product_name}</span>
-                <strong>{money(Number(item.unit_price) * Number(item.quantity))}</strong>
-              </div>
-            ))}
+            <span>ITENS E ENTREGA</span>
+
+            {items.map((item) => {
+              const deliveryType = itemDeliveryType(item);
+              const fulfillment =
+                fulfillmentByItem.get(item.id) || null;
+              const draft = fulfillmentDraft(item, order);
+              const itemStatus =
+                fulfillment?.status ||
+                (paid
+                  ? deliveryType === "digital"
+                    ? "awaiting_delivery"
+                    : "preparing"
+                  : "awaiting_payment");
+
+              return (
+                <section
+                  className="admin-order-item-fulfillment"
+                  key={item.id}
+                >
+                  <div className="admin-order-item-fulfillment-head">
+                    <div>
+                      <strong>
+                        {item.quantity}x {item.product_name}
+                      </strong>
+                      <small>
+                        {money(
+                          Number(item.unit_price) *
+                            Number(item.quantity)
+                        )}
+                      </small>
+                    </div>
+
+                    <div className="admin-order-item-fulfillment-badges">
+                      <span
+                        className={`fulfillment-type-badge ${deliveryType}`}
+                      >
+                        {deliveryType === "digital"
+                          ? "⚡ DIGITAL"
+                          : "📦 FÍSICO"}
+                      </span>
+
+                      <span
+                        className={`fulfillment-status-badge ${itemStatus}`}
+                      >
+                        {fulfillmentStatusText(
+                          itemStatus,
+                          deliveryType
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  {!paid ? (
+                    <p className="admin-fulfillment-help">
+                      O pagamento precisa estar aprovado antes
+                      de liberar a entrega.
+                    </p>
+                  ) : deliveryType === "digital" ? (
+                    <div className="admin-fulfillment-form">
+                      <label>
+                        <span>
+                          CHAVE / LINK / LOGIN / INSTRUÇÕES
+                        </span>
+                        <textarea
+                          value={draft.digital_content}
+                          onChange={(event) =>
+                            updateFulfillmentDraft(
+                              item.id,
+                              "digital_content",
+                              event.target.value
+                            )
+                          }
+                          placeholder={
+                            "Ex.: Chave: XXXX-XXXX-XXXX\nOu link, login e instruções."
+                          }
+                        />
+                      </label>
+
+                      <p className="admin-fulfillment-help">
+                        Esse conteúdo fica visível somente para
+                        o cliente dono do pedido.
+                      </p>
+
+                      <div className="admin-fulfillment-action-row">
+                        <button
+                          type="button"
+                          disabled={fulfillmentSaving}
+                          onClick={() =>
+                            saveItemFulfillment(
+                              item,
+                              order,
+                              "awaiting_delivery"
+                            )
+                          }
+                        >
+                          SALVAR / AGUARDANDO ENTREGA
+                        </button>
+
+                        <button
+                          type="button"
+                          className="primary"
+                          disabled={fulfillmentSaving}
+                          onClick={() =>
+                            saveItemFulfillment(
+                              item,
+                              order,
+                              "delivered"
+                            )
+                          }
+                        >
+                          ENTREGAR PRODUTO DIGITAL
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="admin-fulfillment-form">
+                      <div className="admin-fulfillment-grid">
+                        <label>
+                          <span>TRANSPORTADORA</span>
+                          <input
+                            value={draft.carrier}
+                            onChange={(event) =>
+                              updateFulfillmentDraft(
+                                item.id,
+                                "carrier",
+                                event.target.value
+                              )
+                            }
+                            placeholder="Ex.: Correios / Jadlog"
+                          />
+                        </label>
+
+                        <label>
+                          <span>CÓDIGO DE RASTREIO</span>
+                          <input
+                            value={draft.tracking_code}
+                            onChange={(event) =>
+                              updateFulfillmentDraft(
+                                item.id,
+                                "tracking_code",
+                                event.target.value
+                              )
+                            }
+                            placeholder="Ex.: AA123456789BR"
+                          />
+                        </label>
+                      </div>
+
+                      <label>
+                        <span>LINK DE RASTREIO (OPCIONAL)</span>
+                        <input
+                          value={draft.tracking_url}
+                          onChange={(event) =>
+                            updateFulfillmentDraft(
+                              item.id,
+                              "tracking_url",
+                              event.target.value
+                            )
+                          }
+                          placeholder="https://..."
+                        />
+                      </label>
+
+                      <p className="admin-fulfillment-help">
+                        Gere/compre a etiqueta no Melhor Envio,
+                        poste a encomenda e informe o rastreio.
+                      </p>
+
+                      <div className="admin-fulfillment-action-row">
+                        <button
+                          type="button"
+                          disabled={fulfillmentSaving}
+                          onClick={() =>
+                            saveItemFulfillment(
+                              item,
+                              order,
+                              "preparing"
+                            )
+                          }
+                        >
+                          PREPARANDO ENVIO
+                        </button>
+
+                        <button
+                          type="button"
+                          className="primary"
+                          disabled={fulfillmentSaving}
+                          onClick={() =>
+                            saveItemFulfillment(
+                              item,
+                              order,
+                              "shipped"
+                            )
+                          }
+                        >
+                          MARCAR COMO ENVIADO
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={fulfillmentSaving}
+                          onClick={() =>
+                            saveItemFulfillment(
+                              item,
+                              order,
+                              "delivered"
+                            )
+                          }
+                        >
+                          MARCAR ENTREGUE
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              );
+            })}
           </div>
 
-          {paid ? (
-            <div className="admin-fulfillment-editor">
-              <span>ATUALIZAR ANDAMENTO</span>
-              <p>
-                A alteração aparece para o cliente em “Acompanhar pedido”.
-              </p>
-
-              <div className="admin-fulfillment-buttons">
-                {[
-                  ["preparing", "Preparando pedido"],
-                  ["shipped", "Pedido enviado"],
-                  ["delivered", "Entregue"],
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={currentFulfillment === value ? "active" : ""}
-                    disabled={fulfillmentSaving}
-                    onClick={() => updateOrderFulfillment(order.id, value)}
-                  >
-                    <span>
-                      {value === "preparing" ? "01" : value === "shipped" ? "02" : "03"}
-                    </span>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
+          {!paid && (
             <div className="admin-order-payment-warning">
-              {["refunded", "cancelled", "expired"].includes(order.status)
+              {["refunded", "cancelled", "expired"].includes(
+                order.status
+              )
                 ? order.status === "refunded"
                   ? "Pedido reembolsado e encerrado."
                   : "Pedido encerrado."
-                : "O andamento da entrega será liberado quando o pagamento estiver aprovado."}
+                : "A entrega será liberada quando o pagamento estiver aprovado."}
+            </div>
+          )}
+
+          {paid && (
+            <div className="admin-fulfillment-editor">
+              <span>STATUS GERAL DO PEDIDO</span>
+              <p>
+                O status geral é calculado automaticamente a
+                partir das entregas digitais e físicas.
+              </p>
+              <strong>{fulfillmentLabel(order)}</strong>
             </div>
           )}
 
@@ -3257,7 +3619,7 @@ export default function AdminPanel({
 
   return (
     <>
-      <div className="admin-app" data-admin-language={language} dir={language === "ar-SA" ? "rtl" : "ltr"}>
+      <div className="admin-app">
       <aside className="admin-sidebar">
         <button className="admin-brand" onClick={onBack}>
           <span>BROTHER'S</span>

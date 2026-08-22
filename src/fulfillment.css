@@ -1,0 +1,308 @@
+
+/* =========================================================
+   BROTHER'S GAMES — ENTREGAS DIGITAIS E FÍSICAS
+========================================================= */
+
+.fulfillment-type-badge,
+.fulfillment-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .06em;
+}
+
+.fulfillment-type-badge.digital {
+  border: 1px solid rgba(78, 166, 255, .28);
+  background: rgba(78, 166, 255, .08);
+  color: #74b9ff;
+}
+
+.fulfillment-type-badge.physical {
+  border: 1px solid rgba(229, 9, 20, .28);
+  background: rgba(229, 9, 20, .08);
+  color: #ff626a;
+}
+
+.fulfillment-status-badge {
+  border: 1px solid #35353a;
+  background: #171719;
+  color: #c8c8ce;
+}
+
+.fulfillment-status-badge.delivered {
+  border-color: rgba(57, 196, 107, .28);
+  background: rgba(57, 196, 107, .08);
+  color: #68d891;
+}
+
+.fulfillment-status-badge.shipped {
+  border-color: rgba(255, 183, 77, .3);
+  background: rgba(255, 183, 77, .08);
+  color: #ffc66d;
+}
+
+.admin-order-item-fulfillment {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid #29292e;
+  border-radius: 12px;
+  background: #101012;
+}
+
+.admin-order-item-fulfillment + .admin-order-item-fulfillment {
+  margin-top: 10px;
+}
+
+.admin-order-item-fulfillment-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-order-item-fulfillment-head > div:first-child {
+  min-width: 0;
+}
+
+.admin-order-item-fulfillment-head strong {
+  display: block;
+  color: #f4f4f6;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.admin-order-item-fulfillment-head small {
+  display: block;
+  margin-top: 4px;
+  color: #7e7e87;
+  font-size: 9px;
+}
+
+.admin-order-item-fulfillment-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.admin-fulfillment-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 13px;
+}
+
+.admin-fulfillment-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-fulfillment-form label > span {
+  color: #888892;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.admin-fulfillment-form input,
+.admin-fulfillment-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #303036;
+  border-radius: 9px;
+  background: #151518;
+  color: #f2f2f4;
+  outline: none;
+}
+
+.admin-fulfillment-form input {
+  min-height: 40px;
+  padding: 0 11px;
+}
+
+.admin-fulfillment-form textarea {
+  min-height: 106px;
+  padding: 10px 11px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.admin-fulfillment-form input:focus,
+.admin-fulfillment-form textarea:focus {
+  border-color: rgba(229, 9, 20, .7);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, .07);
+}
+
+.admin-fulfillment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.admin-fulfillment-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-fulfillment-action-row button {
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid #34343a;
+  border-radius: 9px;
+  background: #18181b;
+  color: #dadade;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  cursor: pointer;
+}
+
+.admin-fulfillment-action-row button.primary {
+  border-color: #e50914;
+  background: #e50914;
+  color: #fff;
+}
+
+.admin-fulfillment-action-row button:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+.admin-fulfillment-help {
+  margin: 0;
+  color: #85858e;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.order-item-delivery-box {
+  margin-top: 9px;
+  padding: 11px 12px;
+  border: 1px solid #29292e;
+  border-radius: 10px;
+  background: #111113;
+}
+
+.order-item-delivery-box > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.order-item-delivery-box-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap;
+  gap: 7px !important;
+  margin-top: 9px;
+}
+
+.order-item-delivery-box p {
+  margin: 8px 0 0;
+  color: #a2a2aa;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.digital-delivery-details {
+  margin-top: 10px;
+  border: 1px solid rgba(78, 166, 255, .22);
+  border-radius: 9px;
+  background: rgba(78, 166, 255, .05);
+}
+
+.digital-delivery-details summary {
+  padding: 10px 11px;
+  color: #82c1ff;
+  font-size: 9px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.digital-delivery-details pre {
+  margin: 0;
+  padding: 0 11px 12px;
+  color: #eeeef2;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.physical-tracking-data {
+  display: grid !important;
+  justify-content: stretch !important;
+  gap: 5px !important;
+  margin-top: 9px;
+  color: #b0b0b7;
+  font-size: 9px;
+}
+
+.physical-tracking-data strong {
+  color: #f0f0f3;
+}
+
+.physical-tracking-data a {
+  width: max-content;
+  margin-top: 4px;
+  color: #ff525b;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+html[data-theme="light"] .admin-order-item-fulfillment,
+html[data-theme="light"] .order-item-delivery-box {
+  border-color: #dfe3e9;
+  background: #fff;
+}
+
+html[data-theme="light"] .admin-order-item-fulfillment-head strong,
+html[data-theme="light"] .physical-tracking-data strong,
+html[data-theme="light"] .digital-delivery-details pre {
+  color: #1b2028;
+}
+
+html[data-theme="light"] .admin-fulfillment-form input,
+html[data-theme="light"] .admin-fulfillment-form textarea {
+  border-color: #d5dae2;
+  background: #f8f9fb;
+  color: #20242b;
+}
+
+html[data-theme="light"] .fulfillment-status-badge {
+  border-color: #d9dee6;
+  background: #f5f6f8;
+  color: #515966;
+}
+
+html[data-theme="light"] .digital-delivery-details {
+  border-color: #cce3f8;
+  background: #f3f9ff;
+}
+
+@media (max-width: 620px) {
+  .admin-fulfillment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-order-item-fulfillment-head {
+    flex-direction: column;
+  }
+
+  .admin-order-item-fulfillment-badges {
+    justify-content: flex-start;
+  }
+
+  .order-item-delivery-box > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

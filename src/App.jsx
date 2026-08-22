@@ -8,6 +8,7 @@ import { useSitePopup } from "./SitePopup";
 import { LANGUAGES, detectInitialLanguage, languageMeta, languageChangeCopy, translateDom, translateProductName, translateCategoryName } from "./i18n";
 import "./styles.css";
 import "./avatar-transitions.css";
+import "./fulfillment.css";
 
 const mercadoPagoPublicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
 const mercadoPagoFrontendMode = String(
@@ -752,6 +753,7 @@ function App() {
   );
   const [userData, setUserData] = useState({ ...emptyUserData });
   const [myOrders, setMyOrders] = useState([]);
+  const [myOrderFulfillments, setMyOrderFulfillments] = useState([]);
   const [myOrderItems, setMyOrderItems] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
   const [myReviewPhotos, setMyReviewPhotos] = useState([]);
@@ -1830,6 +1832,18 @@ function App() {
         itemsData = data || [];
       }
 
+      let fulfillmentData = [];
+
+      if (ids.length) {
+        const { data, error } = await supabase
+          .from("order_item_fulfillments")
+          .select("*")
+          .in("order_id", ids);
+
+        if (error) throw error;
+        fulfillmentData = data || [];
+      }
+
       const { data: issuesData, error: issuesError } = await supabase
         .from("order_issues")
         .select("*")
@@ -1862,6 +1876,7 @@ function App() {
 
       setMyOrders(ordersData || []);
       setMyOrderItems(itemsData);
+      setMyOrderFulfillments(fulfillmentData);
       setMyOrderIssues(issuesData || []);
       setMyReviews(reviewsData || []);
       setMyReviewPhotos(reviewPhotosData);
@@ -5482,6 +5497,45 @@ function App() {
       myOrderIssues.map((issue) => [issue.order_id, issue])
     );
 
+    const fulfillmentByOrderItem = new Map(
+      myOrderFulfillments.map((item) => [
+        item.order_item_id,
+        item,
+      ])
+    );
+
+    function orderItemDeliveryType(item) {
+      if (
+        item?.delivery_type === "digital" ||
+        item?.delivery_type === "physical"
+      ) {
+        return item.delivery_type;
+      }
+
+      return "physical";
+    }
+
+    function itemFulfillmentStatusLabel(
+      fulfillment,
+      deliveryType
+    ) {
+      const labels = {
+        awaiting_payment: "Aguardando pagamento",
+        awaiting_delivery: "Aguardando entrega digital",
+        preparing: "Preparando envio",
+        shipped: "Enviado",
+        delivered: "Entregue",
+        cancelled: "Encerrado",
+      };
+
+      return (
+        labels[fulfillment?.status] ||
+        (deliveryType === "digital"
+          ? "Aguardando entrega digital"
+          : "Preparando envio")
+      );
+    }
+
     return (
       <div className="modal-overlay account-overlay" onClick={closeAccount}>
         <div className="account-modal" onClick={(event) => event.stopPropagation()}>
@@ -5806,12 +5860,111 @@ function App() {
 
                     <div className="tracking-products">
                       <span>ITENS DO PEDIDO</span>
-                      {trackingItems.map((item) => (
-                        <div key={item.id}>
-                          <span>{item.quantity}x {translateProductName(item.product_name, language)}</span>
-                          <strong>{formatPrice(Number(item.unit_price) * item.quantity)}</strong>
-                        </div>
-                      ))}
+
+                      {trackingItems.map((item) => {
+                        const deliveryType =
+                          orderItemDeliveryType(item);
+                        const fulfillment =
+                          fulfillmentByOrderItem.get(item.id) ||
+                          null;
+                        const fulfillmentStatus =
+                          itemFulfillmentStatusLabel(
+                            fulfillment,
+                            deliveryType
+                          );
+
+                        return (
+                          <div
+                            className="order-item-delivery-box"
+                            key={item.id}
+                          >
+                            <div>
+                              <span>
+                                {item.quantity}x{" "}
+                                {translateProductName(
+                                  item.product_name,
+                                  language
+                                )}
+                              </span>
+                              <strong>
+                                {formatPrice(
+                                  Number(item.unit_price) *
+                                    item.quantity
+                                )}
+                              </strong>
+                            </div>
+
+                            <div className="order-item-delivery-box-head">
+                              <span
+                                className={`fulfillment-type-badge ${deliveryType}`}
+                              >
+                                {deliveryType === "digital"
+                                  ? "⚡ DIGITAL"
+                                  : "📦 FÍSICO"}
+                              </span>
+
+                              <span
+                                className={`fulfillment-status-badge ${
+                                  fulfillment?.status || ""
+                                }`}
+                              >
+                                {fulfillmentStatus}
+                              </span>
+                            </div>
+
+                            {deliveryType === "digital" ? (
+                              fulfillment?.status ===
+                                "delivered" &&
+                              fulfillment?.digital_content ? (
+                                <details className="digital-delivery-details">
+                                  <summary>
+                                    REVELAR ENTREGA DIGITAL
+                                  </summary>
+                                  <pre>
+                                    {fulfillment.digital_content}
+                                  </pre>
+                                </details>
+                              ) : (
+                                <p>
+                                  Assim que a equipe liberar a
+                                  chave, link ou instruções, a
+                                  entrega digital aparecerá aqui.
+                                </p>
+                              )
+                            ) : (
+                              <div className="physical-tracking-data">
+                                <span>
+                                  Transportadora:{" "}
+                                  <strong>
+                                    {fulfillment?.carrier ||
+                                      "A definir"}
+                                  </strong>
+                                </span>
+
+                                <span>
+                                  Rastreio:{" "}
+                                  <strong>
+                                    {fulfillment?.tracking_code ||
+                                      "Ainda não informado"}
+                                  </strong>
+                                </span>
+
+                                {fulfillment?.tracking_url && (
+                                  <a
+                                    href={
+                                      fulfillment.tracking_url
+                                    }
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    RASTREAR ENCOMENDA →
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {fulfillment === "delivered" && (() => {
