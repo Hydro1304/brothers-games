@@ -52,6 +52,33 @@ function jsonArray(object: JsonObject | null, key: string) {
   return Array.isArray(value) ? value : [];
 }
 
+function firstJsonObject(values: JsonValue[]) {
+  return values.length > 0 && isJsonObject(values[0])
+    ? values[0]
+    : null;
+}
+
+function orderTransactionSnapshot(orderData: JsonObject | null) {
+  const transactions = jsonObject(orderData, "transactions");
+  const payments = jsonArray(transactions, "payments");
+  const refunds = jsonArray(transactions, "refunds");
+
+  const firstPayment = firstJsonObject(payments);
+  const firstRefund = firstJsonObject(refunds);
+
+  return {
+    paymentId: jsonString(firstPayment, "id") || null,
+    paymentStatus:
+      jsonString(firstPayment, "status").toLowerCase() || null,
+    paymentStatusDetail:
+      jsonString(firstPayment, "status_detail").toLowerCase() || null,
+    refundId: jsonString(firstRefund, "id") || null,
+    refundStatus:
+      jsonString(firstRefund, "status").toLowerCase() || null,
+    refundAmount: jsonString(firstRefund, "amount") || null,
+  };
+}
+
 function configuredOrigins() {
   const configured = String(
     Deno.env.get("ALLOWED_ORIGINS") || ""
@@ -514,6 +541,43 @@ Deno.serve(async (request) => {
     }
 
     const providerOrderStatus = jsonString(orderCheck.data, "status").toLowerCase();
+    const transactionSnapshot =
+      orderTransactionSnapshot(orderCheck.data);
+
+    // Se já existe refund em processamento, NÃO criamos outra movimentação.
+    if (
+      ["processing", "pending", "in_process"].includes(
+        String(transactionSnapshot.refundStatus || "")
+      )
+    ) {
+      return jsonResponse(
+        request,
+        {
+          error:
+            "O Mercado Pago já possui um reembolso em processamento para este pedido. Aguarde a conclusão antes de tentar novamente.",
+          refundId: transactionSnapshot.refundId,
+          refundStatus: transactionSnapshot.refundStatus,
+        },
+        409
+      );
+    }
+
+    // Se a transação de pagamento não está processada, o refund não deve ser disparado.
+    if (
+      transactionSnapshot.paymentStatus &&
+      transactionSnapshot.paymentStatus !== "processed"
+    ) {
+      return jsonResponse(
+        request,
+        {
+          error:
+            `A transação de pagamento ainda não está pronta para reembolso. ` +
+            `Status: ${transactionSnapshot.paymentStatus}` +
+            `${transactionSnapshot.paymentStatusDetail ? ` (${transactionSnapshot.paymentStatusDetail})` : ""}.`,
+        },
+        409
+      );
+    }
 
     // Se já estiver reembolsada no Mercado Pago, apenas sincroniza o banco local.
     if (providerOrderStatus === "refunded") {
@@ -588,6 +652,42 @@ Deno.serve(async (request) => {
       );
     }
 
+    // Evita várias movimentações de refund para a mesma order em sequência.
+    const { data: orderRefundAllowed, error: orderRefundRateError } =
+      await admin.rpc("check_edge_rate_limit", {
+        p_key: `admin-refund-order:${order.id}`,
+        p_window_seconds: 60,
+        p_max_requests: 1,
+      });
+
+    if (orderRefundRateError) {
+      console.error(
+        "Rate limit por pedido indisponível:",
+        orderRefundRateError.code || "unknown"
+      );
+
+      return jsonResponse(
+        request,
+        {
+          error:
+            "Não foi possível validar o intervalo seguro para o reembolso. Aguarde alguns segundos e tente novamente.",
+        },
+        503
+      );
+    }
+
+    if (orderRefundAllowed !== true) {
+      return jsonResponse(
+        request,
+        {
+          error:
+            "Já houve uma tentativa de reembolso deste pedido há menos de 60 segundos. Aguarde antes de tentar novamente.",
+        },
+        429,
+        { "Retry-After": "60" }
+      );
+    }
+
     // Reembolso TOTAL pela API de Orders.
     // Para reembolso total, o Mercado Pago orienta enviar POST sem body.
     //
@@ -598,7 +698,7 @@ Deno.serve(async (request) => {
       `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}/refund`;
 
     const refundIdempotencyKey =
-      `admin-refund-${order.id}`;
+      `admin-refund-${crypto.randomUUID()}`;
 
     const refund = await mercadoPagoJson(
       refundEndpoint,
@@ -642,6 +742,12 @@ Deno.serve(async (request) => {
         paymentId: order.payment_id || null,
         providerOrderStatus,
         providerStatusDetail,
+        paymentTransactionId: transactionSnapshot.paymentId,
+        paymentTransactionStatus: transactionSnapshot.paymentStatus,
+        paymentTransactionStatusDetail:
+          transactionSnapshot.paymentStatusDetail,
+        existingRefundId: transactionSnapshot.refundId,
+        existingRefundStatus: transactionSnapshot.refundStatus,
         refundIdempotencyKey,
         httpStatus: refund.response.status,
         errorCode: providerError.code,
@@ -661,6 +767,12 @@ Deno.serve(async (request) => {
           payment_id: order.payment_id || null,
           provider_order_status: providerOrderStatus || null,
           provider_order_status_detail: providerStatusDetail,
+          payment_transaction_id: transactionSnapshot.paymentId,
+          payment_transaction_status: transactionSnapshot.paymentStatus,
+          payment_transaction_status_detail:
+            transactionSnapshot.paymentStatusDetail,
+          existing_refund_id: transactionSnapshot.refundId,
+          existing_refund_status: transactionSnapshot.refundStatus,
           refund_idempotency_key: refundIdempotencyKey,
           http_status: refund.response.status,
           provider_error_code: providerError.code,
@@ -670,6 +782,32 @@ Deno.serve(async (request) => {
           raw_response: refund.rawText || null,
         },
       });
+
+      const isPostProcessingRejected =
+        providerError.code === "unprocessable_entity" &&
+        /post\s*processing\s*rejected/i.test(
+          `${providerError.providerMessage || ""} ` +
+          `${providerError.friendly || ""} ` +
+          `${refund.rawText || ""}`
+        );
+
+      if (isPostProcessingRejected) {
+        return jsonResponse(
+          request,
+          {
+            error:
+              "O Mercado Pago recebeu o pedido de reembolso, mas rejeitou o processamento interno da operação. " +
+              "Não tente novamente imediatamente. Aguarde alguns minutos e consulte o status da order; " +
+              "se continuar processed sem refund, a rejeição é do próprio Mercado Pago para essa transação.",
+            mercadoPagoCode: providerError.code,
+            mercadoPagoHttpStatus: refund.response.status,
+            paymentStatus: transactionSnapshot.paymentStatus,
+            paymentStatusDetail:
+              transactionSnapshot.paymentStatusDetail,
+          },
+          422
+        );
+      }
 
       if (isTooManyRequests) {
         const waitText =
