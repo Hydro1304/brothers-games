@@ -840,13 +840,11 @@ function executeTool(
 function localFallback(
   message: string,
   language: string,
-  catalog: ProductRow[],
-  cart: CartItem[]
+  catalog: ProductRow[]
 ) {
   const text = normalizeSearch(message);
   const actions: ClientAction[] = [];
 
-  const pt = language === "pt-BR";
   const en = language === "en-US";
 
   const reply = (ptText: string, enText: string) =>
@@ -1127,7 +1125,7 @@ Deno.serve(async (request) => {
 
     if (!GROQ_API_KEY) {
       console.warn("AI assistant: GROQ_API_KEY ausente; usando fallback local.");
-      const fallback = localFallback(message, language, catalog, cart);
+      const fallback = localFallback(message, language, catalog);
 
       return jsonResponse(request, {
         ok: true,
@@ -1231,7 +1229,7 @@ Deno.serve(async (request) => {
         groqError instanceof Error ? groqError.message : "unknown"
       );
 
-      const fallback = localFallback(message, language, catalog, cart);
+      const fallback = localFallback(message, language, catalog);
 
       return jsonResponse(request, {
         ok: true,
