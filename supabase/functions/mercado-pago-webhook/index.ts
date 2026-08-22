@@ -466,7 +466,11 @@ async function sendSaleNotificationEmail(
       }
     );
 
-    let resendData: any = null;
+    let resendData: {
+      id?: string;
+      message?: string;
+      name?: string;
+    } | null = null;
 
     try {
       resendData = await response.json();
