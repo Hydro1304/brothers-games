@@ -5,6 +5,8 @@ import "./ai-assistant.css";
 
 const COPY = {
   "pt-BR": {
+    checkoutCta: "IR PARA O CHECKOUT",
+    checkoutHint: "Produto adicionado. Quando quiser, você pode finalizar a compra.",
     title: "Assistente BROTHER'S",
     subtitle: "Compras com IA",
     hello:
@@ -30,6 +32,8 @@ const COPY = {
     ],
   },
   "en-US": {
+    checkoutCta: "GO TO CHECKOUT",
+    checkoutHint: "Product added. When you're ready, you can complete your purchase.",
     title: "BROTHER'S Assistant",
     subtitle: "AI shopping",
     hello:
@@ -55,6 +59,8 @@ const COPY = {
     ],
   },
   "es-ES": {
+    checkoutCta: "IR AL CHECKOUT",
+    checkoutHint: "Producto añadido. Cuando quieras, puedes finalizar la compra.",
     title: "Asistente BROTHER'S",
     subtitle: "Compras con IA",
     hello:
@@ -80,6 +86,8 @@ const COPY = {
     ],
   },
   "zh-CN": {
+    checkoutCta: "前往结账",
+    checkoutHint: "商品已加入购物车。准备好后即可完成购买。",
     title: "BROTHER'S 智能助手",
     subtitle: "AI 购物",
     hello: "你好！我可以帮你找商品、比较选项、搭配设备并管理购物车。",
@@ -99,6 +107,8 @@ const COPY = {
     quick: ["帮我搭配一套设备", "有哪些最佳优惠？", "我想要一个键盘", "打开我的购物车"],
   },
   "hi-IN": {
+    checkoutCta: "चेकआउट पर जाएँ",
+    checkoutHint: "उत्पाद कार्ट में जोड़ दिया गया है। तैयार होने पर खरीदारी पूरी करें।",
     title: "BROTHER'S सहायक",
     subtitle: "AI खरीदारी",
     hello:
@@ -119,6 +129,8 @@ const COPY = {
     quick: ["मेरे लिए सेटअप बनाएं", "सबसे अच्छे ऑफ़र कौन से हैं?", "मुझे कीबोर्ड चाहिए", "मेरा कार्ट खोलें"],
   },
   "ar-SA": {
+    checkoutCta: "الانتقال إلى الدفع",
+    checkoutHint: "تمت إضافة المنتج. عندما تكون جاهزًا يمكنك إكمال الشراء.",
     title: "مساعد BROTHER'S",
     subtitle: "تسوق بالذكاء الاصطناعي",
     hello:
@@ -139,6 +151,8 @@ const COPY = {
     quick: ["جهّز لي إعدادًا", "ما أفضل العروض؟", "أريد لوحة مفاتيح", "افتح سلتي"],
   },
   "fr-FR": {
+    checkoutCta: "PASSER AU PAIEMENT",
+    checkoutHint: "Produit ajouté. Lorsque vous êtes prêt, vous pouvez finaliser l’achat.",
     title: "Assistant BROTHER'S",
     subtitle: "Shopping avec IA",
     hello:
@@ -159,6 +173,8 @@ const COPY = {
     quick: ["Composez un setup pour moi", "Quelles sont les meilleures offres ?", "Je veux un clavier", "Ouvrir mon panier"],
   },
   "de-DE": {
+    checkoutCta: "ZUR KASSE",
+    checkoutHint: "Produkt hinzugefügt. Wenn du bereit bist, kannst du den Kauf abschließen.",
     title: "BROTHER'S Assistent",
     subtitle: "KI-Shopping",
     hello:
@@ -946,6 +962,24 @@ export default function AIShoppingAssistant({
               </div>
             )}
           </div>
+
+          {addedIds.size > 0 && !busy && (
+            <div className="ai-shop-checkout-cta">
+              <div className="ai-shop-checkout-cta-copy">
+                <span>✓</span>
+                <p>{copy.checkoutHint}</p>
+              </div>
+
+              <button
+                type="button"
+                className="ai-shop-checkout-button"
+                onClick={() => onOpenCheckout?.()}
+              >
+                <span>{copy.checkoutCta}</span>
+                <strong>→</strong>
+              </button>
+            </div>
+          )}
 
           {messages.length <= 2 && (
             <div className="ai-shop-quick">
