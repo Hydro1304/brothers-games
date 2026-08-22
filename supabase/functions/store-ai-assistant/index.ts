@@ -836,6 +836,232 @@ function executeTool(
   return { ok: false, error: "UNKNOWN_TOOL" };
 }
 
+
+function localFallback(
+  message: string,
+  language: string,
+  catalog: ProductRow[],
+  cart: CartItem[]
+) {
+  const text = normalizeSearch(message);
+  const actions: ClientAction[] = [];
+
+  const pt = language === "pt-BR";
+  const en = language === "en-US";
+
+  const reply = (ptText: string, enText: string) =>
+    en ? enText : ptText;
+
+  if (
+    text.includes("carrinho") ||
+    text.includes("cart")
+  ) {
+    actions.push({ type: "open_cart" });
+    return {
+      message: reply("Abrindo seu carrinho.", "Opening your cart."),
+      actions,
+    };
+  }
+
+  if (
+    text.includes("oferta") ||
+    text.includes("promoc") ||
+    text.includes("deal")
+  ) {
+    actions.push({ type: "show_offers" });
+    return {
+      message: reply(
+        "Vou mostrar as ofertas disponíveis agora.",
+        "I'll show the available deals now."
+      ),
+      actions,
+    };
+  }
+
+  const budgetMatch = message.match(
+    /(?:r\$\s*)?(\d{2,6}(?:[.,]\d{1,2})?)/
+  );
+  const budget = budgetMatch
+    ? Number(budgetMatch[1].replace(".", "").replace(",", "."))
+    : null;
+
+  const setupIntent =
+    text.includes("setup") ||
+    text.includes("monta") ||
+    text.includes("monte") ||
+    text.includes("pc gamer");
+
+  if (setupIntent) {
+    const options = catalog
+      .filter((product) => availableForCart(product))
+      .filter((product) =>
+        budget && Number.isFinite(budget)
+          ? Number(product.price || 0) <= budget
+          : true
+      )
+      .sort((a, b) => Number(a.price || 0) - Number(b.price || 0))
+      .slice(0, 8);
+
+    if (options.length) {
+      actions.push({
+        type: "show_products",
+        product_ids: options.map((product) => String(product.id)),
+      });
+
+      return {
+        message: budget
+          ? reply(
+              `Separei opções reais da loja dentro do orçamento de R$ ${budget.toFixed(2).replace(".", ",")}. Veja os produtos abaixo e me diga quais você quer combinar.`,
+              `I found real store options within your budget of R$ ${budget.toFixed(2)}. Check the products below and tell me which ones you want to combine.`
+            )
+          : reply(
+              "Separei algumas opções reais da loja para começarmos seu setup. Se você me disser o orçamento, eu consigo filtrar melhor.",
+              "I found some real store options to start your setup. Tell me your budget and I can narrow them down."
+            ),
+        actions,
+      };
+    }
+  }
+
+  const keyboardIntent =
+    text.includes("teclado") ||
+    text.includes("keyboard");
+
+  const gtaIntent =
+    text.includes("gta v") ||
+    text.includes("gta 5") ||
+    text.includes("grand theft auto v") ||
+    text.includes("grand theft auto 5");
+
+  if (gtaIntent && keyboardIntent) {
+    const gtaMatches = catalog
+      .map((product) => ({
+        product,
+        score: Math.max(
+          scoreProduct(product, "GTA V"),
+          scoreProduct(product, "GTA 5"),
+          scoreProduct(product, "Grand Theft Auto V")
+        ),
+      }))
+      .filter((item) => item.score > 0 && availableForCart(item.product))
+      .sort((a, b) => b.score - a.score);
+
+    if (gtaMatches.length === 1) {
+      actions.push({
+        type: "add_to_cart",
+        product_id: String(gtaMatches[0].product.id),
+        quantity: 1,
+      });
+    }
+
+    const keyboards = catalog
+      .map((product) => ({
+        product,
+        score: Math.max(
+          scoreProduct(product, "teclado"),
+          scoreProduct(product, "keyboard")
+        ),
+      }))
+      .filter((item) => item.score > 0 && availableForCart(item.product))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((item) => item.product);
+
+    if (keyboards.length) {
+      actions.push({
+        type: "show_products",
+        product_ids: keyboards.map((product) => String(product.id)),
+      });
+    }
+
+    return {
+      message: reply(
+        gtaMatches.length === 1
+          ? "Encontrei o GTA V e adicionei ao carrinho. Também encontrei opções de teclado; escolha uma delas abaixo."
+          : "Encontrei opções relacionadas ao GTA V e aos teclados. Veja abaixo e escolha o que prefere.",
+        gtaMatches.length === 1
+          ? "I found GTA V and added it to your cart. I also found keyboard options; choose one below."
+          : "I found options related to GTA V and keyboards. Check them below and choose what you prefer."
+      ),
+      actions,
+    };
+  }
+
+  const directQueries = [
+    keyboardIntent ? "teclado" : "",
+    gtaIntent ? "GTA V" : "",
+  ].filter(Boolean);
+
+  const query =
+    directQueries[0] ||
+    cleanText(
+      message
+        .replace(/\b(quero|comprar|procuro|mostre|mostrar|me|um|uma|o|a|de|para|por favor)\b/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+      120
+    );
+
+  if (query) {
+    const matches = catalog
+      .map((product) => ({
+        product,
+        score: scoreProduct(product, query),
+      }))
+      .filter((item) => item.score > 0 && availableForCart(item.product))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((item) => item.product);
+
+    if (matches.length === 1) {
+      const purchaseIntent =
+        text.includes("quero") ||
+        text.includes("comprar") ||
+        text.includes("adicione") ||
+        text.includes("add");
+
+      if (purchaseIntent) {
+        actions.push({
+          type: "add_to_cart",
+          product_id: String(matches[0].id),
+          quantity: 1,
+        });
+
+        return {
+          message: reply(
+            `${String(matches[0].name || "Produto")} foi adicionado ao carrinho.`,
+            `${String(matches[0].name || "Product")} was added to your cart.`
+          ),
+          actions,
+        };
+      }
+    }
+
+    if (matches.length) {
+      actions.push({
+        type: "show_products",
+        product_ids: matches.map((product) => String(product.id)),
+      });
+
+      return {
+        message: reply(
+          "Encontrei estas opções reais no catálogo. Escolha a que você prefere.",
+          "I found these real options in the catalog. Choose the one you prefer."
+        ),
+        actions,
+      };
+    }
+  }
+
+  return {
+    message: reply(
+      "Não encontrei um produto claro para esse pedido. Tente informar o nome do produto, a categoria ou seu orçamento.",
+      "I couldn't find a clear product for that request. Try giving me the product name, category, or your budget."
+    ),
+    actions,
+  };
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(request) });
@@ -850,12 +1076,8 @@ Deno.serve(async (request) => {
     return jsonResponse(request, { ok: false, error: "ORIGIN_NOT_ALLOWED" }, 403);
   }
 
-  if (
-    !GROQ_API_KEY ||
-    !SUPABASE_URL ||
-    !SUPABASE_SECRET_KEY
-  ) {
-    console.error("AI assistant: secrets obrigatórios ausentes.");
+  if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+    console.error("AI assistant: secrets do Supabase ausentes.");
     return jsonResponse(
       request,
       { ok: false, error: "AI_ASSISTANT_NOT_CONFIGURED" },
@@ -903,97 +1125,121 @@ Deno.serve(async (request) => {
     const catalog = await loadCatalog(admin);
     const actions: ClientAction[] = [];
 
-    const messages: JsonObject[] = [
-      {
-        role: "system",
-        content: instructions(language, page, cart),
-      },
-      ...history.map((item) => ({
-        role: item.role,
-        content: item.content,
-      })),
-    ];
+    if (!GROQ_API_KEY) {
+      console.warn("AI assistant: GROQ_API_KEY ausente; usando fallback local.");
+      const fallback = localFallback(message, language, catalog, cart);
 
-    // Garante que a mensagem atual esteja presente quando o frontend mandar
-    // histórico sem ela por alguma razão.
-    const lastHistory = history[history.length - 1];
-    if (
-      !lastHistory ||
-      lastHistory.role !== "user" ||
-      lastHistory.content !== message
-    ) {
-      messages.push({
-        role: "user",
-        content: message,
+      return jsonResponse(request, {
+        ok: true,
+        message: fallback.message,
+        actions: fallback.actions,
+        model: "local-fallback",
       });
     }
 
-    let response = await callGroq({
-      model: GROQ_MODEL,
-      messages,
-      tools: groqTools(),
-      tool_choice: "auto",
-      parallel_tool_calls: false,
-      reasoning_effort: "low",
-      temperature: 0.2,
-      max_completion_tokens: 700,
-    });
+    try {
+      const messages: JsonObject[] = [
+        {
+          role: "system",
+          content: instructions(language, page, cart),
+        },
+        ...history.map((item) => ({
+          role: item.role,
+          content: item.content,
+        })),
+      ];
 
-    for (let loop = 0; loop < MAX_TOOL_LOOPS; loop += 1) {
-      const calls = groqFunctionCalls(response);
-      if (!calls.length) break;
-
-      const assistantMessage = groqAssistantMessage(response);
-      if (assistantMessage) {
+      const lastHistory = history[history.length - 1];
+      if (
+        !lastHistory ||
+        lastHistory.role !== "user" ||
+        lastHistory.content !== message
+      ) {
         messages.push({
-          role: "assistant",
-          content:
-            typeof assistantMessage.content === "string"
-              ? assistantMessage.content
-              : null,
-          tool_calls: calls,
+          role: "user",
+          content: message,
         });
       }
 
-      for (const call of calls) {
-        const result = executeTool(call, catalog, cart, actions);
-        const fn =
-          call.function && typeof call.function === "object"
-            ? (call.function as JsonObject)
-            : {};
-
-        messages.push({
-          role: "tool",
-          tool_call_id: String(call.id || ""),
-          name: String(fn.name || ""),
-          content: JSON.stringify(result),
-        });
-      }
-
-      response = await callGroq({
+      let response = await callGroq({
         model: GROQ_MODEL,
         messages,
         tools: groqTools(),
         tool_choice: "auto",
         parallel_tool_calls: false,
-        reasoning_effort: "low",
         temperature: 0.2,
         max_completion_tokens: 700,
       });
+
+      for (let loop = 0; loop < MAX_TOOL_LOOPS; loop += 1) {
+        const calls = groqFunctionCalls(response);
+        if (!calls.length) break;
+
+        const assistantMessage = groqAssistantMessage(response);
+        if (assistantMessage) {
+          messages.push({
+            role: "assistant",
+            content:
+              typeof assistantMessage.content === "string"
+                ? assistantMessage.content
+                : null,
+            tool_calls: calls,
+          });
+        }
+
+        for (const call of calls) {
+          const result = executeTool(call, catalog, cart, actions);
+          const fn =
+            call.function && typeof call.function === "object"
+              ? (call.function as JsonObject)
+              : {};
+
+          messages.push({
+            role: "tool",
+            tool_call_id: String(call.id || ""),
+            name: String(fn.name || ""),
+            content: JSON.stringify(result),
+          });
+        }
+
+        response = await callGroq({
+          model: GROQ_MODEL,
+          messages,
+          tools: groqTools(),
+          tool_choice: "auto",
+          parallel_tool_calls: false,
+          temperature: 0.2,
+          max_completion_tokens: 700,
+        });
+      }
+
+      const text =
+        groqOutputText(response) ||
+        (language === "en-US"
+          ? "Done. How else can I help with your shopping?"
+          : "Pronto. Como mais posso ajudar com suas compras?");
+
+      return jsonResponse(request, {
+        ok: true,
+        message: text,
+        actions,
+        model: GROQ_MODEL,
+      });
+    } catch (groqError) {
+      console.warn(
+        "AI assistant: Groq indisponível; usando fallback local:",
+        groqError instanceof Error ? groqError.message : "unknown"
+      );
+
+      const fallback = localFallback(message, language, catalog, cart);
+
+      return jsonResponse(request, {
+        ok: true,
+        message: fallback.message,
+        actions: fallback.actions,
+        model: "local-fallback",
+      });
     }
-
-    const text =
-      groqOutputText(response) ||
-      (language === "en-US"
-        ? "Done. How else can I help with your shopping?"
-        : "Pronto. Como mais posso ajudar com suas compras?");
-
-    return jsonResponse(request, {
-      ok: true,
-      message: text,
-      actions,
-      model: GROQ_MODEL,
-    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "AI_ASSISTANT_FAILED";

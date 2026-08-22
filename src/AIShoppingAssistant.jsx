@@ -466,7 +466,7 @@ export default function AIShoppingAssistant({
         <section className="ai-shop-panel" aria-label={copy.title}>
           <header className="ai-shop-header">
             <div className="ai-shop-avatar" aria-hidden="true">
-              <span>✦</span>
+              <img src={robotIcon} alt="" />
             </div>
             <div className="ai-shop-heading">
               <strong>{copy.title}</strong>
