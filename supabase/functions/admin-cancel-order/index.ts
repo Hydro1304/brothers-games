@@ -76,7 +76,32 @@ function configuredOrigins() {
 function isOriginAllowed(request: Request) {
   const origin = request.headers.get("Origin");
   if (!origin) return true;
-  return LOCAL_ORIGINS.has(origin) || configuredOrigins().includes(origin);
+
+  if (
+    LOCAL_ORIGINS.has(origin) ||
+    configuredOrigins().includes(origin)
+  ) {
+    return true;
+  }
+
+  // Vite pode subir em 5174, 5175 etc. quando 5173 já está ocupado.
+  // Permitimos localhost/127.0.0.1 em qualquer porta somente no ambiente local.
+  try {
+    const url = new URL(origin);
+
+    if (
+      (url.hostname === "localhost" ||
+        url.hostname === "127.0.0.1") &&
+      (url.protocol === "http:" ||
+        url.protocol === "https:")
+    ) {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
 }
 
 function corsHeaders(request: Request) {
