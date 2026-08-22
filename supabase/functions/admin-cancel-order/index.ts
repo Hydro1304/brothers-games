@@ -224,10 +224,21 @@ async function mercadoPagoJson(
     }
   }
 
+  const retryAfterHeader =
+    response.headers.get("Retry-After");
+
+  const retryAfterSeconds = retryAfterHeader
+    ? Number(retryAfterHeader)
+    : null;
+
   return {
     response,
     data,
     rawText: rawText.slice(0, 4000),
+    retryAfterSeconds:
+      Number.isFinite(retryAfterSeconds)
+        ? retryAfterSeconds
+        : null,
   };
 }
 
@@ -289,6 +300,8 @@ function mercadoPagoErrorInfo(
       "O prazo permitido pelo Mercado Pago para reembolso foi excedido.",
     insufficient_money_for_refund:
       "O Mercado Pago informou saldo insuficiente para concluir o reembolso.",
+    too_many_requests:
+      "O Mercado Pago bloqueou temporariamente novas tentativas de reembolso porque o limite de movimentações foi atingido. Aguarde o tempo indicado e tente novamente.",
   };
 
   const friendly =
@@ -578,17 +591,16 @@ Deno.serve(async (request) => {
     // Reembolso TOTAL pela API de Orders.
     // Para reembolso total, o Mercado Pago orienta enviar POST sem body.
     //
-    // Cada NOVA tentativa administrativa usa uma chave de idempotência exclusiva.
-    // O código antigo reutilizava sempre a mesma chave para o pedido.
+    // A mesma intenção de reembolso usa uma chave de idempotência estável.
+    // Isso evita criar várias movimentações no Mercado Pago quando o admin
+    // clica novamente ou quando existe uma falha transitória.
     const refundEndpoint =
       `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}/refund`;
 
-    let refundIdempotencyKey =
-      `admin-refund-${order.id}-${crypto.randomUUID()}`;
+    const refundIdempotencyKey =
+      `admin-refund-${order.id}`;
 
-    let refundAttempt = 1;
-
-    let refund = await mercadoPagoJson(
+    const refund = await mercadoPagoJson(
       refundEndpoint,
       mercadoPagoToken,
       {
@@ -601,101 +613,6 @@ Deno.serve(async (request) => {
     );
 
     if (!refund.response.ok || !refund.data) {
-      const firstProviderError = mercadoPagoErrorInfo(
-        refund.data,
-        refund.rawText,
-        refund.response.status
-      );
-
-      const firstProviderText =
-        `${firstProviderError.code || ""} ` +
-        `${firstProviderError.providerMessage || ""} ` +
-        `${firstProviderError.friendly || ""} ` +
-        `${refund.rawText || ""}`;
-
-      const postProcessingRejected =
-        refund.response.status === 422 &&
-        (
-          firstProviderError.code === "unprocessable_entity" ||
-          /post\s*processing\s*rejected/i.test(firstProviderText)
-        );
-
-      if (postProcessingRejected) {
-        console.warn(
-          "Mercado Pago rejeitou o pós-processamento do refund; reconsultando a order.",
-          {
-            orderId: order.id,
-            providerOrderId,
-            refundAttempt,
-            refundIdempotencyKey,
-          }
-        );
-
-        await new Promise((resolve) => setTimeout(resolve, 900));
-
-        const recheck = await mercadoPagoJson(
-          `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}`,
-          mercadoPagoToken
-        );
-
-        const recheckStatus =
-          jsonString(recheck.data, "status").toLowerCase();
-
-        const recheckStatusDetail =
-          jsonString(recheck.data, "status_detail") || null;
-
-        if (
-          recheck.response.ok &&
-          recheck.data &&
-          recheckStatus === "refunded"
-        ) {
-          console.log(
-            "Order apareceu como refunded após o 422; reconciliando sem repetir refund.",
-            {
-              orderId: order.id,
-              providerOrderId,
-              recheckStatus,
-              recheckStatusDetail,
-            }
-          );
-
-          refund = recheck;
-        } else if (
-          recheck.response.ok &&
-          recheck.data &&
-          recheckStatus === "processed"
-        ) {
-          refundAttempt = 2;
-          refundIdempotencyKey =
-            `admin-refund-${order.id}-${crypto.randomUUID()}`;
-
-          console.warn(
-            "Order continua processed após 422; fazendo uma segunda e última tentativa com nova idempotency key.",
-            {
-              orderId: order.id,
-              providerOrderId,
-              refundAttempt,
-              refundIdempotencyKey,
-              recheckStatusDetail,
-            }
-          );
-
-          refund = await mercadoPagoJson(
-            refundEndpoint,
-            mercadoPagoToken,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Idempotency-Key": refundIdempotencyKey,
-              },
-            }
-          );
-        }
-      }
-    }
-
-    if (!refund.response.ok || !refund.data) {
       const providerError = mercadoPagoErrorInfo(
         refund.data,
         refund.rawText,
@@ -705,18 +622,32 @@ Deno.serve(async (request) => {
       const providerStatusDetail =
         jsonString(orderCheck.data, "status_detail") || null;
 
+      const isTooManyRequests =
+        providerError.code === "too_many_requests" ||
+        refund.response.status === 429 ||
+        /movement limit|too many requests/i.test(
+          `${providerError.providerMessage || ""} ${providerError.friendly || ""} ${refund.rawText || ""}`
+        );
+
+      const retryAfterSeconds =
+        refund.retryAfterSeconds && refund.retryAfterSeconds > 0
+          ? Math.ceil(refund.retryAfterSeconds)
+          : isTooManyRequests
+            ? 300
+            : null;
+
       console.error("Mercado Pago recusou reembolso administrativo:", {
         orderId: order.id,
         providerOrderId,
         paymentId: order.payment_id || null,
         providerOrderStatus,
         providerStatusDetail,
-        refundAttempt,
         refundIdempotencyKey,
         httpStatus: refund.response.status,
         errorCode: providerError.code,
         providerMessage: providerError.providerMessage,
         detail: providerError.friendly,
+        retryAfterSeconds,
         rawResponse: refund.rawText || null,
       });
 
@@ -730,34 +661,53 @@ Deno.serve(async (request) => {
           payment_id: order.payment_id || null,
           provider_order_status: providerOrderStatus || null,
           provider_order_status_detail: providerStatusDetail,
-          refund_attempt: refundAttempt,
           refund_idempotency_key: refundIdempotencyKey,
           http_status: refund.response.status,
           provider_error_code: providerError.code,
           provider_message: providerError.providerMessage,
           detail: providerError.friendly,
+          retry_after_seconds: retryAfterSeconds,
           raw_response: refund.rawText || null,
         },
       });
 
+      if (isTooManyRequests) {
+        const waitText =
+          retryAfterSeconds && retryAfterSeconds >= 60
+            ? `${Math.ceil(retryAfterSeconds / 60)} minuto(s)`
+            : `${retryAfterSeconds || 300} segundo(s)`;
+
+        return jsonResponse(
+          request,
+          {
+            error:
+              `O Mercado Pago atingiu o limite temporário de movimentações para este reembolso. ` +
+              `Aguarde cerca de ${waitText} e tente novamente. Não clique várias vezes seguidas.`,
+            mercadoPagoCode:
+              providerError.code || "too_many_requests",
+            mercadoPagoHttpStatus:
+              refund.response.status,
+            retryAfterSeconds:
+              retryAfterSeconds || 300,
+          },
+          429,
+          {
+            "Retry-After":
+              String(retryAfterSeconds || 300),
+          }
+        );
+      }
+
       const errorPrefix = providerError.code
         ? `${providerError.code}: `
         : "";
-
-      const postProcessingMessage =
-        providerError.code === "unprocessable_entity" ||
-        /post\s*processing\s*rejected/i.test(
-          `${providerError.providerMessage || ""} ${providerError.friendly || ""}`
-        )
-          ? " O Mercado Pago rejeitou internamente o pós-processamento da devolução mesmo após uma nova tentativa segura."
-          : "";
 
       return jsonResponse(
         request,
         {
           error:
             `O Mercado Pago não confirmou o reembolso: ` +
-            `${errorPrefix}${providerError.friendly}.${postProcessingMessage}`,
+            `${errorPrefix}${providerError.friendly}`,
           mercadoPagoCode: providerError.code,
           mercadoPagoHttpStatus: refund.response.status,
         },
@@ -820,7 +770,6 @@ Deno.serve(async (request) => {
         provider_order_id: providerOrderId,
         refund_id: jsonString(firstRefund, "id") || null,
         refund_amount: jsonString(firstRefund, "amount") || order.provider_amount || order.total,
-        refund_attempt: refundAttempt,
         refund_idempotency_key: refundIdempotencyKey,
       },
     });
