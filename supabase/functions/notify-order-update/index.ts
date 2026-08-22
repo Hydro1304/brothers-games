@@ -1094,8 +1094,26 @@ Deno.serve(async (request: Request) => {
 
   const sent: string[] = [];
   const failed: string[] = [];
+  let buyerSent = false;
+  let buyerFailure: {
+    provider: string;
+    status: number | null;
+    error: string | null;
+  } | null = null;
 
-  for (const recipient of recipients.values()) {
+  // Envia primeiro para o comprador e valida separadamente.
+  // Assim, o sistema não considera a notificação "bem-sucedida"
+  // só porque o e-mail da loja chegou.
+  const orderedRecipients = [
+    ...Array.from(recipients.values()).filter(
+      (recipient) => recipient.kind === "buyer"
+    ),
+    ...Array.from(recipients.values()).filter(
+      (recipient) => recipient.kind === "staff"
+    ),
+  ];
+
+  for (const recipient of orderedRecipients) {
     const copy =
       recipient.kind === "buyer"
         ? buyerEmailCopy
@@ -1134,6 +1152,16 @@ Deno.serve(async (request: Request) => {
       buyerName,
     });
 
+    console.log(
+      "notify-order-update: enviando e-mail",
+      {
+        recipient: recipient.email,
+        kind: recipient.kind,
+        orderNumber: order.order_number,
+        reason,
+      }
+    );
+
     const result =
       await sendTransactionalEmail({
         to: recipient.email,
@@ -1144,15 +1172,39 @@ Deno.serve(async (request: Request) => {
 
     if (result.ok) {
       sent.push(recipient.email);
+
+      if (recipient.kind === "buyer") {
+        buyerSent = true;
+      }
+
+      console.log(
+        "notify-order-update: e-mail enviado",
+        {
+          recipient: recipient.email,
+          kind: recipient.kind,
+          provider: result.provider,
+          status: result.status || null,
+        }
+      );
     } else {
       failed.push(recipient.email);
 
+      if (recipient.kind === "buyer") {
+        buyerFailure = {
+          provider: result.provider,
+          status: result.status || null,
+          error: result.error || null,
+        };
+      }
+
       console.error(
-        "notify-order-update: Resend recusou envio",
+        "notify-order-update: falha no envio",
         {
           recipient: recipient.email,
-          status: result.status,
-          response: result.error || null,
+          kind: recipient.kind,
+          provider: result.provider,
+          status: result.status || null,
+          error: result.error || null,
         }
       );
     }
@@ -1178,11 +1230,16 @@ Deno.serve(async (request: Request) => {
       },
     });
 
-  if (!sent.length) {
+  // O comprador é obrigatório. Antes, bastava o e-mail da loja
+  // chegar para a função retornar sucesso, mascarando a falha do cliente.
+  if (!buyerSent) {
     return jsonResponse(
       {
         ok: false,
-        error: "EMAIL_SEND_FAILED",
+        error: "BUYER_EMAIL_SEND_FAILED",
+        buyer_email: buyerEmail,
+        buyer_failure: buyerFailure,
+        sent,
         failed,
       },
       502
@@ -1191,6 +1248,8 @@ Deno.serve(async (request: Request) => {
 
   return jsonResponse({
     ok: true,
+    buyer_sent: true,
+    buyer_email: buyerEmail,
     sent,
     failed,
   });
