@@ -713,6 +713,130 @@ Deno.serve(async (request) => {
     );
 
     if (!refund.response.ok || !refund.data) {
+      // IMPORTANTE:
+      // O Mercado Pago pode devolver 422/429 para uma chamada enquanto uma
+      // tentativa anterior termina de processar o reembolso em segundo plano.
+      // Antes de mostrar erro ao Admin, reconsultamos a order. Se ela já estiver
+      // "refunded", tratamos como SUCESSO e sincronizamos o banco local.
+      let lateRefundOrder: {
+        data: JsonObject | null;
+        status: string;
+      } | null = null;
+
+      for (let recheckAttempt = 1; recheckAttempt <= 3; recheckAttempt += 1) {
+        if (recheckAttempt > 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, recheckAttempt === 2 ? 800 : 1400)
+          );
+        }
+
+        const lateCheck = await mercadoPagoJson(
+          `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}`,
+          mercadoPagoToken
+        );
+
+        const lateStatus =
+          jsonString(lateCheck.data, "status").toLowerCase();
+
+        console.log(
+          "Rechecagem da order após resposta não-confirmada do refund:",
+          {
+            orderId: order.id,
+            providerOrderId,
+            recheckAttempt,
+            httpStatus: lateCheck.response.status,
+            providerStatus: lateStatus || null,
+            providerStatusDetail:
+              jsonString(lateCheck.data, "status_detail") || null,
+          }
+        );
+
+        if (
+          lateCheck.response.ok &&
+          lateCheck.data &&
+          lateStatus === "refunded"
+        ) {
+          lateRefundOrder = {
+            data: lateCheck.data,
+            status: lateStatus,
+          };
+          break;
+        }
+      }
+
+      if (lateRefundOrder?.data) {
+        const now = new Date().toISOString();
+        const lateTransactions =
+          jsonObject(lateRefundOrder.data, "transactions");
+        const lateRefunds =
+          jsonArray(lateTransactions, "refunds");
+        const lateFirstRefund =
+          lateRefunds.length > 0 && isJsonObject(lateRefunds[0])
+            ? lateRefunds[0]
+            : null;
+
+        const { error: lateReconcileError } = await admin
+          .from("orders")
+          .update({
+            status: "refunded",
+            cancelled_at: order.cancelled_at || now,
+            payment_status_detail:
+              "refunded_by_admin_reconciled_after_provider_response",
+          })
+          .eq("id", order.id);
+
+        if (lateReconcileError) {
+          console.error(
+            "Refund confirmado em rechecagem, mas falhou reconciliação local:",
+            {
+              orderId: order.id,
+              code: lateReconcileError.code || "unknown",
+            }
+          );
+
+          return jsonResponse(
+            request,
+            {
+              error:
+                "O Mercado Pago confirmou o reembolso, mas não foi possível atualizar o pedido local. Atualize o painel.",
+            },
+            500
+          );
+        }
+
+        await admin.from("order_events").insert({
+          order_id: order.id,
+          event_type:
+            "refunded_by_admin_reconciled_after_provider_response",
+          details: {
+            admin_user_id: user.id,
+            provider: "mercado_pago",
+            provider_order_id: providerOrderId,
+            refund_id:
+              jsonString(lateFirstRefund, "id") || null,
+            refund_amount:
+              jsonString(lateFirstRefund, "amount") ||
+              order.provider_amount ||
+              order.total,
+            original_http_status:
+              refund.response.status,
+            original_raw_response:
+              refund.rawText || null,
+          },
+        });
+
+        return jsonResponse(request, {
+          success: true,
+          orderId: order.id,
+          orderNumber: order.order_number,
+          status: "refunded",
+          refundId:
+            jsonString(lateFirstRefund, "id") || null,
+          message:
+            "Reembolso confirmado pelo Mercado Pago e pedido atualizado com sucesso.",
+        });
+      }
+
       const providerError = mercadoPagoErrorInfo(
         refund.data,
         refund.rawText,
