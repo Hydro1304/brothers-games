@@ -5,6 +5,9 @@ import "./ai-assistant.css";
 
 const COPY = {
   "pt-BR": {
+    availabilityFound: "Sim — encontrei {count} opção(ões) que combinam com o que você pediu. Separei abaixo para você dar uma olhada.",
+    availabilityOne: "Sim, temos! Encontrei este produto no catálogo e deixei ele aqui embaixo para você.",
+    availabilityNone: "No momento não encontrei esse produto disponível no catálogo. Posso procurar uma alternativa parecida para você.",
     sectionFound: "Encontrei todos os produtos disponíveis nas seções: {sections}. Escolha os que quiser abaixo.",
     gtaSectionFound: "Encontrei o GTA V e adicionei ao carrinho. Também mostrei todos os produtos das seções: {sections}.",
     sectionNotFound: "Não encontrei produtos cadastrados nas seções: {sections}.",
@@ -36,6 +39,9 @@ const COPY = {
     ],
   },
   "en-US": {
+    availabilityFound: "Yes — I found {count} option(s) matching what you asked for. I listed them below for you.",
+    availabilityOne: "Yes, we do! I found this product in the catalog and placed it below for you.",
+    availabilityNone: "I couldn't find that product available in the catalog right now. I can look for a similar alternative for you.",
     sectionFound: "I found all products currently listed in these sections: {sections}. Choose any option below.",
     gtaSectionFound: "I found GTA V and added it to your cart. I also showed all products from these sections: {sections}.",
     sectionNotFound: "I couldn't find products listed in these sections: {sections}.",
@@ -67,6 +73,9 @@ const COPY = {
     ],
   },
   "es-ES": {
+    availabilityFound: "Sí — encontré {count} opción(es) que coinciden con lo que pediste. Te las muestro abajo.",
+    availabilityOne: "¡Sí, tenemos! Encontré este producto en el catálogo y te lo dejo abajo.",
+    availabilityNone: "Ahora mismo no encontré ese producto disponible en el catálogo. Puedo buscar una alternativa parecida.",
     sectionFound: "Encontré todos los productos disponibles en estas secciones: {sections}. Elige los que quieras abajo.",
     gtaSectionFound: "Encontré GTA V y lo añadí al carrito. También mostré todos los productos de estas secciones: {sections}.",
     sectionNotFound: "No encontré productos registrados en estas secciones: {sections}.",
@@ -98,6 +107,9 @@ const COPY = {
     ],
   },
   "zh-CN": {
+    availabilityFound: "有的——我找到了 {count} 个符合你需求的商品，已经列在下面。",
+    availabilityOne: "有的！我在商品目录中找到了这个商品，已经放在下面。",
+    availabilityNone: "目前目录中没有找到这个商品。我可以帮你找类似的替代商品。",
     sectionFound: "我找到了这些分类中的所有商品：{sections}。请在下面选择你想要的商品。",
     gtaSectionFound: "我找到了 GTA V 并已加入购物车。同时显示了这些分类中的所有商品：{sections}。",
     sectionNotFound: "这些分类中暂时没有找到商品：{sections}。",
@@ -123,6 +135,9 @@ const COPY = {
     quick: ["帮我搭配一套设备", "有哪些最佳优惠？", "我想要一个键盘", "打开我的购物车"],
   },
   "hi-IN": {
+    availabilityFound: "हाँ — मुझे {count} मिलते-जुलते विकल्प मिले हैं। मैंने उन्हें नीचे दिखाया है।",
+    availabilityOne: "हाँ, हमारे पास है! मुझे यह उत्पाद कैटलॉग में मिला और नीचे दिखाया है।",
+    availabilityNone: "अभी यह उत्पाद कैटलॉग में उपलब्ध नहीं मिला। मैं कोई मिलता-जुलता विकल्प ढूँढ सकता हूँ।",
     sectionFound: "मुझे इन सेक्शन के सभी उपलब्ध उत्पाद मिले: {sections}। नीचे से अपनी पसंद चुनें।",
     gtaSectionFound: "मुझे GTA V मिला और मैंने उसे कार्ट में जोड़ दिया। साथ ही इन सेक्शन के सभी उत्पाद दिखाए: {sections}।",
     sectionNotFound: "इन सेक्शन में कोई उत्पाद नहीं मिला: {sections}।",
@@ -149,6 +164,9 @@ const COPY = {
     quick: ["मेरे लिए सेटअप बनाएं", "सबसे अच्छे ऑफ़र कौन से हैं?", "मुझे कीबोर्ड चाहिए", "मेरा कार्ट खोलें"],
   },
   "ar-SA": {
+    availabilityFound: "نعم — وجدت {count} خيارًا مطابقًا لطلبك. عرضتها لك أدناه.",
+    availabilityOne: "نعم، متوفر! وجدت هذا المنتج في الكتالوج وعرضته أدناه.",
+    availabilityNone: "لم أجد هذا المنتج متاحًا في الكتالوج حاليًا. يمكنني البحث عن بديل مشابه.",
     sectionFound: "وجدت جميع المنتجات الموجودة في هذه الأقسام: {sections}. اختر ما تريده أدناه.",
     gtaSectionFound: "وجدت GTA V وأضفته إلى السلة. كما عرضت جميع المنتجات في هذه الأقسام: {sections}.",
     sectionNotFound: "لم أجد منتجات مسجلة في هذه الأقسام: {sections}.",
@@ -175,6 +193,9 @@ const COPY = {
     quick: ["جهّز لي إعدادًا", "ما أفضل العروض؟", "أريد لوحة مفاتيح", "افتح سلتي"],
   },
   "fr-FR": {
+    availabilityFound: "Oui — j’ai trouvé {count} option(s) correspondant à votre demande. Je les affiche ci-dessous.",
+    availabilityOne: "Oui, nous l’avons ! J’ai trouvé ce produit dans le catalogue et je vous le montre ci-dessous.",
+    availabilityNone: "Je n’ai pas trouvé ce produit disponible pour le moment. Je peux chercher une alternative similaire.",
     sectionFound: "J’ai trouvé tous les produits disponibles dans ces sections : {sections}. Choisissez ceux que vous voulez ci-dessous.",
     gtaSectionFound: "J’ai trouvé GTA V et je l’ai ajouté au panier. J’ai aussi affiché tous les produits de ces sections : {sections}.",
     sectionNotFound: "Je n’ai trouvé aucun produit dans ces sections : {sections}.",
@@ -201,6 +222,9 @@ const COPY = {
     quick: ["Composez un setup pour moi", "Quelles sont les meilleures offres ?", "Je veux un clavier", "Ouvrir mon panier"],
   },
   "de-DE": {
+    availabilityFound: "Ja — ich habe {count} passende Option(en) gefunden. Ich zeige sie dir unten.",
+    availabilityOne: "Ja, haben wir! Ich habe das Produkt im Katalog gefunden und zeige es dir unten.",
+    availabilityNone: "Dieses Produkt ist aktuell nicht im Katalog verfügbar. Ich kann nach einer ähnlichen Alternative suchen.",
     sectionFound: "Ich habe alle Produkte in diesen Bereichen gefunden: {sections}. Wähle unten die gewünschten Produkte aus.",
     gtaSectionFound: "Ich habe GTA V gefunden und zum Warenkorb hinzugefügt. Außerdem zeige ich alle Produkte aus diesen Bereichen: {sections}.",
     sectionNotFound: "Ich habe in diesen Bereichen keine Produkte gefunden: {sections}.",
@@ -852,6 +876,82 @@ function buildDeterministicSectionResponse({
   };
 }
 
+
+function availabilityIntent(message) {
+  const text = normalizeAssistantText(message);
+
+  return (
+    text.includes("tem ") ||
+    text.startsWith("tem ") ||
+    text.includes("voces tem") ||
+    text.includes("vocês têm") ||
+    text.includes("possui ") ||
+    text.includes("vende ") ||
+    text.includes("disponivel") ||
+    text.includes("disponível") ||
+    text.includes("do you have") ||
+    text.includes("have any") ||
+    text.includes("hay ") ||
+    text.includes("tienen ") ||
+    text.includes("avez-vous") ||
+    text.includes("habt ihr") ||
+    text.includes("有") ||
+    text.includes("هل يوجد")
+  );
+}
+
+function availabilityQuery(message) {
+  return String(message || "")
+    .replace(/[?!.,;:]/g, " ")
+    .replace(
+      /\b(voc[eê]s?|tem|t[eê]m|possui|possuem|vende|vendem|dispon[ií]vel|disponiveis|disponíveis|algum|alguma|alguns|algumas|do|you|have|any|is|there|hay|tienen|avez|vous|habt|ihr|bitte|por|favor)\b/gi,
+      " "
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findProductsForNaturalQuestion(products, query) {
+  if (!query) return [];
+
+  const normalizedQuery = normalizeAssistantText(query);
+
+  return (products || [])
+    .map((product) => {
+      const searchable = normalizeAssistantText(
+        [
+          product?.name,
+          product?.category,
+          product?.subcategory,
+          product?.description,
+          product?.tags,
+        ]
+          .filter(Boolean)
+          .join(" ")
+      );
+
+      const words = normalizedQuery
+        .split(/\s+/)
+        .filter((word) => word.length > 2);
+
+      let score = productSearchScore(product, query);
+
+      if (searchable.includes(normalizedQuery)) {
+        score += 70;
+      }
+
+      for (const word of words) {
+        if (searchable.includes(word)) score += 12;
+      }
+
+      return { product, score };
+    })
+    .filter((item) => item.score > 0 && productAvailable(item.product))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 12)
+    .map((item) => item.product);
+}
+
 function buildClientFallback({
   message,
   language,
@@ -1293,6 +1393,44 @@ export default function AIShoppingAssistant({
     // Mouse -> Teclado -> PC, uma seção por vez.
     if (isSetupWizardRequest(clean, copy)) {
       startSetupWizard();
+      return;
+    }
+
+    // Perguntas naturais de disponibilidade:
+    // "vocês têm GTA V?", "tem mouse gamer?", "vende monitor?"
+    // Respondemos de forma humana e exibimos os produtos encontrados.
+    if (availabilityIntent(clean)) {
+      const query = availabilityQuery(clean);
+      const matches = findProductsForNaturalQuestion(
+        products,
+        query
+      );
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-availability-${Date.now()}`,
+          role: "assistant",
+          content:
+            matches.length === 0
+              ? fallbackText(
+                  language,
+                  "availabilityNone"
+                )
+              : matches.length === 1
+                ? fallbackText(
+                    language,
+                    "availabilityOne"
+                  )
+                : fallbackText(
+                    language,
+                    "availabilityFound",
+                    { count: matches.length }
+                  ),
+          products: matches,
+        },
+      ]);
+
       return;
     }
 

@@ -306,3 +306,69 @@ html[data-theme="light"] .digital-delivery-details {
     flex-direction: column;
   }
 }
+
+/* Entrega digital concluída no Admin */
+.admin-digital-delivered-summary {
+  padding: 14px;
+  border: 1px solid rgba(57, 196, 107, .25);
+  border-radius: 11px;
+  background: rgba(57, 196, 107, .055);
+}
+
+.admin-digital-delivered-summary > strong {
+  color: #69db91;
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+.admin-digital-delivered-summary > p {
+  margin: 8px 0 0;
+  color: #92929b;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.admin-digital-delivered-details {
+  margin-top: 11px;
+  border: 1px solid #303036;
+  border-radius: 9px;
+  background: #131315;
+}
+
+.admin-digital-delivered-details summary {
+  padding: 10px 11px;
+  color: #d7d7dc;
+  font-size: 8px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.admin-digital-delivered-details pre {
+  margin: 0;
+  padding: 0 11px 12px;
+  color: #efeff2;
+  font: inherit;
+  font-size: 9px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+html[data-theme="light"] .admin-digital-delivered-summary {
+  border-color: #bfe8ce;
+  background: #f1fbf4;
+}
+
+html[data-theme="light"] .admin-digital-delivered-summary > strong {
+  color: #168647;
+}
+
+html[data-theme="light"] .admin-digital-delivered-details {
+  border-color: #d8dde5;
+  background: #fff;
+}
+
+html[data-theme="light"] .admin-digital-delivered-details pre,
+html[data-theme="light"] .admin-digital-delivered-details summary {
+  color: #242a33;
+}

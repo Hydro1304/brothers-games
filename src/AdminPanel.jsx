@@ -1334,6 +1334,14 @@ export default function AdminPanel({
       if (error) throw error;
 
       await loadAllData(true);
+
+      // Depois de concluir uma entrega digital, volta para a lista de pedidos.
+      if (
+        deliveryType === "digital" &&
+        nextStatus === "delivered"
+      ) {
+        setManagedOrderId(null);
+      }
     } catch (error) {
       console.error(error);
       showSiteAlert(error?.message || "Não foi possível atualizar o andamento do pedido.");
@@ -2132,62 +2140,81 @@ export default function AdminPanel({
                       de liberar a entrega.
                     </p>
                   ) : deliveryType === "digital" ? (
-                    <div className="admin-fulfillment-form">
-                      <label>
-                        <span>
-                          CHAVE / LINK / LOGIN / INSTRUÇÕES
-                        </span>
-                        <textarea
-                          value={draft.digital_content}
-                          onChange={(event) =>
-                            updateFulfillmentDraft(
-                              item.id,
-                              "digital_content",
-                              event.target.value
-                            )
-                          }
-                          placeholder={
-                            "Ex.: Chave: XXXX-XXXX-XXXX\nOu link, login e instruções."
-                          }
-                        />
-                      </label>
+                    itemStatus === "delivered" ? (
+                      <div className="admin-fulfillment-form">
+                        <div className="admin-digital-delivered-summary">
+                          <strong>✓ PRODUTO DIGITAL ENTREGUE</strong>
+                          <p>
+                            A entrega já foi liberada para o cliente.
+                            O formulário de envio fica bloqueado após a conclusão.
+                          </p>
 
-                      <p className="admin-fulfillment-help">
-                        Esse conteúdo fica visível somente para
-                        o cliente dono do pedido.
-                      </p>
-
-                      <div className="admin-fulfillment-action-row">
-                        <button
-                          type="button"
-                          disabled={fulfillmentSaving}
-                          onClick={() =>
-                            saveItemFulfillment(
-                              item,
-                              order,
-                              "awaiting_delivery"
-                            )
-                          }
-                        >
-                          SALVAR / AGUARDANDO ENTREGA
-                        </button>
-
-                        <button
-                          type="button"
-                          className="primary"
-                          disabled={fulfillmentSaving}
-                          onClick={() =>
-                            saveItemFulfillment(
-                              item,
-                              order,
-                              "delivered"
-                            )
-                          }
-                        >
-                          ENTREGAR PRODUTO DIGITAL
-                        </button>
+                          {fulfillment?.digital_content && (
+                            <details className="admin-digital-delivered-details">
+                              <summary>VER CONTEÚDO ENTREGUE</summary>
+                              <pre>{fulfillment.digital_content}</pre>
+                            </details>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="admin-fulfillment-form">
+                        <label>
+                          <span>
+                            CHAVE / LINK / LOGIN / INSTRUÇÕES
+                          </span>
+                          <textarea
+                            value={draft.digital_content}
+                            onChange={(event) =>
+                              updateFulfillmentDraft(
+                                item.id,
+                                "digital_content",
+                                event.target.value
+                              )
+                            }
+                            placeholder={
+                              "Ex.: Chave: XXXX-XXXX-XXXX\nOu link, login e instruções."
+                            }
+                          />
+                        </label>
+
+                        <p className="admin-fulfillment-help">
+                          Esse conteúdo fica visível somente para
+                          o cliente dono do pedido.
+                        </p>
+
+                        <div className="admin-fulfillment-action-row">
+                          <button
+                            type="button"
+                            disabled={fulfillmentSaving}
+                            onClick={() =>
+                              saveItemFulfillment(
+                                item,
+                                order,
+                                "awaiting_delivery"
+                              )
+                            }
+                          >
+                            SALVAR / AGUARDANDO ENTREGA
+                          </button>
+
+                          <button
+                            type="button"
+                            className="primary"
+                            disabled={fulfillmentSaving}
+                            onClick={() =>
+                              saveItemFulfillment(
+                                item,
+                                order,
+                                "delivered"
+                              )
+                            }
+                          >
+                            ENTREGAR PRODUTO DIGITAL
+                          </button>
+                        </div>
+                      </div>
+                    )
                   ) : (
                     <div className="admin-fulfillment-form">
                       <div className="admin-fulfillment-grid">
