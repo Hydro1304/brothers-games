@@ -2372,6 +2372,26 @@ function App() {
     setAuthActionOverlay(null);
   }
 
+  function getAuthEmailRedirectUrl() {
+    const productionUrl =
+      "https://brothers-games.brothersgames.workers.dev/";
+
+    if (typeof window === "undefined") {
+      return productionUrl;
+    }
+
+    const hostname = window.location.hostname;
+
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1"
+    ) {
+      return window.location.origin + "/";
+    }
+
+    return productionUrl;
+  }
+
   async function handleAccountSubmit(event) {
     event.preventDefault();
     if (authBusy) return;
@@ -2397,7 +2417,13 @@ function App() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: accountForm.name.trim() } },
+          options: {
+            data: {
+              full_name: accountForm.name.trim(),
+            },
+            emailRedirectTo:
+              getAuthEmailRedirectUrl(),
+          },
         });
 
         if (error) throw error;

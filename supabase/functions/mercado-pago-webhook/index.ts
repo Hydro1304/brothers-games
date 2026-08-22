@@ -183,6 +183,94 @@ async function sendTransactionalEmail({
   subject: string;
   html: string;
 }): Promise<EmailProviderResult> {
+  // PRIORIDADE 1: RESEND
+  const resendApiKey = String(
+    Deno.env.get("RESEND_API_KEY") || ""
+  ).trim();
+
+  const resendFrom = String(
+    Deno.env.get("SALE_EMAIL_FROM") ||
+      Deno.env.get("ORDER_EMAIL_FROM") ||
+      ""
+  ).trim();
+
+  if (resendApiKey && resendFrom) {
+    try {
+      const from = parseResendFrom(resendFrom);
+
+      const response = await fetch(
+        "https://api.resend.com/emails",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: `${from.name} <${from.email}>`,
+            to: [to],
+            subject,
+            html,
+          }),
+        }
+      );
+
+      let data: {
+        id?: string;
+        message?: string;
+        name?: string;
+      } | null = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (response.ok) {
+        console.log(
+          "RESEND EMAIL ACCEPTED",
+          {
+            recipient: to,
+            status: response.status,
+            id: data?.id || null,
+          }
+        );
+
+        return {
+          ok: true,
+          provider: "resend",
+          status: response.status,
+          id: data?.id || null,
+        };
+      }
+
+      console.warn(
+        "Resend falhou; tentando fallback pela Brevo.",
+        {
+          recipient: to,
+          status: response.status,
+          error:
+            data?.message ||
+            data?.name ||
+            `HTTP ${response.status}`,
+        }
+      );
+    } catch (error) {
+      console.warn(
+        "Resend indisponível; tentando fallback pela Brevo.",
+        {
+          recipient: to,
+          error:
+            error instanceof Error
+              ? error.message
+              : "RESEND_REQUEST_FAILED",
+        }
+      );
+    }
+  }
+
+  // PRIORIDADE 2: BREVO (fallback)
   const brevoApiKey = String(
     Deno.env.get("BREVO_API_KEY") || ""
   ).trim();
@@ -237,6 +325,15 @@ async function sendTransactionalEmail({
       }
 
       if (response.ok) {
+        console.log(
+          "BREVO FALLBACK EMAIL ACCEPTED",
+          {
+            recipient: to,
+            status: response.status,
+            messageId: data?.messageId || null,
+          }
+        );
+
         return {
           ok: true,
           provider: "brevo",
@@ -245,99 +342,7 @@ async function sendTransactionalEmail({
         };
       }
 
-      console.error("E-mail Brevo recusado:", {
-        recipient: to,
-        status: response.status,
-        response: data,
-      });
-
-      console.warn(
-        "Brevo falhou; tentando fallback pelo Resend.",
-        {
-          recipient: to,
-          status: response.status,
-          error:
-            data?.message ||
-            data?.code ||
-            `HTTP ${response.status}`,
-        }
-      );
-    } catch (error) {
-      console.error("Erro chamando Brevo:", {
-        recipient: to,
-        error:
-          error instanceof Error
-            ? error.message
-            : "unknown",
-      });
-
-      console.warn(
-        "Brevo indisponível; tentando fallback pelo Resend.",
-        {
-          recipient: to,
-          error:
-            error instanceof Error
-              ? error.message
-              : "BREVO_REQUEST_FAILED",
-        }
-      );
-    }
-  }
-
-  // Fallback: mantém Resend funcionando caso já esteja configurado.
-  const resendApiKey = String(
-    Deno.env.get("RESEND_API_KEY") || ""
-  ).trim();
-
-  const resendFrom = String(
-    Deno.env.get("SALE_EMAIL_FROM") ||
-      Deno.env.get("ORDER_EMAIL_FROM") ||
-      ""
-  ).trim();
-
-  if (resendApiKey && resendFrom) {
-    try {
-      const from = parseResendFrom(resendFrom);
-
-      const response = await fetch(
-        "https://api.resend.com/emails",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: `${from.name} <${from.email}>`,
-            to: [to],
-            subject,
-            html,
-          }),
-        }
-      );
-
-      let data: {
-        id?: string;
-        message?: string;
-        name?: string;
-      } | null = null;
-
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
-
-      if (response.ok) {
-        return {
-          ok: true,
-          provider: "resend",
-          status: response.status,
-          id: data?.id || null,
-        };
-      }
-
-      console.error("E-mail Resend recusado:", {
+      console.error("Brevo fallback recusado:", {
         recipient: to,
         status: response.status,
         response: data,
@@ -345,21 +350,21 @@ async function sendTransactionalEmail({
 
       return {
         ok: false,
-        provider: "resend",
+        provider: "brevo",
         status: response.status,
         error:
           data?.message ||
-          data?.name ||
+          data?.code ||
           `HTTP ${response.status}`,
       };
     } catch (error) {
       return {
         ok: false,
-        provider: "resend",
+        provider: "brevo",
         error:
           error instanceof Error
             ? error.message
-            : "RESEND_REQUEST_FAILED",
+            : "BREVO_REQUEST_FAILED",
       };
     }
   }
