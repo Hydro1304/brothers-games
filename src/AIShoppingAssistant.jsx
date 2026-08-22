@@ -5,6 +5,9 @@ import "./ai-assistant.css";
 
 const COPY = {
   "pt-BR": {
+    sectionFound: "Encontrei todos os produtos disponíveis nas seções: {sections}. Escolha os que quiser abaixo.",
+    gtaSectionFound: "Encontrei o GTA V e adicionei ao carrinho. Também mostrei todos os produtos das seções: {sections}.",
+    sectionNotFound: "Não encontrei produtos cadastrados nas seções: {sections}.",
     gtaNoKeyboard: "Encontrei e adicionei o GTA V, mas não encontrei nenhum teclado no catálogo agora.",
     checkoutCta: "IR PARA O CHECKOUT",
     checkoutHint: "Produto adicionado. Quando quiser, você pode finalizar a compra.",
@@ -33,6 +36,9 @@ const COPY = {
     ],
   },
   "en-US": {
+    sectionFound: "I found all products currently listed in these sections: {sections}. Choose any option below.",
+    gtaSectionFound: "I found GTA V and added it to your cart. I also showed all products from these sections: {sections}.",
+    sectionNotFound: "I couldn't find products listed in these sections: {sections}.",
     gtaNoKeyboard: "I found and added GTA V, but I couldn't find any keyboards in the catalog right now.",
     checkoutCta: "GO TO CHECKOUT",
     checkoutHint: "Product added. When you're ready, you can complete your purchase.",
@@ -61,6 +67,9 @@ const COPY = {
     ],
   },
   "es-ES": {
+    sectionFound: "Encontré todos los productos disponibles en estas secciones: {sections}. Elige los que quieras abajo.",
+    gtaSectionFound: "Encontré GTA V y lo añadí al carrito. También mostré todos los productos de estas secciones: {sections}.",
+    sectionNotFound: "No encontré productos registrados en estas secciones: {sections}.",
     gtaNoKeyboard: "Encontré y añadí GTA V, pero no encontré ningún teclado en el catálogo ahora.",
     checkoutCta: "IR AL CHECKOUT",
     checkoutHint: "Producto añadido. Cuando quieras, puedes finalizar la compra.",
@@ -89,6 +98,9 @@ const COPY = {
     ],
   },
   "zh-CN": {
+    sectionFound: "我找到了这些分类中的所有商品：{sections}。请在下面选择你想要的商品。",
+    gtaSectionFound: "我找到了 GTA V 并已加入购物车。同时显示了这些分类中的所有商品：{sections}。",
+    sectionNotFound: "这些分类中暂时没有找到商品：{sections}。",
     gtaNoKeyboard: "我找到了 GTA V 并已加入购物车，但当前目录中没有找到键盘。",
     checkoutCta: "前往结账",
     checkoutHint: "商品已加入购物车。准备好后即可完成购买。",
@@ -111,6 +123,9 @@ const COPY = {
     quick: ["帮我搭配一套设备", "有哪些最佳优惠？", "我想要一个键盘", "打开我的购物车"],
   },
   "hi-IN": {
+    sectionFound: "मुझे इन सेक्शन के सभी उपलब्ध उत्पाद मिले: {sections}। नीचे से अपनी पसंद चुनें।",
+    gtaSectionFound: "मुझे GTA V मिला और मैंने उसे कार्ट में जोड़ दिया। साथ ही इन सेक्शन के सभी उत्पाद दिखाए: {sections}।",
+    sectionNotFound: "इन सेक्शन में कोई उत्पाद नहीं मिला: {sections}।",
     gtaNoKeyboard: "मुझे GTA V मिला और मैंने उसे कार्ट में जोड़ दिया, लेकिन अभी कैटलॉग में कोई कीबोर्ड नहीं मिला।",
     checkoutCta: "चेकआउट पर जाएँ",
     checkoutHint: "उत्पाद कार्ट में जोड़ दिया गया है। तैयार होने पर खरीदारी पूरी करें।",
@@ -134,6 +149,9 @@ const COPY = {
     quick: ["मेरे लिए सेटअप बनाएं", "सबसे अच्छे ऑफ़र कौन से हैं?", "मुझे कीबोर्ड चाहिए", "मेरा कार्ट खोलें"],
   },
   "ar-SA": {
+    sectionFound: "وجدت جميع المنتجات الموجودة في هذه الأقسام: {sections}. اختر ما تريده أدناه.",
+    gtaSectionFound: "وجدت GTA V وأضفته إلى السلة. كما عرضت جميع المنتجات في هذه الأقسام: {sections}.",
+    sectionNotFound: "لم أجد منتجات مسجلة في هذه الأقسام: {sections}.",
     gtaNoKeyboard: "عثرت على GTA V وأضفته إلى السلة، لكنني لم أجد أي لوحة مفاتيح في الكتالوج الآن.",
     checkoutCta: "الانتقال إلى الدفع",
     checkoutHint: "تمت إضافة المنتج. عندما تكون جاهزًا يمكنك إكمال الشراء.",
@@ -157,6 +175,9 @@ const COPY = {
     quick: ["جهّز لي إعدادًا", "ما أفضل العروض؟", "أريد لوحة مفاتيح", "افتح سلتي"],
   },
   "fr-FR": {
+    sectionFound: "J’ai trouvé tous les produits disponibles dans ces sections : {sections}. Choisissez ceux que vous voulez ci-dessous.",
+    gtaSectionFound: "J’ai trouvé GTA V et je l’ai ajouté au panier. J’ai aussi affiché tous les produits de ces sections : {sections}.",
+    sectionNotFound: "Je n’ai trouvé aucun produit dans ces sections : {sections}.",
     gtaNoKeyboard: "J’ai trouvé GTA V et je l’ai ajouté au panier, mais je n’ai trouvé aucun clavier dans le catalogue pour le moment.",
     checkoutCta: "PASSER AU PAIEMENT",
     checkoutHint: "Produit ajouté. Lorsque vous êtes prêt, vous pouvez finaliser l’achat.",
@@ -180,6 +201,9 @@ const COPY = {
     quick: ["Composez un setup pour moi", "Quelles sont les meilleures offres ?", "Je veux un clavier", "Ouvrir mon panier"],
   },
   "de-DE": {
+    sectionFound: "Ich habe alle Produkte in diesen Bereichen gefunden: {sections}. Wähle unten die gewünschten Produkte aus.",
+    gtaSectionFound: "Ich habe GTA V gefunden und zum Warenkorb hinzugefügt. Außerdem zeige ich alle Produkte aus diesen Bereichen: {sections}.",
+    sectionNotFound: "Ich habe in diesen Bereichen keine Produkte gefunden: {sections}.",
     gtaNoKeyboard: "Ich habe GTA V gefunden und zum Warenkorb hinzugefügt, aber derzeit keine Tastatur im Katalog gefunden.",
     checkoutCta: "ZUR KASSE",
     checkoutHint: "Produkt hinzugefügt. Wenn du bereit bist, kannst du den Kauf abschließen.",
@@ -452,6 +476,173 @@ function productSearchScore(product, query) {
   return score;
 }
 
+
+const SHOP_SECTION_DEFINITIONS = [
+  {
+    id: "mouse",
+    requestTerms: ["mouse", "mouses"],
+    productTerms: ["mouse"],
+  },
+  {
+    id: "teclado",
+    requestTerms: ["teclado", "teclados", "keyboard", "keyboards"],
+    productTerms: ["teclad", "keyboard"],
+  },
+  {
+    id: "monitor",
+    requestTerms: ["monitor", "monitores", "display", "displays"],
+    productTerms: ["monitor", "display"],
+  },
+];
+
+const SHOP_SECTION_LABELS = {
+  "pt-BR": { mouse: "Mouse", teclado: "Teclado", monitor: "Monitor" },
+  "en-US": { mouse: "Mouse", teclado: "Keyboard", monitor: "Monitor" },
+  "es-ES": { mouse: "Mouse", teclado: "Teclado", monitor: "Monitor" },
+  "zh-CN": { mouse: "鼠标", teclado: "键盘", monitor: "显示器" },
+  "hi-IN": { mouse: "माउस", teclado: "कीबोर्ड", monitor: "मॉनिटर" },
+  "ar-SA": { mouse: "الماوس", teclado: "لوحة المفاتيح", monitor: "الشاشة" },
+  "fr-FR": { mouse: "Souris", teclado: "Clavier", monitor: "Écran" },
+  "de-DE": { mouse: "Maus", teclado: "Tastatur", monitor: "Monitor" },
+};
+
+function requestedShopSections(message) {
+  const normalized = normalizeAssistantText(message);
+
+  return SHOP_SECTION_DEFINITIONS.filter((section) =>
+    section.requestTerms.some((term) => normalized.includes(term))
+  );
+}
+
+function productBelongsToShopSection(product, section) {
+  const category = normalizeAssistantText(product?.category);
+  const name = normalizeAssistantText(product?.name);
+  const description = normalizeAssistantText(product?.description);
+
+  // Prioriza a seção/categoria real cadastrada no produto.
+  if (section.productTerms.some((term) => category.includes(term))) {
+    return true;
+  }
+
+  // Compatibilidade caso produtos antigos estejam em "Periféricos"
+  // e a identificação exista somente no nome/descrição.
+  return section.productTerms.some(
+    (term) => name.includes(term) || description.includes(term)
+  );
+}
+
+function productsFromRequestedSections(products, sections) {
+  const seen = new Set();
+  const result = [];
+
+  for (const section of sections) {
+    for (const product of products || []) {
+      if (!productBelongsToShopSection(product, section)) continue;
+
+      const id = String(product?.id || "");
+      if (!id || seen.has(id)) continue;
+
+      seen.add(id);
+      result.push(product);
+    }
+  }
+
+  return result;
+}
+
+function localizedSectionNames(language, sections) {
+  const labels =
+    SHOP_SECTION_LABELS[language] || SHOP_SECTION_LABELS["pt-BR"];
+
+  return sections.map((section) => labels[section.id] || section.id).join(", ");
+}
+
+function isGtaRequest(message) {
+  const text = normalizeAssistantText(message);
+  return (
+    text.includes("gta v") ||
+    text.includes("gta 5") ||
+    text.includes("grand theft auto v") ||
+    text.includes("grand theft auto 5")
+  );
+}
+
+function findClearGtaProduct(products) {
+  const candidates = (products || [])
+    .filter(productAvailable)
+    .map((product) => ({
+      product,
+      score: Math.max(
+        productSearchScore(product, "gta v"),
+        productSearchScore(product, "gta 5"),
+        productSearchScore(product, "grand theft auto v")
+      ),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (!candidates.length) return null;
+
+  // Só adiciona automaticamente quando a primeira opção é claramente a melhor.
+  if (
+    candidates.length === 1 ||
+    candidates[0].score >= candidates[1].score + 20
+  ) {
+    return candidates[0].product;
+  }
+
+  return null;
+}
+
+function buildDeterministicSectionResponse({
+  message,
+  language,
+  products,
+  onAddToCart,
+}) {
+  const sections = requestedShopSections(message);
+  if (!sections.length) return null;
+
+  const sectionProducts = productsFromRequestedSections(products, sections);
+  const sectionNames = localizedSectionNames(language, sections);
+  const gtaRequested = isGtaRequest(message);
+
+  let gtaAdded = false;
+
+  if (gtaRequested) {
+    const gtaProduct = findClearGtaProduct(products);
+
+    if (gtaProduct) {
+      onAddToCart?.(gtaProduct, 1);
+      gtaAdded = true;
+    }
+  }
+
+  if (!sectionProducts.length) {
+    return {
+      content: fallbackText(language, "sectionNotFound", {
+        sections: sectionNames,
+      }),
+      products: [],
+      addedProductIds: [],
+    };
+  }
+
+  return {
+    content: fallbackText(
+      language,
+      gtaAdded ? "gtaSectionFound" : "sectionFound",
+      { sections: sectionNames }
+    ),
+    // Importante: sem slice. Mostra TODOS os produtos cadastrados
+    // nas seções solicitadas (Mouse, Teclado e/ou Monitor).
+    products: sectionProducts,
+    addedProductIds: gtaAdded
+      ? [String(findClearGtaProduct(products)?.id || "")].filter(Boolean)
+      : [],
+  };
+}
+
 function buildClientFallback({
   message,
   language,
@@ -483,6 +674,22 @@ function buildClientFallback({
   }
 
   const availableProducts = (products || []).filter(productAvailable);
+
+  const requestedSections = requestedShopSections(message);
+  if (requestedSections.length) {
+    const sectionProducts = productsFromRequestedSections(
+      products,
+      requestedSections
+    );
+    const sectionNames = localizedSectionNames(language, requestedSections);
+
+    return {
+      content: sectionProducts.length
+        ? fallbackText(language, "sectionFound", { sections: sectionNames })
+        : fallbackText(language, "sectionNotFound", { sections: sectionNames }),
+      products: sectionProducts,
+    };
+  }
 
   const gtaIntent =
     text.includes("gta v") ||
@@ -787,6 +994,41 @@ export default function AIShoppingAssistant({
     const history = safeMessages([...messages, userMessage]);
     setMessages((current) => [...current, userMessage]);
     setInput("");
+
+    // Pedidos de Mouse / Teclado / Monitor são determinísticos:
+    // sempre mostramos TODOS os produtos cadastrados nessas seções,
+    // sem deixar a IA escolher apenas um item aleatório.
+    const deterministicSectionResponse = buildDeterministicSectionResponse({
+      message: clean,
+      language,
+      products,
+      onAddToCart,
+    });
+
+    if (deterministicSectionResponse) {
+      if (deterministicSectionResponse.addedProductIds?.length) {
+        setAddedIds((current) => {
+          const next = new Set(current);
+          for (const id of deterministicSectionResponse.addedProductIds) {
+            next.add(String(id));
+          }
+          return next;
+        });
+      }
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-sections-${Date.now()}`,
+          role: "assistant",
+          content: deterministicSectionResponse.content,
+          products: deterministicSectionResponse.products,
+        },
+      ]);
+
+      return;
+    }
+
     setBusy(true);
 
     try {
