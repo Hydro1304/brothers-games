@@ -153,17 +153,14 @@ async function sendSaleNotificationEmail(
   fromEmail: string,
   notificationEmail: string
 ): Promise<void> {
-  if (
-    !resendApiKey ||
-    !fromEmail ||
-    !notificationEmail
-  ) {
+  if (!resendApiKey || !fromEmail) {
     console.warn(
-      "Webhook: e-mail de venda não configurado.",
+      "Webhook: e-mail de pagamento não configurado.",
       {
-        hasResendApiKey: Boolean(resendApiKey),
-        hasFromEmail: Boolean(fromEmail),
-        hasNotificationEmail: Boolean(notificationEmail),
+        hasResendApiKey:
+          Boolean(resendApiKey),
+        hasFromEmail:
+          Boolean(fromEmail),
       }
     );
     return;
@@ -174,35 +171,47 @@ async function sendSaleNotificationEmail(
       await admin
         .from("order_items")
         .select(
-          "product_name, quantity, unit_price"
+          "product_name,quantity,unit_price"
         )
         .eq("order_id", order.id);
 
     if (itemsError) {
       console.error(
-        "Webhook: erro buscando itens para e-mail de venda:",
+        "Webhook: erro buscando itens para e-mail:",
         itemsError.code || "unknown"
       );
     }
 
-    const { data: customerProfile } =
-      await admin
-        .from("profiles")
-        .select("name, full_name, email")
-        .eq("id", order.customer_id)
-        .maybeSingle();
+    const {
+      data: customerAuth,
+    } = await admin.auth.admin.getUserById(
+      order.customer_id
+    );
+
+    const {
+      data: customerProfile,
+    } = await admin
+      .from("profiles")
+      .select("name,full_name")
+      .eq("id", order.customer_id)
+      .maybeSingle();
+
+    const customerEmail =
+      String(
+        customerAuth?.user?.email || ""
+      )
+        .trim()
+        .toLowerCase();
 
     const customerName =
       String(
         customerProfile?.name ||
           customerProfile?.full_name ||
+          customerAuth?.user?.user_metadata?.name ||
+          customerAuth?.user?.user_metadata?.full_name ||
+          customerEmail.split("@")[0] ||
           "Cliente"
       ).trim() || "Cliente";
-
-    const customerEmail =
-      String(
-        customerProfile?.email || ""
-      ).trim();
 
     const itemsHtml =
       (items || [])
@@ -228,289 +237,294 @@ async function sendSaleNotificationEmail(
           `
         )
         .join("") ||
-      `
-        <tr>
-          <td colspan="2" style="padding:8px 0;color:#8f8f98;font-size:13px;">
-            Itens não disponíveis para exibição.
-          </td>
-        </tr>
-      `;
+      `<tr><td colspan="2" style="padding:8px 0;color:#8f8f98;font-size:13px;">Itens não disponíveis para exibição.</td></tr>`;
 
-    const subject =
-      `NOVA VENDA • Pedido ${String(
-        order.order_number || ""
-      ).trim()}`;
+    const siteUrl =
+      String(
+        Deno.env.get("PUBLIC_SITE_URL") ||
+          "https://brothers-games.brothersgames.workers.dev"
+      ).trim();
 
-    const html = `
-<!doctype html>
+    const {
+      data: staffProfiles,
+    } = await admin
+      .from("profiles")
+      .select("id,role,status,name,full_name")
+      .in("role", ["owner", "admin"])
+      .eq("status", "active");
+
+    const recipients = new Map<
+      string,
+      {
+        email: string;
+        name: string;
+        kind: "buyer" | "staff";
+      }
+    >();
+
+    if (customerEmail) {
+      recipients.set(customerEmail, {
+        email: customerEmail,
+        name: customerName,
+        kind: "buyer",
+      });
+    }
+
+    for (
+      const profile of
+        (staffProfiles || [])
+    ) {
+      try {
+        const {
+          data: staffAuth,
+        } = await admin.auth.admin.getUserById(
+          String(profile.id)
+        );
+
+        const email =
+          String(
+            staffAuth?.user?.email || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        if (
+          !email ||
+          email === customerEmail
+        ) {
+          continue;
+        }
+
+        recipients.set(email, {
+          email,
+          name:
+            String(
+              profile.name ||
+                profile.full_name ||
+                "Admin"
+            ).trim() || "Admin",
+          kind: "staff",
+        });
+      } catch (error) {
+        console.error(
+          "Webhook: falha buscando e-mail de Admin/Owner",
+          {
+            userId: profile.id,
+            error:
+              error instanceof Error
+                ? error.message
+                : "unknown",
+          }
+        );
+      }
+    }
+
+    const fallbackStaffEmail =
+      String(
+        notificationEmail || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    if (
+      fallbackStaffEmail &&
+      fallbackStaffEmail !== customerEmail &&
+      !recipients.has(fallbackStaffEmail)
+    ) {
+      recipients.set(
+        fallbackStaffEmail,
+        {
+          email: fallbackStaffEmail,
+          name: "Equipe BROTHER'S GAMES",
+          kind: "staff",
+        }
+      );
+    }
+
+    const sent: string[] = [];
+    const failed: string[] = [];
+
+    for (
+      const recipient of
+        recipients.values()
+    ) {
+      const isBuyer =
+        recipient.kind === "buyer";
+
+      const subject = isBuyer
+        ? `PAGAMENTO CONFIRMADO • Pedido ${String(
+            order.order_number || ""
+          ).trim()}`
+        : `NOVA VENDA CONFIRMADA • Pedido ${String(
+            order.order_number || ""
+          ).trim()}`;
+
+      const title = isBuyer
+        ? "Pagamento confirmado!"
+        : "Nova venda confirmada";
+
+      const eyebrow = isBuyer
+        ? "PAGAMENTO APROVADO"
+        : "NOVA VENDA";
+
+      const message = isBuyer
+        ? "Recebemos a confirmação do seu pagamento. Seu pedido já está confirmado e seguirá para a próxima etapa."
+        : `O pagamento do pedido de ${customerName} foi aprovado. A venda já está registrada no painel.`;
+
+      const html = `<!doctype html>
 <html>
-  <body
-    style="
-      margin:0;
-      padding:0;
-      background:#070708;
-      font-family:Arial,Helvetica,sans-serif;
-      color:#f5f5f7;
-    "
-  >
-    <table
-      width="100%"
-      cellpadding="0"
-      cellspacing="0"
-      role="presentation"
-      style="padding:28px 14px;background:#070708;"
-    >
+  <body style="margin:0;background:#070708;font-family:Arial,Helvetica,sans-serif;color:#f5f5f7;">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:28px 14px;background:#070708;">
       <tr>
         <td align="center">
-          <table
-            width="100%"
-            cellpadding="0"
-            cellspacing="0"
-            role="presentation"
-            style="
-              max-width:620px;
-              overflow:hidden;
-              border:1px solid #242428;
-              border-radius:18px;
-              background:#0d0d0f;
-            "
-          >
-            <tr>
-              <td style="height:4px;background:#e50914;"></td>
-            </tr>
-
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+            style="max-width:620px;overflow:hidden;border:1px solid #242428;border-radius:18px;background:#0d0d0f;">
+            <tr><td style="height:4px;background:#4fd07b;"></td></tr>
             <tr>
               <td style="padding:30px 28px 8px;">
-                <div
-                  style="
-                    font-size:22px;
-                    font-weight:900;
-                    letter-spacing:-.03em;
-                  "
-                >
-                  BROTHER'S
-                  <span style="color:#e50914;">
-                    GAMES
-                  </span>
+                <div style="font-size:22px;font-weight:900;letter-spacing:-.03em;">
+                  BROTHER'S <span style="color:#e50914;">GAMES</span>
                 </div>
               </td>
             </tr>
-
             <tr>
               <td style="padding:22px 28px 30px;">
-                <div
-                  style="
-                    color:#ff4a54;
-                    font-size:10px;
-                    font-weight:900;
-                    letter-spacing:.13em;
-                    text-transform:uppercase;
-                  "
-                >
-                  NOVA VENDA CONFIRMADA
+                <div style="color:#4fd07b;font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;">
+                  ${escapeHtml(eyebrow)}
                 </div>
 
-                <h1
-                  style="
-                    margin:10px 0 12px;
-                    color:#ffffff;
-                    font-size:28px;
-                    line-height:1.15;
-                  "
-                >
-                  Pagamento aprovado
+                <h1 style="margin:10px 0 12px;color:#fff;font-size:28px;line-height:1.15;">
+                  ${escapeHtml(title)}
                 </h1>
 
-                <p
-                  style="
-                    margin:0;
-                    color:#b8b8c1;
-                    font-size:15px;
-                    line-height:1.65;
-                  "
-                >
-                  Uma nova venda foi confirmada na BROTHER'S GAMES.
+                <p style="margin:0;color:#b8b8c1;font-size:15px;line-height:1.65;">
+                  Olá, ${escapeHtml(recipient.name)}. ${escapeHtml(message)}
                 </p>
 
-                <div
-                  style="
-                    margin:22px 0;
-                    padding:16px;
-                    border:1px solid #29292f;
-                    border-radius:12px;
-                    background:#111114;
-                  "
-                >
+                <div style="margin:22px 0;padding:16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
                   <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
                     Pedido:
-                    <strong style="color:#fff;">
-                      ${escapeHtml(order.order_number)}
-                    </strong>
-                  </div>
-
-                  <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
-                    Cliente:
-                    <strong style="color:#fff;">
-                      ${escapeHtml(customerName)}
-                    </strong>
+                    <strong style="color:#fff;">${escapeHtml(order.order_number)}</strong>
                   </div>
 
                   ${
-                    customerEmail
-                      ? `
-                    <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
-                      E-mail:
-                      <strong style="color:#fff;">
-                        ${escapeHtml(customerEmail)}
-                      </strong>
-                    </div>
-                  `
+                    !isBuyer
+                      ? `<div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
+                           Cliente:
+                           <strong style="color:#fff;">${escapeHtml(customerName)}</strong>
+                         </div>`
                       : ""
                   }
 
                   <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
                     Pagamento:
-                    <strong style="color:#fff;">
-                      ${escapeHtml(order.payment_method || "")}
-                    </strong>
+                    <strong style="color:#fff;">${escapeHtml(order.payment_method || "")}</strong>
                   </div>
 
                   <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
                     Total:
-                    <strong style="color:#fff;">
-                      ${escapeHtml(money(order.total))}
-                    </strong>
+                    <strong style="color:#fff;">${escapeHtml(money(order.total))}</strong>
                   </div>
                 </div>
 
-                <div
-                  style="
-                    margin:20px 0;
-                    padding:16px;
-                    border:1px solid #29292f;
-                    border-radius:12px;
-                    background:#111114;
-                  "
-                >
-                  <div
-                    style="
-                      font-size:10px;
-                      color:#7f7f89;
-                      font-weight:800;
-                      letter-spacing:.09em;
-                      text-transform:uppercase;
-                      margin-bottom:8px;
-                    "
-                  >
+                <div style="margin:20px 0;padding:16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
+                  <div style="font-size:10px;color:#7f7f89;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px;">
                     Itens do pedido
                   </div>
-
-                  <table
-                    width="100%"
-                    cellpadding="0"
-                    cellspacing="0"
-                    role="presentation"
-                  >
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                     ${itemsHtml}
                   </table>
                 </div>
 
-                <p
-                  style="
-                    margin:22px 0 0;
-                    color:#73737d;
-                    font-size:11px;
-                    line-height:1.55;
-                  "
-                >
-                  Este é um aviso automático de nova venda.
-                </p>
+                <a href="${escapeHtml(siteUrl)}"
+                  style="display:inline-block;margin-top:4px;padding:13px 18px;border-radius:10px;background:#e50914;color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.04em;">
+                  ${isBuyer ? "VER MEU PEDIDO" : "ABRIR SITE / PAINEL"}
+                </a>
               </td>
             </tr>
           </table>
-
-          <div
-            style="
-              max-width:620px;
-              margin:14px auto 0;
-              color:#5d5d66;
-              font-size:10px;
-              text-align:center;
-            "
-          >
-            BROTHER'S GAMES • Notificação de venda
-          </div>
         </td>
       </tr>
     </table>
   </body>
-</html>
-    `;
+</html>`;
 
-    const response = await fetch(
-      "https://api.resend.com/emails",
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            `Bearer ${resendApiKey}`,
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [notificationEmail],
-          subject,
-          html,
-        }),
+      const response =
+        await fetch(
+          "https://api.resend.com/emails",
+          {
+            method: "POST",
+            headers: {
+              Authorization:
+                `Bearer ${resendApiKey}`,
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              from: fromEmail,
+              to: [recipient.email],
+              subject,
+              html,
+            }),
+          }
+        );
+
+      let resendData: {
+        id?: string;
+        message?: string;
+        name?: string;
+      } | null = null;
+
+      try {
+        resendData =
+          await response.json();
+      } catch {
+        resendData = null;
       }
-    );
 
-    let resendData: {
-      id?: string;
-      message?: string;
-      name?: string;
-    } | null = null;
+      if (response.ok) {
+        sent.push(recipient.email);
+      } else {
+        failed.push(recipient.email);
 
-    try {
-      resendData = await response.json();
-    } catch {
-      resendData = null;
-    }
-
-    if (!response.ok) {
-      console.error(
-        "Webhook: falha enviando e-mail de nova venda",
-        {
-          status: response.status,
-          response: resendData,
-        }
-      );
-      return;
-    }
-
-    console.log(
-      "Webhook: e-mail de nova venda enviado",
-      {
-        orderNumber: order.order_number,
-        to: notificationEmail,
-        resendId: resendData?.id || null,
+        console.error(
+          "Webhook: Resend recusou e-mail de pagamento",
+          {
+            recipient:
+              recipient.email,
+            status:
+              response.status,
+            response:
+              resendData,
+          }
+        );
       }
-    );
+    }
 
     await admin
       .from("order_events")
       .insert({
         order_id: order.id,
-        event_type: "sale_notification_email_sent",
+        event_type:
+          "payment_confirmed_email_notification",
         details: {
-          recipient: notificationEmail,
-          resend_id: resendData?.id || null,
+          sent,
+          failed,
         },
       });
+
+    console.log(
+      "Webhook: e-mails de pagamento processados",
+      {
+        orderNumber:
+          order.order_number,
+        sent,
+        failed,
+      }
+    );
   } catch (error) {
     console.error(
-      "Webhook: erro inesperado enviando e-mail de venda",
+      "Webhook: erro inesperado enviando e-mails de pagamento",
       {
         message:
           error instanceof Error

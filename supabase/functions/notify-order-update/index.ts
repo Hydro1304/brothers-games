@@ -1,5 +1,19 @@
-// deno-lint-ignore-file no-explicit-any no-import-prefix
+// deno-lint-ignore-file no-import-prefix
 import { createClient } from "npm:@supabase/supabase-js@2";
+
+type ProfileRow = {
+  id: string;
+  role?: string | null;
+  status?: string | null;
+  name?: string | null;
+  full_name?: string | null;
+};
+
+type EmailRecipient = {
+  email: string;
+  name: string;
+  kind: "buyer" | "staff";
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,9 +41,12 @@ function getSupabaseSecretKey() {
 
   if (modern) {
     try {
-      const parsed = JSON.parse(modern);
+      const parsed = JSON.parse(modern) as {
+        default?: unknown;
+      };
+
       if (
-        typeof parsed?.default === "string" &&
+        typeof parsed.default === "string" &&
         parsed.default
       ) {
         return parsed.default;
@@ -66,17 +83,29 @@ function money(value: unknown) {
   }).format(Number(value || 0));
 }
 
-function statusCopy({
+function buyerCopy({
+  reason,
   orderStatus,
   fulfillmentStatus,
   itemStatus,
   deliveryType,
 }: {
+  reason: string;
   orderStatus: string;
   fulfillmentStatus: string;
   itemStatus: string;
   deliveryType: string;
 }) {
+  if (reason === "order_created") {
+    return {
+      eyebrow: "PEDIDO RECEBIDO",
+      title: "Recebemos seu pedido",
+      message:
+        "Seu pedido foi criado com sucesso. Você pode acompanhar o pagamento e todas as próximas etapas em Meus Pedidos.",
+      accent: "#e50914",
+    };
+  }
+
   if (orderStatus === "refunded") {
     return {
       eyebrow: "REEMBOLSO",
@@ -95,7 +124,7 @@ function statusCopy({
       eyebrow: "PEDIDO ENCERRADO",
       title: "Seu pedido foi encerrado",
       message:
-        "Seu pedido recebeu uma atualização e foi encerrado. Você pode consultar os detalhes na sua conta.",
+        "Seu pedido recebeu uma atualização e foi encerrado. Você pode consultar os detalhes em Meus Pedidos.",
       accent: "#ff5d65",
     };
   }
@@ -108,7 +137,7 @@ function statusCopy({
       eyebrow: "ENTREGA DIGITAL",
       title: "Seu produto digital está sendo preparado",
       message:
-        "O pagamento está aprovado e nossa equipe está preparando a entrega digital. Avisaremos você novamente assim que ela for liberada.",
+        "O pagamento está aprovado e nossa equipe está preparando sua entrega digital. Avisaremos novamente assim que ela for liberada.",
       accent: "#58a9ff",
     };
   }
@@ -121,7 +150,7 @@ function statusCopy({
       eyebrow: "ENTREGA DIGITAL",
       title: "Seu produto digital foi liberado",
       message:
-        "A entrega digital já está disponível em Meus Pedidos. Por segurança, chaves, links privados e credenciais não são enviados por e-mail.",
+        "Sua entrega digital já está disponível em Meus Pedidos. Por segurança, chaves, links privados e credenciais não são enviados por e-mail.",
       accent: "#4fd07b",
     };
   }
@@ -189,13 +218,85 @@ function statusCopy({
     eyebrow: "ATUALIZAÇÃO DO PEDIDO",
     title: "Tem novidade no seu pedido",
     message:
-      "A equipe da BROTHER'S GAMES atualizou o andamento do seu pedido. Confira os detalhes mais recentes na sua conta.",
+      "A equipe da BROTHER'S GAMES atualizou o andamento do seu pedido. Confira os detalhes mais recentes em Meus Pedidos.",
     accent: "#e50914",
   };
 }
 
+function staffCopy({
+  reason,
+  orderStatus,
+  itemStatus,
+  deliveryType,
+}: {
+  reason: string;
+  orderStatus: string;
+  itemStatus: string;
+  deliveryType: string;
+}) {
+  if (reason === "order_created") {
+    return {
+      eyebrow: "NOVO PEDIDO",
+      title: "Um novo pedido foi criado",
+      message:
+        "Um cliente finalizou a criação de um pedido. Acompanhe o pagamento e o processamento pelo painel administrativo.",
+      accent: "#e50914",
+    };
+  }
+
+  if (orderStatus === "refunded") {
+    return {
+      eyebrow: "REEMBOLSO",
+      title: "Pedido reembolsado",
+      message:
+        "Um pedido foi atualizado para reembolsado. O registro já está disponível no painel administrativo.",
+      accent: "#ffb020",
+    };
+  }
+
+  if (
+    orderStatus === "cancelled" ||
+    orderStatus === "expired"
+  ) {
+    return {
+      eyebrow: "PEDIDO ENCERRADO",
+      title: "Pedido encerrado",
+      message:
+        "Um pedido foi encerrado. Consulte o histórico e os detalhes no painel administrativo.",
+      accent: "#ff5d65",
+    };
+  }
+
+  const deliveryLabel =
+    deliveryType === "digital"
+      ? "produto digital"
+      : deliveryType === "physical"
+        ? "produto físico"
+        : "pedido";
+
+  const statusLabel = {
+    awaiting_delivery: "aguardando entrega digital",
+    preparing: "preparando envio",
+    shipped: "enviado",
+    delivered: "entregue",
+  }[itemStatus] || "atualizado";
+
+  return {
+    eyebrow: "ATUALIZAÇÃO OPERACIONAL",
+    title: "Status de pedido atualizado",
+    message:
+      `O ${deliveryLabel} foi marcado como ${statusLabel}. A atualização já está registrada no painel.`,
+    accent:
+      itemStatus === "delivered"
+        ? "#4fd07b"
+        : itemStatus === "shipped"
+          ? "#58a9ff"
+          : "#e50914",
+  };
+}
+
 function buildEmail({
-  buyerName,
+  recipientName,
   orderNumber,
   total,
   copy,
@@ -206,12 +307,33 @@ function buildEmail({
   trackingCode,
   trackingUrl,
   siteUrl,
-}: any) {
+  staffMode,
+  buyerName,
+}: {
+  recipientName: string;
+  orderNumber: string;
+  total: number;
+  copy: {
+    eyebrow: string;
+    title: string;
+    message: string;
+    accent: string;
+  };
+  productName: string;
+  deliveryType: string;
+  itemStatus: string;
+  carrier: string;
+  trackingCode: string;
+  trackingUrl: string;
+  siteUrl: string;
+  staffMode: boolean;
+  buyerName: string;
+}) {
   const itemBlock = productName
     ? `
       <div style="margin:20px 0;padding:16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
         <div style="font-size:10px;color:#7f7f89;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px;">
-          Item atualizado
+          ${staffMode ? "Item atualizado" : "Produto"}
         </div>
         <div style="font-size:15px;color:#fff;font-weight:800;">
           ${escapeHtml(productName)}
@@ -264,6 +386,17 @@ function buildEmail({
       </div>`
       : "";
 
+  const staffBuyerBlock =
+    staffMode && buyerName
+      ? `
+      <div style="margin:20px 0;padding:14px 16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
+        <span style="color:#85858f;font-size:12px;">Cliente:</span>
+        <strong style="margin-left:6px;color:#fff;font-size:13px;">
+          ${escapeHtml(buyerName)}
+        </strong>
+      </div>`
+      : "";
+
   return `<!doctype html>
 <html>
   <body style="margin:0;background:#070708;font-family:Arial,Helvetica,sans-serif;color:#f5f5f7;">
@@ -295,8 +428,10 @@ function buildEmail({
                 </h1>
 
                 <p style="margin:0;color:#b8b8c1;font-size:15px;line-height:1.65;">
-                  Olá, ${escapeHtml(buyerName || "cliente")}. ${escapeHtml(copy.message)}
+                  Olá, ${escapeHtml(recipientName || (staffMode ? "equipe" : "cliente"))}. ${escapeHtml(copy.message)}
                 </p>
+
+                ${staffBuyerBlock}
 
                 <div style="margin:22px 0;padding:16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
                   <div style="display:flex;justify-content:space-between;gap:12px;">
@@ -314,20 +449,16 @@ function buildEmail({
 
                 <a href="${escapeHtml(siteUrl)}"
                   style="display:inline-block;margin-top:4px;padding:13px 18px;border-radius:10px;background:#e50914;color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.04em;">
-                  VER MEU PEDIDO
+                  ${staffMode ? "ABRIR PAINEL / SITE" : "VER MEU PEDIDO"}
                 </a>
 
                 <p style="margin:22px 0 0;color:#73737d;font-size:11px;line-height:1.55;">
-                  Este é um e-mail automático de atualização do seu pedido.
+                  Este é um e-mail automático da BROTHER'S GAMES.
                   Por segurança, chaves digitais, links privados e credenciais nunca são enviados por e-mail.
                 </p>
               </td>
             </tr>
           </table>
-
-          <div style="max-width:620px;margin:14px auto 0;color:#5d5d66;font-size:10px;text-align:center;">
-            BROTHER'S GAMES • Atualizações de pedido
-          </div>
         </td>
       </tr>
     </table>
@@ -335,9 +466,60 @@ function buildEmail({
 </html>`;
 }
 
+async function sendResendEmail({
+  apiKey,
+  from,
+  to,
+  subject,
+  html,
+}: {
+  apiKey: string;
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  const response = await fetch(
+    "https://api.resend.com/emails",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html,
+      }),
+    }
+  );
+
+  let data: {
+    id?: string;
+    message?: string;
+    name?: string;
+  } | null = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  };
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", {
+      headers: corsHeaders,
+    });
   }
 
   if (request.method !== "POST") {
@@ -351,21 +533,23 @@ Deno.serve(async (request: Request) => {
     Deno.env.get("SUPABASE_URL") || "";
   const secretKey =
     getSupabaseSecretKey();
-  const resendApiKey = String(
-    Deno.env.get("RESEND_API_KEY") || ""
-  ).trim();
-
-  // Usa o MESMO remetente já usado no seu e-mail de venda.
-  const fromEmail = String(
-    Deno.env.get("SALE_EMAIL_FROM") ||
-      Deno.env.get("ORDER_EMAIL_FROM") ||
-      ""
-  ).trim();
-
-  const siteUrl = String(
-    Deno.env.get("PUBLIC_SITE_URL") ||
-      "https://brothers-games.brothersgames.workers.dev"
-  ).trim();
+  const resendApiKey =
+    String(Deno.env.get("RESEND_API_KEY") || "").trim();
+  const fromEmail =
+    String(
+      Deno.env.get("SALE_EMAIL_FROM") ||
+        Deno.env.get("ORDER_EMAIL_FROM") ||
+        ""
+    ).trim();
+  const fallbackStaffEmail =
+    String(
+      Deno.env.get("SALE_NOTIFICATION_EMAIL") || ""
+    ).trim();
+  const siteUrl =
+    String(
+      Deno.env.get("PUBLIC_SITE_URL") ||
+        "https://brothers-games.brothersgames.workers.dev"
+    ).trim();
 
   if (!supabaseUrl || !secretKey) {
     return jsonResponse(
@@ -375,10 +559,6 @@ Deno.serve(async (request: Request) => {
   }
 
   if (!resendApiKey || !fromEmail) {
-    console.error(
-      "notify-order-update: RESEND_API_KEY ou SALE_EMAIL_FROM ausente."
-    );
-
     return jsonResponse(
       { ok: false, error: "EMAIL_NOT_CONFIGURED" },
       503
@@ -387,9 +567,8 @@ Deno.serve(async (request: Request) => {
 
   const authorization =
     request.headers.get("Authorization") || "";
-  const token = authorization
-    .replace(/^Bearer\s+/i, "")
-    .trim();
+  const token =
+    authorization.replace(/^Bearer\s+/i, "").trim();
 
   if (!token) {
     return jsonResponse(
@@ -424,32 +603,11 @@ Deno.serve(async (request: Request) => {
 
   const callerId = authData.user.id;
 
-  const {
-    data: callerProfile,
-    error: callerError,
-  } = await admin
-    .from("profiles")
-    .select("id,role,status")
-    .eq("id", callerId)
-    .maybeSingle();
-
-  if (
-    callerError ||
-    !callerProfile ||
-    !["owner", "admin"].includes(
-      String(callerProfile.role || "")
-    ) ||
-    String(
-      callerProfile.status || "active"
-    ) !== "active"
-  ) {
-    return jsonResponse(
-      { ok: false, error: "FORBIDDEN" },
-      403
-    );
-  }
-
-  let body: any;
+  let body: {
+    order_id?: unknown;
+    order_item_id?: unknown;
+    reason?: unknown;
+  };
 
   try {
     body = await request.json();
@@ -461,11 +619,11 @@ Deno.serve(async (request: Request) => {
   }
 
   const orderId =
-    cleanText(body?.order_id, 80);
+    cleanText(body.order_id, 80);
   const orderItemId =
-    cleanText(body?.order_item_id, 80);
+    cleanText(body.order_item_id, 80);
   const reason =
-    cleanText(body?.reason, 80);
+    cleanText(body.reason, 80);
 
   if (!orderId) {
     return jsonResponse(
@@ -493,6 +651,60 @@ Deno.serve(async (request: Request) => {
   }
 
   const {
+    data: callerProfile,
+  } = await admin
+    .from("profiles")
+    .select("id,role,status")
+    .eq("id", callerId)
+    .maybeSingle();
+
+  const callerIsStaff =
+    Boolean(callerProfile) &&
+    ["owner", "admin"].includes(
+      String(callerProfile?.role || "")
+    ) &&
+    String(
+      callerProfile?.status || "active"
+    ) === "active";
+
+  const callerOwnsOrder =
+    order.customer_id === callerId;
+
+  if (reason === "order_created") {
+    if (!callerOwnsOrder && !callerIsStaff) {
+      return jsonResponse(
+        { ok: false, error: "FORBIDDEN" },
+        403
+      );
+    }
+
+    const {
+      data: existing,
+    } = await admin
+      .from("order_events")
+      .select("id")
+      .eq("order_id", order.id)
+      .eq(
+        "event_type",
+        "order_created_email_notification"
+      )
+      .limit(1);
+
+    if (existing?.length) {
+      return jsonResponse({
+        ok: true,
+        skipped: true,
+        reason: "ALREADY_SENT",
+      });
+    }
+  } else if (!callerIsStaff) {
+    return jsonResponse(
+      { ok: false, error: "FORBIDDEN" },
+      403
+    );
+  }
+
+  const {
     data: buyerAuth,
     error: buyerAuthError,
   } = await admin.auth.admin.getUserById(
@@ -500,7 +712,10 @@ Deno.serve(async (request: Request) => {
   );
 
   const buyerEmail =
-    buyerAuth?.user?.email || "";
+    cleanText(
+      buyerAuth?.user?.email || "",
+      180
+    ).toLowerCase();
 
   if (
     buyerAuthError ||
@@ -531,8 +746,19 @@ Deno.serve(async (request: Request) => {
       120
     );
 
-  let item: any = null;
-  let fulfillment: any = null;
+  let item: {
+    id?: string;
+    product_name?: string | null;
+    delivery_type?: string | null;
+  } | null = null;
+
+  let fulfillment: {
+    status?: string | null;
+    delivery_type?: string | null;
+    carrier?: string | null;
+    tracking_code?: string | null;
+    tracking_url?: string | null;
+  } | null = null;
 
   if (orderItemId) {
     const {
@@ -563,14 +789,10 @@ Deno.serve(async (request: Request) => {
       .select(
         "status,delivery_type,carrier,tracking_code,tracking_url"
       )
-      .eq(
-        "order_item_id",
-        orderItemId
-      )
+      .eq("order_item_id", orderItemId)
       .maybeSingle();
 
-    fulfillment =
-      fulfillmentData || null;
+    fulfillment = fulfillmentData || null;
   }
 
   const deliveryType =
@@ -586,124 +808,206 @@ Deno.serve(async (request: Request) => {
       40
     );
 
-  const copy = statusCopy({
+  const buyerEmailCopy = buyerCopy({
+    reason,
     orderStatus:
       String(order.status || ""),
     fulfillmentStatus:
-      String(
-        order.fulfillment_status || ""
-      ),
+      String(order.fulfillment_status || ""),
     itemStatus,
     deliveryType,
   });
 
-  const subject =
-    `BROTHER'S GAMES • ${copy.title} • ` +
-    cleanText(
-      order.order_number,
-      80
-    );
-
-  const html = buildEmail({
-    buyerName,
-    orderNumber:
-      cleanText(
-        order.order_number,
-        80
-      ),
-    total:
-      Number(order.total || 0),
-    copy,
-    productName:
-      cleanText(
-        item?.product_name,
-        180
-      ),
-    deliveryType,
+  const staffEmailCopy = staffCopy({
+    reason,
+    orderStatus:
+      String(order.status || ""),
     itemStatus,
-    carrier:
-      cleanText(
-        fulfillment?.carrier,
-        120
-      ),
-    trackingCode:
-      cleanText(
-        fulfillment?.tracking_code,
-        180
-      ),
-    trackingUrl:
-      cleanText(
-        fulfillment?.tracking_url,
-        1000
-      ),
-    siteUrl,
+    deliveryType,
   });
 
-  const response =
-    await fetch(
-      "https://api.resend.com/emails",
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            `Bearer ${resendApiKey}`,
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [buyerEmail],
-          subject,
-          html,
-        }),
+  const {
+    data: staffData,
+  } = await admin
+    .from("profiles")
+    .select("id,role,status,name,full_name")
+    .in("role", ["owner", "admin"])
+    .eq("status", "active");
+
+  const recipients = new Map<
+    string,
+    EmailRecipient
+  >();
+
+  recipients.set(buyerEmail, {
+    email: buyerEmail,
+    name: buyerName,
+    kind: "buyer",
+  });
+
+  for (
+    const profile of
+      ((staffData || []) as ProfileRow[])
+  ) {
+    try {
+      const {
+        data: staffAuth,
+      } = await admin.auth.admin.getUserById(
+        profile.id
+      );
+
+      const email =
+        cleanText(
+          staffAuth?.user?.email || "",
+          180
+        ).toLowerCase();
+
+      if (!email || email === buyerEmail) {
+        continue;
       }
-    );
 
-  let resendData: any = null;
-
-  try {
-    resendData =
-      await response.json();
-  } catch {
-    resendData = null;
+      recipients.set(email, {
+        email,
+        name:
+          cleanText(
+            profile.name ||
+              profile.full_name ||
+              "Admin",
+            120
+          ) || "Admin",
+        kind: "staff",
+      });
+    } catch (error) {
+      console.error(
+        "notify-order-update: não foi possível obter e-mail de staff",
+        {
+          userId: profile.id,
+          error:
+            error instanceof Error
+              ? error.message
+              : "unknown",
+        }
+      );
+    }
   }
 
-  if (!response.ok) {
-    console.error(
-      "notify-order-update: erro Resend",
-      {
-        status: response.status,
-        response: resendData,
-      }
-    );
+  if (fallbackStaffEmail) {
+    const fallback =
+      fallbackStaffEmail.toLowerCase();
 
-    return jsonResponse(
-      { ok: false, error: "EMAIL_SEND_FAILED" },
-      502
-    );
+    if (
+      fallback !== buyerEmail &&
+      !recipients.has(fallback)
+    ) {
+      recipients.set(fallback, {
+        email: fallback,
+        name: "Equipe BROTHER'S GAMES",
+        kind: "staff",
+      });
+    }
   }
+
+  const sent: string[] = [];
+  const failed: string[] = [];
+
+  for (const recipient of recipients.values()) {
+    const copy =
+      recipient.kind === "buyer"
+        ? buyerEmailCopy
+        : staffEmailCopy;
+
+    const subject =
+      `BROTHER'S GAMES • ${copy.title} • ` +
+      cleanText(order.order_number, 80);
+
+    const html = buildEmail({
+      recipientName: recipient.name,
+      orderNumber:
+        cleanText(order.order_number, 80),
+      total:
+        Number(order.total || 0),
+      copy,
+      productName:
+        cleanText(item?.product_name, 180),
+      deliveryType,
+      itemStatus,
+      carrier:
+        cleanText(fulfillment?.carrier, 120),
+      trackingCode:
+        cleanText(
+          fulfillment?.tracking_code,
+          180
+        ),
+      trackingUrl:
+        cleanText(
+          fulfillment?.tracking_url,
+          1000
+        ),
+      siteUrl,
+      staffMode:
+        recipient.kind === "staff",
+      buyerName,
+    });
+
+    const result =
+      await sendResendEmail({
+        apiKey: resendApiKey,
+        from: fromEmail,
+        to: recipient.email,
+        subject,
+        html,
+      });
+
+    if (result.ok) {
+      sent.push(recipient.email);
+    } else {
+      failed.push(recipient.email);
+
+      console.error(
+        "notify-order-update: Resend recusou envio",
+        {
+          recipient: recipient.email,
+          status: result.status,
+          response: result.data,
+        }
+      );
+    }
+  }
+
+  const eventType =
+    reason === "order_created"
+      ? "order_created_email_notification"
+      : "order_update_email_notification";
 
   await admin
     .from("order_events")
     .insert({
       order_id: order.id,
-      event_type:
-        "buyer_email_notification",
+      event_type: eventType,
       details: {
         reason,
         order_item_id:
           orderItemId || null,
-        recipient: buyerEmail,
-        resend_id:
-          resendData?.id || null,
+        sent,
+        failed,
         sent_by: callerId,
       },
     });
 
+  if (!sent.length) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "EMAIL_SEND_FAILED",
+        failed,
+      },
+      502
+    );
+  }
+
   return jsonResponse({
     ok: true,
-    sent: true,
-    email_id:
-      resendData?.id || null,
+    sent,
+    failed,
   });
 });

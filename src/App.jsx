@@ -3173,6 +3173,36 @@ function App() {
     setPaymentOverlay(null);
   }
 
+
+  async function notifyOrderCreatedByEmail(orderId) {
+    if (!orderId) return;
+
+    try {
+      const { error } = await supabase.functions.invoke(
+        "notify-order-update",
+        {
+          body: {
+            order_id: orderId,
+            reason: "order_created",
+          },
+        }
+      );
+
+      if (error) {
+        console.error(
+          "Pedido criado, mas não foi possível enviar os e-mails de confirmação:",
+          error
+        );
+      }
+    } catch (error) {
+      // O checkout não pode falhar só porque o provedor de e-mail está indisponível.
+      console.error(
+        "Pedido criado, mas a notificação por e-mail falhou:",
+        error
+      );
+    }
+  }
+
   function completePaidOrder(result, method) {
     resetCheckoutRequestId(method);
 
@@ -3245,6 +3275,8 @@ function App() {
       if (!data?.success || !data?.orderId) {
         throw new Error(data?.error || "O servidor não retornou os dados do pedido.");
       }
+
+      void notifyOrderCreatedByEmail(data.orderId);
 
       if (data.status === "paid") {
         completePaidOrder(data, "pix");
@@ -3348,6 +3380,10 @@ function App() {
 
       if (!data?.success) {
         throw new Error(data?.error || "Não foi possível processar o cartão.");
+      }
+
+      if (data?.orderId) {
+        void notifyOrderCreatedByEmail(data.orderId);
       }
 
       if (data.status === "paid") {

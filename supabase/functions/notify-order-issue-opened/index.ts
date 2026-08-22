@@ -259,6 +259,88 @@ function buildEmail(params: {
 </html>`;
 }
 
+
+function buildBuyerIssueConfirmationEmail(params: {
+  customerName: string;
+  orderNumber: string;
+  issueDescription: string;
+  issueId: string;
+  siteUrl: string;
+}) {
+  const {
+    customerName,
+    orderNumber,
+    issueDescription,
+    issueId,
+    siteUrl,
+  } = params;
+
+  return `<!doctype html>
+<html>
+  <body style="margin:0;background:#070708;font-family:Arial,Helvetica,sans-serif;color:#f5f5f7;">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:28px 14px;background:#070708;">
+      <tr>
+        <td align="center">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+            style="max-width:620px;overflow:hidden;border:1px solid #242428;border-radius:18px;background:#0d0d0f;">
+            <tr><td style="height:4px;background:#e50914;"></td></tr>
+
+            <tr>
+              <td style="padding:30px 28px 8px;">
+                <div style="font-size:22px;font-weight:900;letter-spacing:-.03em;">
+                  BROTHER'S <span style="color:#e50914;">GAMES</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:22px 28px 30px;">
+                <div style="color:#ff4a54;font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;">
+                  SUPORTE PÓS-VENDA
+                </div>
+
+                <h1 style="margin:10px 0 12px;color:#fff;font-size:28px;line-height:1.15;">
+                  Recebemos sua reclamação
+                </h1>
+
+                <p style="margin:0;color:#b8b8c1;font-size:15px;line-height:1.65;">
+                  Olá, ${escapeHtml(customerName)}. Seu chamado foi aberto com sucesso e nossa equipe já foi avisada por e-mail.
+                </p>
+
+                <div style="margin:22px 0;padding:16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
+                  <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
+                    Pedido:
+                    <strong style="color:#fff;">${escapeHtml(orderNumber)}</strong>
+                  </div>
+                  <div style="margin:6px 0;color:#c6c6cd;font-size:13px;">
+                    Chamado:
+                    <strong style="color:#fff;">${escapeHtml(issueId)}</strong>
+                  </div>
+                </div>
+
+                <div style="margin:20px 0;padding:16px;border:1px solid #29292f;border-radius:12px;background:#111114;">
+                  <div style="font-size:10px;color:#7f7f89;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px;">
+                    Sua descrição
+                  </div>
+                  <div style="color:#f2f2f5;font-size:14px;line-height:1.65;white-space:pre-wrap;">
+                    ${escapeHtml(issueDescription)}
+                  </div>
+                </div>
+
+                <a href="${escapeHtml(siteUrl)}"
+                  style="display:inline-block;margin-top:4px;padding:13px 18px;border-radius:10px;background:#e50914;color:#fff;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.04em;">
+                  ACOMPANHAR CHAMADO
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", {
@@ -609,6 +691,70 @@ Deno.serve(async (request: Request) => {
           recipient: recipient.email,
           status: response.status,
           detail,
+        }
+      );
+    }
+  }
+
+
+  // Confirmação para o próprio comprador.
+  if (customerEmail) {
+    const buyerHtml =
+      buildBuyerIssueConfirmationEmail({
+        customerName,
+        orderNumber:
+          cleanText(order.order_number, 100),
+        issueDescription:
+          cleanText(issue.description, 5000),
+        issueId: issue.id,
+        siteUrl,
+      });
+
+    const buyerResponse = await fetch(
+      "https://api.resend.com/emails",
+      {
+        method: "POST",
+        headers: {
+          Authorization:
+            `Bearer ${resendApiKey}`,
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [customerEmail],
+          subject:
+            `CHAMADO RECEBIDO • Pedido ${cleanText(
+              order.order_number,
+              100
+            )}`,
+          html: buyerHtml,
+        }),
+      }
+    );
+
+    if (buyerResponse.ok) {
+      sent.push(customerEmail);
+    } else {
+      failed.push(customerEmail);
+
+      let buyerDetail: unknown = null;
+      try {
+        buyerDetail =
+          await buyerResponse.json();
+      } catch {
+        buyerDetail = null;
+      }
+
+      console.error(
+        "notify-order-issue-opened: falha enviando confirmação ao comprador",
+        {
+          recipient:
+            customerEmail,
+          status:
+            buyerResponse.status,
+          detail:
+            buyerDetail,
         }
       );
     }
