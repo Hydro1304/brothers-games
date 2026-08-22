@@ -2020,6 +2020,32 @@ function App() {
         if (attachError) throw attachError;
       }
 
+      // Avisa Admin/Owner por e-mail após o chamado estar completamente criado,
+      // inclusive depois de anexar a imagem, quando houver.
+      try {
+        const { error: notifyError } = await supabase.functions.invoke(
+          "notify-order-issue-opened",
+          {
+            body: {
+              issue_id: issue.id,
+            },
+          }
+        );
+
+        if (notifyError) {
+          console.error(
+            "Chamado criado, mas não foi possível enviar a notificação por e-mail ao suporte:",
+            notifyError
+          );
+        }
+      } catch (notifyError) {
+        // O chamado continua válido mesmo se o serviço de e-mail estiver indisponível.
+        console.error(
+          "Chamado criado, mas a notificação por e-mail ao suporte falhou:",
+          notifyError
+        );
+      }
+
       cleanupIssueImagePreview();
       setIssueDescription("");
       await loadMyOrders(false);

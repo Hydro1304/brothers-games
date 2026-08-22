@@ -12,11 +12,13 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
    - SUPABASE_SECRET_KEYS (ou SUPABASE_SERVICE_ROLE_KEY)
    - MERCADO_PAGO_ACCESS_TOKEN
    - ALLOWED_ORIGINS
+   - PUBLIC_SITE_URL (opcional, recomendado)
 ========================================================= */
 
 const LOCAL_ORIGINS = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
+  "https://brothers-games.brothersgames.workers.dev",
 ]);
 
 const UUID_RE =
@@ -51,10 +53,24 @@ function jsonArray(object: JsonObject | null, key: string) {
 }
 
 function configuredOrigins() {
-  return String(Deno.env.get("ALLOWED_ORIGINS") || "")
+  const configured = String(
+    Deno.env.get("ALLOWED_ORIGINS") || ""
+  )
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+
+  const publicSiteUrl = String(
+    Deno.env.get("PUBLIC_SITE_URL") || ""
+  )
+    .trim()
+    .replace(/\/$/, "");
+
+  if (publicSiteUrl) {
+    configured.push(publicSiteUrl);
+  }
+
+  return [...new Set(configured)];
 }
 
 function isOriginAllowed(request: Request) {
@@ -65,14 +81,19 @@ function isOriginAllowed(request: Request) {
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get("Origin") || "";
+
+  const allowedOrigin =
+    origin && isOriginAllowed(request)
+      ? origin
+      : "https://brothers-games.brothersgames.workers.dev";
+
   return {
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Max-Age": "86400",
-    ...(origin && isOriginAllowed(request)
-      ? { "Access-Control-Allow-Origin": origin, Vary: "Origin" }
-      : {}),
+    Vary: "Origin",
   };
 }
 
@@ -178,12 +199,18 @@ async function mercadoPagoJson(
 }
 
 Deno.serve(async (request) => {
-  if (!isOriginAllowed(request)) {
-    return jsonResponse(request, { error: "Origem não permitida." }, 403);
+  if (request.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: corsHeaders(request),
+    });
   }
 
-  if (request.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders(request) });
+  if (!isOriginAllowed(request)) {
+    return jsonResponse(
+      request,
+      { error: "Origem não permitida." },
+      403
+    );
   }
 
   if (request.method !== "POST") {
