@@ -477,6 +477,210 @@ function productSearchScore(product, query) {
 }
 
 
+
+const SETUP_WIZARD_COPY = {
+  "pt-BR": {
+    intro: "Vamos montar seu setup por etapas. Primeiro, escolha um mouse.",
+    sections: {
+      mouse: {
+        title: "1. Mouse",
+        found: "Escolha um mouse para o seu setup.",
+        empty: "No momento não temos mouses disponíveis, mas teremos novidades em breve.",
+      },
+      teclado: {
+        title: "2. Teclado",
+        found: "Agora escolha um teclado para o seu setup.",
+        empty: "No momento não temos teclados disponíveis, mas teremos novidades em breve.",
+      },
+      pc: {
+        title: "3. PC",
+        found: "Por último, escolha um PC para completar o seu setup.",
+        empty: "No momento não temos PCs disponíveis, mas teremos novidades em breve.",
+      },
+    },
+    continue: "CONTINUAR MONTAGEM DE SETUP",
+    checkout: "IR PARA O CHECKOUT",
+    finished: "Montagem concluída. Você pode revisar o carrinho e seguir para o checkout.",
+  },
+  "en-US": {
+    intro: "Let's build your setup step by step. First, choose a mouse.",
+    sections: {
+      mouse: {
+        title: "1. Mouse",
+        found: "Choose a mouse for your setup.",
+        empty: "We don't have mice available right now, but more will be available soon.",
+      },
+      teclado: {
+        title: "2. Keyboard",
+        found: "Now choose a keyboard for your setup.",
+        empty: "We don't have keyboards available right now, but more will be available soon.",
+      },
+      pc: {
+        title: "3. PC",
+        found: "Finally, choose a PC to complete your setup.",
+        empty: "We don't have PCs available right now, but more will be available soon.",
+      },
+    },
+    continue: "CONTINUE BUILDING SETUP",
+    checkout: "GO TO CHECKOUT",
+    finished: "Setup complete. You can review your cart and continue to checkout.",
+  },
+  "es-ES": {
+    intro: "Vamos a montar tu setup por etapas. Primero, elige un mouse.",
+    sections: {
+      mouse: {
+        title: "1. Mouse",
+        found: "Elige un mouse para tu setup.",
+        empty: "Ahora mismo no tenemos mouses disponibles, pero tendremos novedades pronto.",
+      },
+      teclado: {
+        title: "2. Teclado",
+        found: "Ahora elige un teclado para tu setup.",
+        empty: "Ahora mismo no tenemos teclados disponibles, pero tendremos novedades pronto.",
+      },
+      pc: {
+        title: "3. PC",
+        found: "Por último, elige un PC para completar tu setup.",
+        empty: "Ahora mismo no tenemos PCs disponibles, pero tendremos novedades pronto.",
+      },
+    },
+    continue: "CONTINUAR MONTAJE DEL SETUP",
+    checkout: "IR AL CHECKOUT",
+    finished: "Montaje terminado. Puedes revisar el carrito y continuar al checkout.",
+  },
+  "zh-CN": {
+    intro: "我们将分步骤搭配你的设备。首先选择鼠标。",
+    sections: {
+      mouse: { title: "1. 鼠标", found: "为你的设备选择一个鼠标。", empty: "目前暂无鼠标商品，但很快会有新品上架。" },
+      teclado: { title: "2. 键盘", found: "现在为你的设备选择一个键盘。", empty: "目前暂无键盘商品，但很快会有新品上架。" },
+      pc: { title: "3. PC", found: "最后选择一台 PC 来完成你的设备搭配。", empty: "目前暂无 PC 商品，但很快会有新品上架。" },
+    },
+    continue: "继续搭配设备",
+    checkout: "前往结账",
+    finished: "设备搭配完成。你可以检查购物车并前往结账。",
+  },
+  "hi-IN": {
+    intro: "हम आपका सेटअप चरणों में बनाएँगे। पहले एक माउस चुनें।",
+    sections: {
+      mouse: { title: "1. माउस", found: "अपने सेटअप के लिए एक माउस चुनें।", empty: "अभी माउस उपलब्ध नहीं हैं, लेकिन जल्द ही नए उत्पाद आएँगे।" },
+      teclado: { title: "2. कीबोर्ड", found: "अब अपने सेटअप के लिए एक कीबोर्ड चुनें।", empty: "अभी कीबोर्ड उपलब्ध नहीं हैं, लेकिन जल्द ही नए उत्पाद आएँगे।" },
+      pc: { title: "3. PC", found: "अंत में अपना सेटअप पूरा करने के लिए एक PC चुनें।", empty: "अभी PC उपलब्ध नहीं हैं, लेकिन जल्द ही नए उत्पाद आएँगे।" },
+    },
+    continue: "सेटअप बनाना जारी रखें",
+    checkout: "चेकआउट पर जाएँ",
+    finished: "सेटअप पूरा हो गया। आप कार्ट की समीक्षा करके चेकआउट पर जा सकते हैं।",
+  },
+  "ar-SA": {
+    intro: "سنقوم ببناء إعدادك على مراحل. أولاً اختر الماوس.",
+    sections: {
+      mouse: { title: "1. الماوس", found: "اختر ماوسًا لإعدادك.", empty: "لا تتوفر أجهزة ماوس حالياً، لكن ستتوفر منتجات جديدة قريباً." },
+      teclado: { title: "2. لوحة المفاتيح", found: "الآن اختر لوحة مفاتيح لإعدادك.", empty: "لا تتوفر لوحات مفاتيح حالياً، لكن ستتوفر منتجات جديدة قريباً." },
+      pc: { title: "3. الكمبيوتر", found: "أخيراً اختر جهاز كمبيوتر لإكمال إعدادك.", empty: "لا تتوفر أجهزة كمبيوتر حالياً، لكن ستتوفر منتجات جديدة قريباً." },
+    },
+    continue: "متابعة بناء الإعداد",
+    checkout: "الانتقال إلى الدفع",
+    finished: "اكتمل الإعداد. يمكنك مراجعة السلة والانتقال إلى الدفع.",
+  },
+  "fr-FR": {
+    intro: "Nous allons composer votre setup étape par étape. Commencez par choisir une souris.",
+    sections: {
+      mouse: { title: "1. Souris", found: "Choisissez une souris pour votre setup.", empty: "Aucune souris n’est disponible pour le moment, mais de nouveaux produits arriveront bientôt." },
+      teclado: { title: "2. Clavier", found: "Choisissez maintenant un clavier pour votre setup.", empty: "Aucun clavier n’est disponible pour le moment, mais de nouveaux produits arriveront bientôt." },
+      pc: { title: "3. PC", found: "Enfin, choisissez un PC pour compléter votre setup.", empty: "Aucun PC n’est disponible pour le moment, mais de nouveaux produits arriveront bientôt." },
+    },
+    continue: "CONTINUER LE MONTAGE DU SETUP",
+    checkout: "PASSER AU PAIEMENT",
+    finished: "Setup terminé. Vous pouvez vérifier le panier et passer au paiement.",
+  },
+  "de-DE": {
+    intro: "Wir stellen dein Setup Schritt für Schritt zusammen. Wähle zuerst eine Maus.",
+    sections: {
+      mouse: { title: "1. Maus", found: "Wähle eine Maus für dein Setup.", empty: "Derzeit sind keine Mäuse verfügbar, aber bald kommen neue Produkte." },
+      teclado: { title: "2. Tastatur", found: "Wähle jetzt eine Tastatur für dein Setup.", empty: "Derzeit sind keine Tastaturen verfügbar, aber bald kommen neue Produkte." },
+      pc: { title: "3. PC", found: "Wähle zum Schluss einen PC, um dein Setup zu vervollständigen.", empty: "Derzeit sind keine PCs verfügbar, aber bald kommen neue Produkte." },
+    },
+    continue: "SETUP WEITER ZUSAMMENSTELLEN",
+    checkout: "ZUR KASSE",
+    finished: "Setup abgeschlossen. Du kannst den Warenkorb prüfen und zur Kasse gehen.",
+  },
+};
+
+function setupWizardCopy(language) {
+  return SETUP_WIZARD_COPY[language] || SETUP_WIZARD_COPY["pt-BR"];
+}
+
+const SETUP_WIZARD_SECTIONS = [
+  {
+    id: "mouse",
+    productTerms: ["mouse"],
+  },
+  {
+    id: "teclado",
+    productTerms: ["teclad", "keyboard"],
+  },
+  {
+    id: "pc",
+    productTerms: [
+      "pc",
+      "desktop",
+      "computador",
+      "computer",
+      "gabinete completo",
+      "prebuilt",
+      "pre-built",
+    ],
+  },
+];
+
+function setupProductsForSection(products, sectionId) {
+  const section = SETUP_WIZARD_SECTIONS.find((item) => item.id === sectionId);
+  if (!section) return [];
+
+  const seen = new Set();
+
+  return (products || []).filter((product) => {
+    const haystack = normalizeAssistantText(
+      [
+        product?.category,
+        product?.subcategory,
+        product?.name,
+        product?.description,
+        product?.tags,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+
+    const matches = section.productTerms.some((term) => haystack.includes(term));
+    if (!matches) return false;
+
+    const id = String(product?.id || "");
+    if (!id || seen.has(id)) return false;
+
+    seen.add(id);
+    return true;
+  });
+}
+
+function isSetupWizardRequest(message, copy) {
+  const normalized = normalizeAssistantText(message);
+
+  return (
+    String(message || "").trim() === copy.quick?.[0] ||
+    normalized.includes("monte um setup") ||
+    normalized.includes("monta um setup") ||
+    normalized.includes("montar um setup") ||
+    normalized.includes("build a setup") ||
+    normalized.includes("monta un setup") ||
+    normalized.includes("composez un setup") ||
+    normalized.includes("stell mir ein setup") ||
+    normalized.includes("setup बन") ||
+    normalized.includes("إعداد") ||
+    normalized.includes("搭配")
+  );
+}
+
+
 const SHOP_SECTION_DEFINITIONS = [
   {
     id: "mouse",
@@ -874,6 +1078,10 @@ export default function AIShoppingAssistant({
     { id: "welcome", role: "assistant", content: localCopy(language).hello },
   ]);
   const [addedIds, setAddedIds] = useState(() => new Set());
+  const [setupWizard, setSetupWizard] = useState({
+    active: false,
+    step: -1,
+  });
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -886,6 +1094,7 @@ export default function AIShoppingAssistant({
     ]);
     setInput("");
     setAddedIds(new Set());
+    setSetupWizard({ active: false, step: -1 });
   }, [language, copy.hello]);
 
   useEffect(() => {
@@ -906,6 +1115,86 @@ export default function AIShoppingAssistant({
   function clearConversation() {
     setMessages([{ id: "welcome", role: "assistant", content: copy.hello }]);
     setAddedIds(new Set());
+    setSetupWizard({ active: false, step: -1 });
+  }
+
+
+  function appendSetupSection(step) {
+    const wizardCopy = setupWizardCopy(language);
+    const section = SETUP_WIZARD_SECTIONS[step];
+    if (!section) return;
+
+    const sectionProducts = setupProductsForSection(products, section.id);
+    const sectionCopy = wizardCopy.sections[section.id];
+    const isLast = step === SETUP_WIZARD_SECTIONS.length - 1;
+
+    setMessages((current) => [
+      ...current,
+      {
+        id: `setup-section-${section.id}-${Date.now()}`,
+        role: "assistant",
+        content: sectionProducts.length
+          ? `${sectionCopy.title} — ${sectionCopy.found}`
+          : `${sectionCopy.title} — ${sectionCopy.empty}`,
+        products: sectionProducts,
+        setupActions: true,
+        setupStep: step,
+        setupFinal: isLast,
+      },
+    ]);
+
+    setSetupWizard({
+      active: true,
+      step,
+    });
+  }
+
+  function startSetupWizard() {
+    const wizardCopy = setupWizardCopy(language);
+
+    setSetupWizard({
+      active: true,
+      step: 0,
+    });
+
+    setMessages((current) => [
+      ...current,
+      {
+        id: `setup-intro-${Date.now()}`,
+        role: "assistant",
+        content: wizardCopy.intro,
+      },
+    ]);
+
+    window.setTimeout(() => {
+      appendSetupSection(0);
+    }, 80);
+  }
+
+  function continueSetupWizard(step) {
+    const nextStep = Number(step) + 1;
+
+    if (nextStep >= SETUP_WIZARD_SECTIONS.length) {
+      const wizardCopy = setupWizardCopy(language);
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: `setup-finished-${Date.now()}`,
+          role: "assistant",
+          content: wizardCopy.finished,
+          setupCheckoutOnly: true,
+        },
+      ]);
+
+      setSetupWizard({
+        active: false,
+        step: SETUP_WIZARD_SECTIONS.length - 1,
+      });
+      return;
+    }
+
+    appendSetupSection(nextStep);
   }
 
   function executeAction(action) {
@@ -994,6 +1283,13 @@ export default function AIShoppingAssistant({
     const history = safeMessages([...messages, userMessage]);
     setMessages((current) => [...current, userMessage]);
     setInput("");
+
+    // Fluxo guiado de montagem de setup:
+    // Mouse -> Teclado -> PC, uma seção por vez.
+    if (isSetupWizardRequest(clean, copy)) {
+      startSetupWizard();
+      return;
+    }
 
     // Pedidos de Mouse / Teclado / Monitor são determinísticos:
     // sempre mostramos TODOS os produtos cadastrados nessas seções,
@@ -1220,6 +1516,40 @@ export default function AIShoppingAssistant({
                     })}
                   </div>
                 )}
+
+                {message.setupActions && (
+                  <div className="ai-shop-setup-actions">
+                    {!message.setupFinal && (
+                      <button
+                        type="button"
+                        className="ai-shop-setup-continue"
+                        onClick={() => continueSetupWizard(message.setupStep)}
+                      >
+                        {setupWizardCopy(language).continue}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="ai-shop-setup-checkout"
+                      onClick={() => onOpenCheckout?.()}
+                    >
+                      {setupWizardCopy(language).checkout}
+                    </button>
+                  </div>
+                )}
+
+                {message.setupCheckoutOnly && (
+                  <div className="ai-shop-setup-actions is-final">
+                    <button
+                      type="button"
+                      className="ai-shop-setup-checkout"
+                      onClick={() => onOpenCheckout?.()}
+                    >
+                      {setupWizardCopy(language).checkout}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 
@@ -1233,7 +1563,7 @@ export default function AIShoppingAssistant({
             )}
           </div>
 
-          {addedIds.size > 0 && !busy && (
+          {addedIds.size > 0 && !busy && !setupWizard.active && (
             <div className="ai-shop-checkout-cta">
               <div className="ai-shop-checkout-cta-copy">
                 <span>✓</span>
