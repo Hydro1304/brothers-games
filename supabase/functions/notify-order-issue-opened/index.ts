@@ -341,6 +341,228 @@ function buildBuyerIssueConfirmationEmail(params: {
 </html>`;
 }
 
+
+type EmailProviderResult = {
+  ok: boolean;
+  provider: "brevo" | "resend" | "none";
+  status?: number;
+  id?: string | null;
+  error?: string | null;
+};
+
+function parseResendFrom(value: string) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^(.*)<([^>]+)>$/);
+
+  if (match) {
+    return {
+      name: match[1].trim().replace(/^["']|["']$/g, "") || "BROTHER'S GAMES",
+      email: match[2].trim(),
+    };
+  }
+
+  return {
+    name: "BROTHER'S GAMES",
+    email: raw,
+  };
+}
+
+async function sendTransactionalEmail({
+  to,
+  toName,
+  subject,
+  html,
+}: {
+  to: string;
+  toName?: string;
+  subject: string;
+  html: string;
+}): Promise<EmailProviderResult> {
+  const brevoApiKey = String(
+    Deno.env.get("BREVO_API_KEY") || ""
+  ).trim();
+
+  const brevoSenderEmail = String(
+    Deno.env.get("BREVO_SENDER_EMAIL") || ""
+  ).trim();
+
+  const brevoSenderName = String(
+    Deno.env.get("BREVO_SENDER_NAME") ||
+      "BROTHER'S GAMES"
+  ).trim();
+
+  if (brevoApiKey && brevoSenderEmail) {
+    try {
+      const response = await fetch(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": brevoApiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: {
+              name: brevoSenderName,
+              email: brevoSenderEmail,
+            },
+            to: [
+              {
+                email: to,
+                name: toName || undefined,
+              },
+            ],
+            subject,
+            htmlContent: html,
+          }),
+        }
+      );
+
+      let data: {
+        messageId?: string;
+        message?: string;
+        code?: string;
+      } | null = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (response.ok) {
+        return {
+          ok: true,
+          provider: "brevo",
+          status: response.status,
+          id: data?.messageId || null,
+        };
+      }
+
+      console.error("E-mail Brevo recusado:", {
+        recipient: to,
+        status: response.status,
+        response: data,
+      });
+
+      return {
+        ok: false,
+        provider: "brevo",
+        status: response.status,
+        error:
+          data?.message ||
+          data?.code ||
+          `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      console.error("Erro chamando Brevo:", {
+        recipient: to,
+        error:
+          error instanceof Error
+            ? error.message
+            : "unknown",
+      });
+
+      return {
+        ok: false,
+        provider: "brevo",
+        error:
+          error instanceof Error
+            ? error.message
+            : "BREVO_REQUEST_FAILED",
+      };
+    }
+  }
+
+  // Fallback: mantém Resend funcionando caso já esteja configurado.
+  const resendApiKey = String(
+    Deno.env.get("RESEND_API_KEY") || ""
+  ).trim();
+
+  const resendFrom = String(
+    Deno.env.get("SALE_EMAIL_FROM") ||
+      Deno.env.get("ORDER_EMAIL_FROM") ||
+      ""
+  ).trim();
+
+  if (resendApiKey && resendFrom) {
+    try {
+      const from = parseResendFrom(resendFrom);
+
+      const response = await fetch(
+        "https://api.resend.com/emails",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: `${from.name} <${from.email}>`,
+            to: [to],
+            subject,
+            html,
+          }),
+        }
+      );
+
+      let data: {
+        id?: string;
+        message?: string;
+        name?: string;
+      } | null = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (response.ok) {
+        return {
+          ok: true,
+          provider: "resend",
+          status: response.status,
+          id: data?.id || null,
+        };
+      }
+
+      console.error("E-mail Resend recusado:", {
+        recipient: to,
+        status: response.status,
+        response: data,
+      });
+
+      return {
+        ok: false,
+        provider: "resend",
+        status: response.status,
+        error:
+          data?.message ||
+          data?.name ||
+          `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        provider: "resend",
+        error:
+          error instanceof Error
+            ? error.message
+            : "RESEND_REQUEST_FAILED",
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    provider: "none",
+    error: "EMAIL_PROVIDER_NOT_CONFIGURED",
+  };
+}
+
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", {
@@ -380,6 +602,21 @@ Deno.serve(async (request: Request) => {
     String(
       Deno.env.get("SALE_NOTIFICATION_EMAIL") || ""
     ).trim();
+
+  if (!fallbackNotificationEmail) {
+    console.error(
+      "notify-order-issue-opened: SALE_NOTIFICATION_EMAIL não configurado."
+    );
+
+    return jsonResponse(
+      request,
+      {
+        ok: false,
+        error: "SUPPORT_NOTIFICATION_EMAIL_NOT_CONFIGURED",
+      },
+      503
+    );
+  }
   const siteUrl =
     String(
       Deno.env.get("PUBLIC_SITE_URL") ||
@@ -394,7 +631,15 @@ Deno.serve(async (request: Request) => {
     );
   }
 
-  if (!resendApiKey || !fromEmail) {
+  const hasBrevo =
+    Boolean(String(Deno.env.get("BREVO_API_KEY") || "").trim()) &&
+    Boolean(String(Deno.env.get("BREVO_SENDER_EMAIL") || "").trim());
+
+  const hasResend =
+    Boolean(resendApiKey) &&
+    Boolean(fromEmail);
+
+  if (!hasBrevo && !hasResend) {
     return jsonResponse(
       request,
       { ok: false, error: "EMAIL_NOT_CONFIGURED" },
@@ -576,6 +821,20 @@ Deno.serve(async (request: Request) => {
     { email: string; name: string }
   >();
 
+  // A caixa principal da loja SEMPRE recebe o aviso.
+  // Isso não depende de profile/role/auth de Admin/Owner.
+  if (fallbackNotificationEmail) {
+    const storeEmail =
+      fallbackNotificationEmail.toLowerCase();
+
+    recipients.set(storeEmail, {
+      email: storeEmail,
+      name: "Equipe BROTHER'S GAMES",
+    });
+  }
+
+  // Além da caixa principal, tenta notificar todos
+  // os perfis Admin/Owner ativos que possuam e-mail no Auth.
   for (const profile of staffProfiles) {
     try {
       const {
@@ -607,25 +866,20 @@ Deno.serve(async (request: Request) => {
         "notify-order-issue-opened: erro lendo e-mail de staff",
         {
           userId: profile.id,
-          error,
+          error:
+            error instanceof Error
+              ? error.message
+              : "unknown",
         }
       );
     }
   }
 
-  if (fallbackNotificationEmail) {
-    const email =
-      fallbackNotificationEmail.toLowerCase();
-
-    if (!recipients.has(email)) {
-      recipients.set(email, {
-        email,
-        name: "Equipe BROTHER'S GAMES",
-      });
-    }
-  }
-
   if (!recipients.size) {
+    console.error(
+      "notify-order-issue-opened: nenhum destinatário de suporte configurado."
+    );
+
     return jsonResponse(
       request,
       { ok: false, error: "NO_STAFF_EMAILS" },
@@ -637,6 +891,15 @@ Deno.serve(async (request: Request) => {
   const failed: string[] = [];
 
   for (const recipient of recipients.values()) {
+    console.log(
+      "notify-order-issue-opened: enviando aviso de chamado",
+      {
+        issueId: issue.id,
+        orderNumber: order.order_number,
+        recipient: recipient.email,
+      }
+    );
+
     const html = buildEmail({
       staffName: recipient.name,
       customerName,
@@ -650,47 +913,30 @@ Deno.serve(async (request: Request) => {
       siteUrl,
     });
 
-    const response = await fetch(
-      "https://api.resend.com/emails",
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            `Bearer ${resendApiKey}`,
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [recipient.email],
-          subject:
-            `NOVA RECLAMAÇÃO • Pedido ${cleanText(
-              order.order_number,
-              100
-            )}`,
-          html,
-        }),
-      }
-    );
+    const emailResult =
+      await sendTransactionalEmail({
+        to: recipient.email,
+        toName: recipient.name,
+        subject:
+          `NOVA RECLAMAÇÃO • Pedido ${cleanText(
+            order.order_number,
+            100
+          )}`,
+        html,
+      });
 
-    if (response.ok) {
+    if (emailResult.ok) {
       sent.push(recipient.email);
     } else {
       failed.push(recipient.email);
 
-      let detail: unknown = null;
-      try {
-        detail = await response.json();
-      } catch {
-        detail = null;
-      }
-
       console.error(
-        "notify-order-issue-opened: Resend recusou envio",
+        "notify-order-issue-opened: falha enviando e-mail ao staff",
         {
           recipient: recipient.email,
-          status: response.status,
-          detail,
+          provider: emailResult.provider,
+          status: emailResult.status || null,
+          error: emailResult.error || null,
         }
       );
     }
@@ -710,51 +956,30 @@ Deno.serve(async (request: Request) => {
         siteUrl,
       });
 
-    const buyerResponse = await fetch(
-      "https://api.resend.com/emails",
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            `Bearer ${resendApiKey}`,
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [customerEmail],
-          subject:
-            `CHAMADO RECEBIDO • Pedido ${cleanText(
-              order.order_number,
-              100
-            )}`,
-          html: buyerHtml,
-        }),
-      }
-    );
+    const buyerResult =
+      await sendTransactionalEmail({
+        to: customerEmail,
+        toName: customerName,
+        subject:
+          `CHAMADO RECEBIDO • Pedido ${cleanText(
+            order.order_number,
+            100
+          )}`,
+        html: buyerHtml,
+      });
 
-    if (buyerResponse.ok) {
+    if (buyerResult.ok) {
       sent.push(customerEmail);
     } else {
       failed.push(customerEmail);
 
-      let buyerDetail: unknown = null;
-      try {
-        buyerDetail =
-          await buyerResponse.json();
-      } catch {
-        buyerDetail = null;
-      }
-
       console.error(
         "notify-order-issue-opened: falha enviando confirmação ao comprador",
         {
-          recipient:
-            customerEmail,
-          status:
-            buyerResponse.status,
-          detail:
-            buyerDetail,
+          recipient: customerEmail,
+          provider: buyerResult.provider,
+          status: buyerResult.status || null,
+          error: buyerResult.error || null,
         }
       );
     }

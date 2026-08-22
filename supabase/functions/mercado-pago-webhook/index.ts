@@ -146,6 +146,227 @@ function money(value: unknown) {
   }).format(Number(value || 0));
 }
 
+
+type EmailProviderResult = {
+  ok: boolean;
+  provider: "brevo" | "resend" | "none";
+  status?: number;
+  id?: string | null;
+  error?: string | null;
+};
+
+function parseResendFrom(value: string) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^(.*)<([^>]+)>$/);
+
+  if (match) {
+    return {
+      name: match[1].trim().replace(/^["']|["']$/g, "") || "BROTHER'S GAMES",
+      email: match[2].trim(),
+    };
+  }
+
+  return {
+    name: "BROTHER'S GAMES",
+    email: raw,
+  };
+}
+
+async function sendTransactionalEmail({
+  to,
+  toName,
+  subject,
+  html,
+}: {
+  to: string;
+  toName?: string;
+  subject: string;
+  html: string;
+}): Promise<EmailProviderResult> {
+  const brevoApiKey = String(
+    Deno.env.get("BREVO_API_KEY") || ""
+  ).trim();
+
+  const brevoSenderEmail = String(
+    Deno.env.get("BREVO_SENDER_EMAIL") || ""
+  ).trim();
+
+  const brevoSenderName = String(
+    Deno.env.get("BREVO_SENDER_NAME") ||
+      "BROTHER'S GAMES"
+  ).trim();
+
+  if (brevoApiKey && brevoSenderEmail) {
+    try {
+      const response = await fetch(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": brevoApiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: {
+              name: brevoSenderName,
+              email: brevoSenderEmail,
+            },
+            to: [
+              {
+                email: to,
+                name: toName || undefined,
+              },
+            ],
+            subject,
+            htmlContent: html,
+          }),
+        }
+      );
+
+      let data: {
+        messageId?: string;
+        message?: string;
+        code?: string;
+      } | null = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (response.ok) {
+        return {
+          ok: true,
+          provider: "brevo",
+          status: response.status,
+          id: data?.messageId || null,
+        };
+      }
+
+      console.error("E-mail Brevo recusado:", {
+        recipient: to,
+        status: response.status,
+        response: data,
+      });
+
+      return {
+        ok: false,
+        provider: "brevo",
+        status: response.status,
+        error:
+          data?.message ||
+          data?.code ||
+          `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      console.error("Erro chamando Brevo:", {
+        recipient: to,
+        error:
+          error instanceof Error
+            ? error.message
+            : "unknown",
+      });
+
+      return {
+        ok: false,
+        provider: "brevo",
+        error:
+          error instanceof Error
+            ? error.message
+            : "BREVO_REQUEST_FAILED",
+      };
+    }
+  }
+
+  // Fallback: mantém Resend funcionando caso já esteja configurado.
+  const resendApiKey = String(
+    Deno.env.get("RESEND_API_KEY") || ""
+  ).trim();
+
+  const resendFrom = String(
+    Deno.env.get("SALE_EMAIL_FROM") ||
+      Deno.env.get("ORDER_EMAIL_FROM") ||
+      ""
+  ).trim();
+
+  if (resendApiKey && resendFrom) {
+    try {
+      const from = parseResendFrom(resendFrom);
+
+      const response = await fetch(
+        "https://api.resend.com/emails",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: `${from.name} <${from.email}>`,
+            to: [to],
+            subject,
+            html,
+          }),
+        }
+      );
+
+      let data: {
+        id?: string;
+        message?: string;
+        name?: string;
+      } | null = null;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (response.ok) {
+        return {
+          ok: true,
+          provider: "resend",
+          status: response.status,
+          id: data?.id || null,
+        };
+      }
+
+      console.error("E-mail Resend recusado:", {
+        recipient: to,
+        status: response.status,
+        response: data,
+      });
+
+      return {
+        ok: false,
+        provider: "resend",
+        status: response.status,
+        error:
+          data?.message ||
+          data?.name ||
+          `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        provider: "resend",
+        error:
+          error instanceof Error
+            ? error.message
+            : "RESEND_REQUEST_FAILED",
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    provider: "none",
+    error: "EMAIL_PROVIDER_NOT_CONFIGURED",
+  };
+}
+
 async function sendSaleNotificationEmail(
   admin: AdminClient,
   order: LocalOrder,
@@ -153,15 +374,17 @@ async function sendSaleNotificationEmail(
   fromEmail: string,
   notificationEmail: string
 ): Promise<void> {
-  if (!resendApiKey || !fromEmail) {
+  const hasBrevo =
+    Boolean(String(Deno.env.get("BREVO_API_KEY") || "").trim()) &&
+    Boolean(String(Deno.env.get("BREVO_SENDER_EMAIL") || "").trim());
+
+  const hasResend =
+    Boolean(resendApiKey) &&
+    Boolean(fromEmail);
+
+  if (!hasBrevo && !hasResend) {
     console.warn(
-      "Webhook: e-mail de pagamento não configurado.",
-      {
-        hasResendApiKey:
-          Boolean(resendApiKey),
-        hasFromEmail:
-          Boolean(fromEmail),
-      }
+      "Webhook: nenhum provedor de e-mail configurado."
     );
     return;
   }
@@ -449,53 +672,26 @@ async function sendSaleNotificationEmail(
   </body>
 </html>`;
 
-      const response =
-        await fetch(
-          "https://api.resend.com/emails",
-          {
-            method: "POST",
-            headers: {
-              Authorization:
-                `Bearer ${resendApiKey}`,
-              "Content-Type":
-                "application/json",
-            },
-            body: JSON.stringify({
-              from: fromEmail,
-              to: [recipient.email],
-              subject,
-              html,
-            }),
-          }
-        );
+      const emailResult =
+        await sendTransactionalEmail({
+          to: recipient.email,
+          toName: recipient.name,
+          subject,
+          html,
+        });
 
-      let resendData: {
-        id?: string;
-        message?: string;
-        name?: string;
-      } | null = null;
-
-      try {
-        resendData =
-          await response.json();
-      } catch {
-        resendData = null;
-      }
-
-      if (response.ok) {
+      if (emailResult.ok) {
         sent.push(recipient.email);
       } else {
         failed.push(recipient.email);
 
         console.error(
-          "Webhook: Resend recusou e-mail de pagamento",
+          "Webhook: falha no e-mail de pagamento",
           {
-            recipient:
-              recipient.email,
-            status:
-              response.status,
-            response:
-              resendData,
+            recipient: recipient.email,
+            provider: emailResult.provider,
+            status: emailResult.status || null,
+            error: emailResult.error || null,
           }
         );
       }
