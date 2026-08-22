@@ -1116,6 +1116,46 @@ export default function AdminPanel({
     );
   }
 
+
+  async function notifyBuyerOrderUpdate({
+    orderId,
+    orderItemId = null,
+    reason = "order_updated",
+  }) {
+    if (!orderId) {
+      return { ok: false, skipped: true };
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "notify-order-update",
+        {
+          body: {
+            order_id: orderId,
+            order_item_id: orderItemId,
+            reason,
+          },
+        }
+      );
+
+      if (error) throw error;
+
+      return data || { ok: true };
+    } catch (error) {
+      console.error(
+        "Falha ao enviar e-mail de atualização ao comprador:",
+        error
+      );
+
+      return {
+        ok: false,
+        error:
+          error?.message ||
+          "Não foi possível enviar o e-mail.",
+      };
+    }
+  }
+
   async function refundAndCancelPaidOrder(order) {
     if (!order?.id || orderRefundSaving) return;
 
@@ -1177,6 +1217,23 @@ export default function AdminPanel({
           successMessage: `${orderLabel} foi cancelado e o reembolso foi confirmado.`,
         }
       );
+
+      const emailResult =
+        await notifyBuyerOrderUpdate({
+          orderId: order.id,
+          reason: "refund_or_cancel_updated",
+        });
+
+      if (
+        !emailResult?.ok &&
+        !emailResult?.skipped
+      ) {
+        showSiteAlert(
+          "O pedido foi atualizado, mas o e-mail de aviso ao comprador não pôde ser enviado.",
+          { variant: "warning" }
+        );
+      }
+
       return result;
     } finally {
       setOrderRefundSaving(false);
@@ -1314,37 +1371,62 @@ export default function AdminPanel({
   }
 
 
-  async function updateOrderFulfillment(orderId, nextStatus) {
+  async function updateOrderFulfillment(
+    orderId,
+    nextStatus
+  ) {
     if (!orderId || fulfillmentSaving) return;
 
-    const allowed = ["preparing", "shipped", "delivered"];
+    const allowed = [
+      "preparing",
+      "shipped",
+      "delivered",
+    ];
+
     if (!allowed.includes(nextStatus)) {
-      showSiteAlert("Status de entrega inválido.", { variant: "warning" });
+      showSiteAlert(
+        "Status de entrega inválido.",
+        { variant: "warning" }
+      );
       return;
     }
 
     setFulfillmentSaving(true);
 
     try {
-      const { error } = await supabase.rpc("admin_set_order_fulfillment", {
-        p_order_id: orderId,
-        p_status: nextStatus,
-      });
+      const { error } = await supabase.rpc(
+        "admin_set_order_fulfillment",
+        {
+          p_order_id: orderId,
+          p_status: nextStatus,
+        }
+      );
 
       if (error) throw error;
 
+      const emailResult =
+        await notifyBuyerOrderUpdate({
+          orderId,
+          reason: "fulfillment_updated",
+        });
+
       await loadAllData(true);
 
-      // Depois de concluir uma entrega digital, volta para a lista de pedidos.
       if (
-        deliveryType === "digital" &&
-        nextStatus === "delivered"
+        !emailResult?.ok &&
+        !emailResult?.skipped
       ) {
-        setManagedOrderId(null);
+        showSiteAlert(
+          "O pedido foi atualizado, mas o e-mail de aviso ao comprador não pôde ser enviado.",
+          { variant: "warning" }
+        );
       }
     } catch (error) {
       console.error(error);
-      showSiteAlert(error?.message || "Não foi possível atualizar o andamento do pedido.");
+      showSiteAlert(
+        error?.message ||
+          "Não foi possível atualizar o andamento do pedido."
+      );
     } finally {
       setFulfillmentSaving(false);
     }
@@ -1509,7 +1591,34 @@ export default function AdminPanel({
 
       if (error) throw error;
 
+      const emailResult =
+        await notifyBuyerOrderUpdate({
+          orderId: order.id,
+          orderItemId: item.id,
+          reason:
+            deliveryType === "digital"
+              ? "digital_fulfillment_updated"
+              : "physical_fulfillment_updated",
+        });
+
       await loadAllData(true);
+
+      if (
+        !emailResult?.ok &&
+        !emailResult?.skipped
+      ) {
+        showSiteAlert(
+          "A entrega foi atualizada, mas o e-mail de aviso ao comprador não pôde ser enviado.",
+          { variant: "warning" }
+        );
+      }
+
+      if (
+        deliveryType === "digital" &&
+        nextStatus === "delivered"
+      ) {
+        setManagedOrderId(null);
+      }
     } catch (error) {
       console.error(error);
       showSiteAlert(
