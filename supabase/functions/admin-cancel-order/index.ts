@@ -577,17 +577,123 @@ Deno.serve(async (request) => {
 
     // Reembolso TOTAL pela API de Orders.
     // Para reembolso total, o Mercado Pago orienta enviar POST sem body.
-    const refund = await mercadoPagoJson(
-      `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}/refund`,
+    //
+    // Cada NOVA tentativa administrativa usa uma chave de idempotência exclusiva.
+    // O código antigo reutilizava sempre a mesma chave para o pedido.
+    const refundEndpoint =
+      `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}/refund`;
+
+    let refundIdempotencyKey =
+      `admin-refund-${order.id}-${crypto.randomUUID()}`;
+
+    let refundAttempt = 1;
+
+    let refund = await mercadoPagoJson(
+      refundEndpoint,
       mercadoPagoToken,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Idempotency-Key": `admin-refund-${order.id}`,
+          "X-Idempotency-Key": refundIdempotencyKey,
         },
       }
     );
+
+    if (!refund.response.ok || !refund.data) {
+      const firstProviderError = mercadoPagoErrorInfo(
+        refund.data,
+        refund.rawText,
+        refund.response.status
+      );
+
+      const firstProviderText =
+        `${firstProviderError.code || ""} ` +
+        `${firstProviderError.providerMessage || ""} ` +
+        `${firstProviderError.friendly || ""} ` +
+        `${refund.rawText || ""}`;
+
+      const postProcessingRejected =
+        refund.response.status === 422 &&
+        (
+          firstProviderError.code === "unprocessable_entity" ||
+          /post\s*processing\s*rejected/i.test(firstProviderText)
+        );
+
+      if (postProcessingRejected) {
+        console.warn(
+          "Mercado Pago rejeitou o pós-processamento do refund; reconsultando a order.",
+          {
+            orderId: order.id,
+            providerOrderId,
+            refundAttempt,
+            refundIdempotencyKey,
+          }
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 900));
+
+        const recheck = await mercadoPagoJson(
+          `https://api.mercadopago.com/v1/orders/${encodeURIComponent(providerOrderId)}`,
+          mercadoPagoToken
+        );
+
+        const recheckStatus =
+          jsonString(recheck.data, "status").toLowerCase();
+
+        const recheckStatusDetail =
+          jsonString(recheck.data, "status_detail") || null;
+
+        if (
+          recheck.response.ok &&
+          recheck.data &&
+          recheckStatus === "refunded"
+        ) {
+          console.log(
+            "Order apareceu como refunded após o 422; reconciliando sem repetir refund.",
+            {
+              orderId: order.id,
+              providerOrderId,
+              recheckStatus,
+              recheckStatusDetail,
+            }
+          );
+
+          refund = recheck;
+        } else if (
+          recheck.response.ok &&
+          recheck.data &&
+          recheckStatus === "processed"
+        ) {
+          refundAttempt = 2;
+          refundIdempotencyKey =
+            `admin-refund-${order.id}-${crypto.randomUUID()}`;
+
+          console.warn(
+            "Order continua processed após 422; fazendo uma segunda e última tentativa com nova idempotency key.",
+            {
+              orderId: order.id,
+              providerOrderId,
+              refundAttempt,
+              refundIdempotencyKey,
+              recheckStatusDetail,
+            }
+          );
+
+          refund = await mercadoPagoJson(
+            refundEndpoint,
+            mercadoPagoToken,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Idempotency-Key": refundIdempotencyKey,
+              },
+            }
+          );
+        }
+      }
+    }
 
     if (!refund.response.ok || !refund.data) {
       const providerError = mercadoPagoErrorInfo(
@@ -605,6 +711,8 @@ Deno.serve(async (request) => {
         paymentId: order.payment_id || null,
         providerOrderStatus,
         providerStatusDetail,
+        refundAttempt,
+        refundIdempotencyKey,
         httpStatus: refund.response.status,
         errorCode: providerError.code,
         providerMessage: providerError.providerMessage,
@@ -622,6 +730,8 @@ Deno.serve(async (request) => {
           payment_id: order.payment_id || null,
           provider_order_status: providerOrderStatus || null,
           provider_order_status_detail: providerStatusDetail,
+          refund_attempt: refundAttempt,
+          refund_idempotency_key: refundIdempotencyKey,
           http_status: refund.response.status,
           provider_error_code: providerError.code,
           provider_message: providerError.providerMessage,
@@ -634,12 +744,20 @@ Deno.serve(async (request) => {
         ? `${providerError.code}: `
         : "";
 
+      const postProcessingMessage =
+        providerError.code === "unprocessable_entity" ||
+        /post\s*processing\s*rejected/i.test(
+          `${providerError.providerMessage || ""} ${providerError.friendly || ""}`
+        )
+          ? " O Mercado Pago rejeitou internamente o pós-processamento da devolução mesmo após uma nova tentativa segura."
+          : "";
+
       return jsonResponse(
         request,
         {
           error:
             `O Mercado Pago não confirmou o reembolso: ` +
-            `${errorPrefix}${providerError.friendly}`,
+            `${errorPrefix}${providerError.friendly}.${postProcessingMessage}`,
           mercadoPagoCode: providerError.code,
           mercadoPagoHttpStatus: refund.response.status,
         },
@@ -702,6 +820,8 @@ Deno.serve(async (request) => {
         provider_order_id: providerOrderId,
         refund_id: jsonString(firstRefund, "id") || null,
         refund_amount: jsonString(firstRefund, "amount") || order.provider_amount || order.total,
+        refund_attempt: refundAttempt,
+        refund_idempotency_key: refundIdempotencyKey,
       },
     });
 
