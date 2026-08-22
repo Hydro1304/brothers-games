@@ -244,6 +244,240 @@ function safeMessages(value) {
     .slice(-12);
 }
 
+
+function normalizeAssistantText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function productAvailable(product) {
+  const category = normalizeAssistantText(product?.category);
+  const deliveryType = normalizeAssistantText(product?.delivery_type);
+  const digital = deliveryType === "digital" || category === "jogos";
+  const stock = Math.max(0, Number(product?.stock_quantity ?? product?.stock ?? 0) || 0);
+  return digital || stock > 0;
+}
+
+function productSearchScore(product, query) {
+  const q = normalizeAssistantText(query);
+  if (!q) return 0;
+
+  const name = normalizeAssistantText(product?.name);
+  const category = normalizeAssistantText(product?.category);
+  const description = normalizeAssistantText(product?.description);
+
+  let score = 0;
+  if (name === q) score += 100;
+  if (name.includes(q)) score += 60;
+  if (q.includes(name) && name.length > 3) score += 45;
+  if (category.includes(q)) score += 25;
+  if (description.includes(q)) score += 10;
+
+  for (const word of q.split(/\s+/).filter((word) => word.length > 2)) {
+    if (name.includes(word)) score += 12;
+    if (category.includes(word)) score += 5;
+    if (description.includes(word)) score += 2;
+  }
+
+  return score;
+}
+
+function buildClientFallback({
+  message,
+  language,
+  products,
+  onAddToCart,
+  onOpenCart,
+  onOpenOffers,
+}) {
+  const text = normalizeAssistantText(message);
+  const en = language === "en-US";
+  const reply = (pt, english) => (en ? english : pt);
+
+  if (text.includes("carrinho") || text.includes("cart")) {
+    onOpenCart?.();
+    return {
+      content: reply("Abrindo seu carrinho.", "Opening your cart."),
+      products: [],
+    };
+  }
+
+  if (
+    text.includes("oferta") ||
+    text.includes("promoc") ||
+    text.includes("deal")
+  ) {
+    onOpenOffers?.();
+    return {
+      content: reply(
+        "Vou abrir as ofertas disponíveis.",
+        "I'll open the available deals."
+      ),
+      products: [],
+    };
+  }
+
+  const availableProducts = (products || []).filter(productAvailable);
+
+  const gtaIntent =
+    text.includes("gta v") ||
+    text.includes("gta 5") ||
+    text.includes("grand theft auto v") ||
+    text.includes("grand theft auto 5");
+
+  const keyboardIntent =
+    text.includes("teclado") ||
+    text.includes("keyboard");
+
+  const setupIntent =
+    text.includes("setup") ||
+    text.includes("monte") ||
+    text.includes("monta") ||
+    text.includes("pc gamer");
+
+  if (gtaIntent && keyboardIntent) {
+    const gta = availableProducts
+      .map((product) => ({
+        product,
+        score: Math.max(
+          productSearchScore(product, "gta v"),
+          productSearchScore(product, "gta 5"),
+          productSearchScore(product, "grand theft auto v")
+        ),
+      }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    const keyboards = availableProducts
+      .map((product) => ({
+        product,
+        score: Math.max(
+          productSearchScore(product, "teclado"),
+          productSearchScore(product, "keyboard")
+        ),
+      }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((item) => item.product);
+
+    if (gta.length === 1) {
+      onAddToCart?.(gta[0].product, 1);
+    }
+
+    return {
+      content: reply(
+        gta.length === 1
+          ? "Encontrei o GTA V e adicionei ao carrinho. Também encontrei opções de teclado; escolha uma abaixo."
+          : "Encontrei opções relacionadas ao GTA V e teclados. Veja abaixo.",
+        gta.length === 1
+          ? "I found GTA V and added it to your cart. I also found keyboard options; choose one below."
+          : "I found options related to GTA V and keyboards. Check them below."
+      ),
+      products: keyboards.length
+        ? keyboards
+        : gta.slice(0, 8).map((item) => item.product),
+    };
+  }
+
+  if (setupIntent) {
+    const budgetMatch = String(message).match(
+      /(?:r\$\s*)?(\d{2,6}(?:[.,]\d{1,2})?)/
+    );
+    const budget = budgetMatch
+      ? Number(budgetMatch[1].replace(".", "").replace(",", "."))
+      : null;
+
+    const setupProducts = availableProducts
+      .filter((product) =>
+        budget && Number.isFinite(budget)
+          ? Number(product?.price || 0) <= budget
+          : true
+      )
+      .sort((a, b) => Number(a?.price || 0) - Number(b?.price || 0))
+      .slice(0, 8);
+
+    return {
+      content: budget
+        ? reply(
+            `Separei opções reais da loja dentro de aproximadamente R$ ${budget
+              .toFixed(2)
+              .replace(".", ",")}.`,
+            `I found real store options within roughly R$ ${budget.toFixed(2)}.`
+          )
+        : reply(
+            "Separei algumas opções reais da loja para começar seu setup. Se você me disser o orçamento, consigo filtrar melhor.",
+            "I found some real store options to start your setup. Tell me your budget and I can narrow them down."
+          ),
+      products: setupProducts,
+    };
+  }
+
+  let query = "";
+  if (gtaIntent) query = "gta v";
+  else if (keyboardIntent) query = "teclado";
+  else {
+    query = String(message)
+      .replace(
+        /\b(quero|comprar|procuro|mostre|mostrar|me|um|uma|o|a|de|para|por favor|eu|want|buy|show|please)\b/gi,
+        " "
+      )
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  const matches = availableProducts
+    .map((product) => ({
+      product,
+      score: productSearchScore(product, query),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map((item) => item.product);
+
+  if (matches.length === 1) {
+    const purchaseIntent =
+      text.includes("quero") ||
+      text.includes("comprar") ||
+      text.includes("adicione") ||
+      text.includes("add") ||
+      text.includes("buy");
+
+    if (purchaseIntent) {
+      onAddToCart?.(matches[0], 1);
+      return {
+        content: reply(
+          `${matches[0]?.name || "Produto"} foi adicionado ao carrinho.`,
+          `${matches[0]?.name || "Product"} was added to your cart.`
+        ),
+        products: [matches[0]],
+      };
+    }
+  }
+
+  if (matches.length) {
+    return {
+      content: reply(
+        "Encontrei estas opções reais no catálogo da loja.",
+        "I found these real options in the store catalog."
+      ),
+      products: matches,
+    };
+  }
+
+  return {
+    content: reply(
+      "Não encontrei um produto claro para esse pedido. Tente informar o nome do produto, categoria ou orçamento.",
+      "I couldn't find a clear product for that request. Try the product name, category, or budget."
+    ),
+    products: [],
+  };
+}
+
 export default function AIShoppingAssistant({
   language = "pt-BR",
   page = "home",
@@ -433,16 +667,23 @@ export default function AIShoppingAssistant({
       ]);
     } catch (error) {
       console.error("AI assistant:", error);
+
+      const fallback = buildClientFallback({
+        message: clean,
+        language,
+        products,
+        onAddToCart,
+        onOpenCart,
+        onOpenOffers,
+      });
+
       setMessages((current) => [
         ...current,
         {
-          id: `assistant-error-${Date.now()}`,
+          id: `assistant-fallback-${Date.now()}`,
           role: "assistant",
-          content:
-            error instanceof Error && error.message
-              ? error.message
-              : copy.error,
-          error: true,
+          content: fallback.content,
+          products: fallback.products,
         },
       ]);
     } finally {
