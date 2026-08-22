@@ -571,15 +571,17 @@ async function sendTransactionalEmail({
         response: data,
       });
 
-      return {
-        ok: false,
-        provider: "brevo",
-        status: response.status,
-        error:
-          data?.message ||
-          data?.code ||
-          `HTTP ${response.status}`,
-      };
+      console.warn(
+        "Brevo falhou; tentando fallback pelo Resend.",
+        {
+          recipient: to,
+          status: response.status,
+          error:
+            data?.message ||
+            data?.code ||
+            `HTTP ${response.status}`,
+        }
+      );
     } catch (error) {
       console.error("Erro chamando Brevo:", {
         recipient: to,
@@ -589,14 +591,16 @@ async function sendTransactionalEmail({
             : "unknown",
       });
 
-      return {
-        ok: false,
-        provider: "brevo",
-        error:
-          error instanceof Error
-            ? error.message
-            : "BREVO_REQUEST_FAILED",
-      };
+      console.warn(
+        "Brevo indisponível; tentando fallback pelo Resend.",
+        {
+          recipient: to,
+          error:
+            error instanceof Error
+              ? error.message
+              : "BREVO_REQUEST_FAILED",
+        }
+      );
     }
   }
 
